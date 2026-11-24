@@ -1,0 +1,79 @@
+:root {
+  color-scheme: light;
+  font-family: ui-rounded, "Avenir Next", system-ui, sans-serif;
+  color: #183c32;
+  background: #f7f5eb;
+  --ink: #173e32;
+  --green: #215b47;
+  --line: #d5dfd4;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+header { background: #fffcf4; border-bottom: 1px solid #e3e4d7; }
+.top, main { width: min(100% - 32px, 1040px); margin: auto; }
+.top, .play-top, .tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.top, .play-top { justify-content: space-between; }
+.top { min-height: 72px; }
+.brand { color: var(--ink); text-decoration: none; font-weight: 900; font-size: clamp(1.15rem, 4vw, 1.55rem); }
+.brand span { color: #8a5903; }
+.stars { background: #ffedb1; padding: 9px 13px; border-radius: 99px; font-weight: 800; }
+main { padding: 24px 0 44px; }
+.hero {
+  display: grid; align-items: center; min-height: 320px; padding: clamp(24px, 6vw, 68px);
+  border-radius: 30px; background: #ccebd6 url('../assets/trail.svg') center / cover no-repeat;
+}
+.hero h1 { margin: 0; font-size: clamp(2.8rem, 7vw, 5.4rem); font-weight: 900; line-height: .91; letter-spacing: -.055em; }
+.hero p { max-width: 16em; font-size: 1.12rem; font-weight: 650; }
+h2 { margin-block: 25px 13px; font-size: clamp(1.25rem, 3vw, 1.65rem); }
+.worlds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+button, input, select { font: inherit; }
+button, select { min-height: 48px; cursor: pointer; touch-action: manipulation; }
+button { border: 1px solid transparent; border-radius: 14px; padding: 10px 16px; background: var(--green); color: white; font-weight: 780; }
+button:hover { filter: brightness(.94); }
+button:disabled { cursor: default; opacity: .65; }
+:focus-visible { outline: 3px solid #995306; outline-offset: 3px; }
+.quiet { background: #edf3e9; border-color: #dae6d8; color: var(--ink); }
+.world {
+  display: flex; align-items: center; gap: 12px; min-height: 99px; text-align: left;
+  background: #fffdf7; border-color: #e0e2d5; color: var(--ink);
+}
+.world strong, .world small { display: block; }
+.world small { margin-top: 4px; line-height: 1.25; font-weight: 550; }
+.world .icon { display: grid; place-items: center; flex: 0 0 44px; height: 44px; border-radius: 12px; font-size: 1.4rem; background: var(--tile); }
+.forest { --tile: #d8edcd; } .race { --tile: #f9ddd1; } .dino { --tile: #d8ebbd; }
+.animal { --tile: #f9e6b6; } .sport { --tile: #f5dcc4; } .space { --tile: #e1def6; } .treasure { --tile: #d4ebed; }
+#play, .finish { max-width: 780px; margin: auto; }
+progress { width: 100%; margin: 12px 0; height: 12px; accent-color: var(--green); }
+.card, dialog { background: #fffdf7; border: 1px solid #e0e2d5; border-radius: 22px; padding: clamp(18px, 4vw, 38px); }
+.card h1 { margin: 0 0 18px; font-size: clamp(1.4rem, 4vw, 2rem); line-height: 1.32; }
+.card form { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-top: 20px; }
+#response > label { display: block; font-weight: 720; }
+input[type=text], select { border-radius: 10px; border: 1px solid #658779; padding: 10px; color: var(--ink); background: white; }
+input[type=text] { display: block; width: 9rem; min-height: 48px; margin-top: 6px; }
+fieldset { border: 0; padding: 0; margin: 0; }
+legend { font-weight: 750; margin-bottom: 6px; }
+.choice { display: inline-flex; min-height: 48px; align-items: center; gap: 8px; margin: 3px 5px 3px 0; padding: 8px; border-radius: 9px; background: #edf3e9; }
+.choice input { width: 20px; height: 20px; accent-color: var(--green); }
+.note, #feedback:not(:empty) { padding: 12px; border-radius: 10px; background: #fff0c7; }
+canvas { display: block; width: 100%; height: auto; border: 2px dashed #819d8b; border-radius: 12px; touch-action: none; margin: 10px 0; background: white; }
+.chart { margin-bottom: 16px; padding: 10px 12px; border-radius: 12px; background: #edf3e9; }
+.chart p { margin: 4px 0; }
+.chart-row { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); align-items: center; padding: 4px 0; gap: 4px; }
+.marks { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; }
+.tally { display: inline-block; position: relative; height: 23px; margin: 0 5px 0 3px; }
+.tally i { display: inline-block; width: 2px; height: 20px; background: currentColor; margin: 0 2px; }
+.tally.crossed::after { content: ''; position: absolute; top: 9px; left: -4px; width: 32px; height: 2px; background: currentColor; transform: rotate(-30deg); }
+.reward { font-size: 3.5rem; }
+dialog { color: var(--ink); width: min(440px, 95%); }
+dialog::backdrop { background: #0c271c90; }
+dialog h2 { margin-top: 0; }
+@media (max-width: 880px) { .worlds { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 650px) {
+  .worlds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero { min-height: 235px; background-position: 43% center; }
+}
+@media (max-width: 380px) {
+  .world { padding: 8px; gap: 7px; }
+  .world .icon { flex-basis: 32px; height: 36px; }
+}

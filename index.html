@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f7f5eb">
+  <meta name="description" content="A math adventure for early elementary explorers.">
+  <title>Math Quest</title>
+  <link rel="stylesheet" href="./css/game.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+<body>
+  <header><div class="top">
+    <a class="brand" href="./"><span aria-hidden="true">✦</span> Math Quest</a>
+    <div class="tools"><span id="stars" class="stars"></span><button class="quiet" id="settings">Grown-ups</button></div>
+  </div></header>
+  <main>
+    <section id="home">
+      <div class="hero"><div>
+        <h1 tabindex="-1">Adventure<br>map</h1>
+        <p>Pick a world and set out on a math quest.</p>
+      </div></div>
+      <h2>Choose your adventure</h2>
+      <div id="worlds" class="worlds"></div>
+    </section>
+    <section id="play" hidden>
+      <div class="play-top"><button class="quiet" id="back">← Map</button><strong id="world-name"></strong><span id="position"></span></div>
+      <progress id="trail-progress" aria-label="Adventure progress"></progress>
+      <article class="card">
+        <h1 id="prompt" tabindex="-1"></h1>
+        <div id="visual" hidden></div>
+        <div class="tools">
+          <button class="quiet" id="read">Read aloud</button>
+          <button class="quiet" id="hint">Hint</button>
+          <button class="quiet" id="draw" aria-expanded="false">Draw</button>
+        </div>
+        <p id="hint-copy" class="note" role="status" hidden></p>
+        <div id="drawing" hidden>
+          <canvas id="pad" width="800" height="220" aria-label="Drawing area"></canvas>
+          <button id="clear" class="quiet">Clear drawing</button>
+        </div>
+        <form id="answer-form">
+          <div id="response"></div>
+          <button id="check">Check answer</button>
+        </form>
+        <p id="feedback" role="status"></p>
+        <button id="next" hidden>Next challenge →</button>
+      </article>
+    </section>
+    <section id="finish" class="card finish" hidden>
+      <div class="reward" aria-hidden="true">⭐</div>
+      <h1 tabindex="-1">Adventure complete!</h1>
+      <p id="outcome"></p><p id="earned"></p>
+      <div class="tools"><button id="map">Adventure map</button><button id="again" class="quiet">Play again</button></div>
+    </section>
+  </main>
+  <dialog id="preferences">
+    <form method="dialog">
+      <h2>Practice settings</h2>
+      <label for="length">Challenges per adventure</label>
+      <select id="length"><option value="3">3</option><option value="5">5</option><option value="7">7</option></select>
+      <p id="history"></p>
+      <p>Progress stays in this browser.</p>
+      <button>Done</button>
+    </form>
+  </dialog>
+</body>
+</html>

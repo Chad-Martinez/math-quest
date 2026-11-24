@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420">
+<path fill="#d1efd9" d="M0 0h960v420H0z"/>
+<circle cx="760" cy="78" r="43" fill="#ffe39a"/>
+<path fill="#f6fff4" d="M489 109q4-21 27-19 13-28 40-9 27-9 42 28zm306 27q8-24 31-21 17-21 41-6 25-5 35 27z"/>
+<path fill="#98cf9b" d="M0 249Q165 98 321 218T598 201Q766 101 960 211v209H0z"/>
+<path fill="#73b983" d="M0 300q163-66 320-25 200 52 340-13 147-60 300-19v177H0z"/>
+<path fill="#56a28b" d="M0 376q190-63 407-20 263 52 553-48v112H0z"/>
+<path d="M483 426q42-83 151-88t108-57q-3-28 37-57" fill="none" stroke="#f8dfa5" stroke-width="19" stroke-linecap="round"/>
+<g fill="#347966"><path d="M840 235l34-88 27 88zm50 11l27-73 33 73zm-302 61l21-60 25 60z"/><path d="M131 293l37-83 37 83z"/></g>
+<g fill="#ffe495"><circle cx="750" cy="317" r="5"/><circle cx="820" cy="277" r="5"/><circle cx="570" cy="352" r="5"/></g>
+<g transform="translate(704 164)" stroke="#245f4b" stroke-width="4" stroke-linejoin="round">
+<path d="M55 87Q20 107 2 69q18 16 39 1 11-28 42-24 14 1 22-14 10-24 35-22 20 0 23 14l24 5q17 5 14 23-4 21-41 17l-12-1q-11 46-55 40l-5 21H68l3-27q-15 2-16-15Z" fill="#85c861"/>
+<path d="M112 91q23-13 29-31 17 7 40 2-8 13-31 8-9 31-36 38l-4 21H90l4-25" fill="#f5dd93"/>
+<path d="M43 69l4-19 14 8 5-21 15 12 11-17 11 12" fill="#ffcb6b"/>
+<circle cx="144" cy="29" r="5" fill="#245f4b" stroke="none"/><circle cx="184" cy="40" r="2.5" fill="#245f4b" stroke="none"/>
+<path d="M174 53q10 6 18-1" fill="none" stroke-linecap="round"/>
+</g></svg>
