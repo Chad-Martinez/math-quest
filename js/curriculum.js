@@ -29,6 +29,15 @@ const compare = {
     b, `${a + b} − ${a} = ${b}`, ['Look for the difference between the two groups.', 'Open the math tools and pair the cars. Count the cars without a partner.'], { vocabulary: ['difference', 'more'], models: [rows('pair', ['Ben', a + b], ['Leo', a], '🚗')] }),
   fewer: (a, b) => number('fewer', `Ana has ${a} flags. Jo has ${a + b}. How many fewer flags does Ana have?`,
     b, `${a + b} − ${a} = ${b}`, ['Find the gap between the two groups.', 'Match flags in pairs. Count the extras in Jo’s group.'], { vocabulary: ['fewer'], models: [rows('pair', ['Ana', a], ['Jo', a + b], '⚑')] }),
+  fewerGiven: (a, b) => number('find-smaller', `Luz has ${a + b} ribbons. Kai has ${b} fewer ribbons than Luz. How many ribbons does Kai have?`,
+    a, `${a + b} − ${b} = ${a}`, ['Start with Luz’s ribbons. Kai has a smaller group.', `Take away ${b} from Luz’s count to show Kai’s group.`], {
+      vocabulary: ['fewer'],
+      models: [{ kind: 'remove', start: a + b, change: b, icon: '🎀' }],
+      misconceptions: {
+        ...(a !== b && { [b]: 'That is the difference. Find how many ribbons Kai has.' }),
+        [a + b]: 'That is Luz’s count. Kai has fewer ribbons.',
+      },
+    }),
   match: (a, b) => number('match', `Mia has ${a} stickers. Ava has ${a + b}. How many more stickers does Mia need to have the same number as Ava?`,
     b, `${a} + ${b} = ${a + b}`, ['Both groups need the same number.', `Count up from ${a} until you reach ${a + b}.`], { vocabulary: ['same', 'equal'], models: [rows('grow', ['Mia', a], ['Ava', a + b], '★')] }),
   exceed: (a, b) => number('exceed', `Pip has ${a} shells. Sol has ${a + b}. What is the smallest number of shells Pip needs to add to have more than Sol?`,
@@ -61,11 +70,36 @@ const steps = {
       misconceptions: { [a + b]: 'That was the total before the dinosaur ate. Count the berries that are left.' },
       vocabulary: ['left'],
     }),
+  shareThenMatch: (a, b, c) => number('remove-then-match', `Roo has ${a + b} seeds and shares ${b}. Kit has ${a + c} seeds. How many seeds should Kit share to have the same number as Roo?`,
+    c, `${a + b} − ${b} = ${a}. ${a + c} − ${a} = ${c}.`, ['Find how many seeds Roo has left.', 'Compare Kit’s seeds with Roo’s remaining seeds.'], {
+      intermediate: [{
+        prompt: 'How many seeds does Roo have left?',
+        answer: a,
+        retry: 'Start with Roo’s seeds and take away only the seeds Roo shared.',
+        suffix: ' seeds left for Roo',
+      }],
+      stageHints: [
+        ['Use only Roo’s numbers for this step.', `Take ${b} away from ${a + b}.`],
+        ['Kit needs the same number that Roo has now.', 'Pair the seeds. The extras in Kit’s row are the seeds to share.'],
+      ],
+      models: [
+        { kind: 'remove', start: a + b, change: b, icon: '🌰' },
+        rows('pair', ['Roo', a], ['Kit', a + c], '🌰'),
+      ],
+      misconceptions: { [a + c]: 'That is Kit’s starting count. Find only the extra seeds Kit should share.' },
+      vocabulary: ['left', 'same'],
+    }),
 };
 
 const equation = {
   blank: (a, b) => number('missing-addend', `${a + b} = □ + ${b}`, a,
     `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], { vocabulary: ['equal', 'addend'], models: [{ kind: 'line', start: b, target: a + b }] }),
+  missingStart: (a, b) => number('missing-start', `□ − ${b} = ${a}`, a + b,
+    `${a + b} − ${b} = ${a}`, ['The blank is the number you started with.', `Put the ${b} that were taken away back with the ${a} that are left.`], {
+      vocabulary: ['left', 'equal'],
+      models: [{ kind: 'join', parts: [a, b], icon: '●' }],
+      misconceptions: { [a]: 'That is what is left. Put back what was taken away to find the starting number.' },
+    }),
   balance: (a, b, c) => number('balance', `${a + b + c} − □ = ${a} + ${b}`, c,
     `${a + b + c} − ${c} = ${a + b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`]),
   truth: (a, b, c, random) => {
@@ -93,14 +127,22 @@ function charts(kind, random) {
   const visual = { kind, rows };
   const hints = ['Each mark stands for one vote.', kind === 'tally' ? 'A crossed group is five. Count any single marks after it.' : 'Count the pictures in the rows that the question names.'];
   const difference = high.count - low.count;
+  const grow = { kind: 'chart-grow', visual, label: low.label, target: high.label };
   return {
     count: number('count-votes', `How many votes did ${middle.label} get?`, middle.count, `${middle.label} has ${middle.count} votes.`, hints, { visual }),
-    most: number('most-votes', 'Which group got the most votes?', high.label, `${high.label} has the longest row, with ${high.count} votes.`, hints,
+    most: number('most-votes', 'Which group got the most votes?', high.label, `${high.label} has ${high.count} votes, the largest count.`, hints,
       { visual, answerType: 'choice', choices: labels }),
+    least: number('fewest-votes', 'Which group got the fewest votes?', low.label, `${low.label} has ${low.count} votes, the smallest count.`, hints,
+      { visual, answerType: 'choice', choices: labels }),
+    tie: number('tie-votes', `How many more votes does ${low.label} need to have the same number as ${high.label}?`, difference,
+      `${low.count} + ${difference} = ${high.count}`, [...hints, 'Add votes until the two groups are tied.'], {
+        visual, models: [grow],
+        misconceptions: { [difference + 1]: 'That puts the group ahead. Stop when the two groups are tied.' },
+      }),
     gap: number('compare-votes', `How many fewer votes did ${low.label} get than ${high.label}?`, difference, `${high.count} − ${low.count} = ${difference}`, hints, { visual }),
     exceed: number('exceed-votes', `What is the smallest number of votes ${low.label} needs to add to have the most votes?`, difference + 1,
       `${low.count} + ${difference + 1} = ${high.count + 1}`, [...hints, `${low.label} needs one more vote than ${high.label}.`],
-      { visual, misconceptions: { [difference]: 'That makes a tie. Add one more vote to take the lead.' } }),
+      { visual, models: [grow], misconceptions: { [difference]: 'That makes a tie. Add one more vote to take the lead.' } }),
     total: number('total-votes', 'How many votes were cast altogether?', rows.reduce((sum, row) => sum + row.count, 0),
       rows.map(row => row.count).join(' + ') + ` = ${low.count + middle.count + high.count}`, [...hints, 'Add the counts from all three rows.'], { visual }),
     statements: number('graph-statements', 'Choose two true statements about the votes.',

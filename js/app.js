@@ -1,6 +1,6 @@
-import { buildModel } from './manipulatives.js';
+import { buildChart, buildModel } from './manipulatives.js';
 import { worlds } from './curriculum.js';
-import { generateSession, Session, tallyGroups } from './engine.js';
+import { generateSession, Session } from './engine.js';
 import { readProgress, saveProgress } from './storage.js';
 
 const byId = id => document.getElementById(id);
@@ -49,29 +49,6 @@ function start(selected) {
   byId('world-name').textContent = world.name;
   show('play');
   renderQuestion();
-}
-
-function chart({ kind, rows }) {
-  const figure = element('div', '', 'chart');
-  figure.append(element('p', kind === 'picture' ? 'Each picture is one vote.' : 'Each mark is one vote.'));
-  for (const row of rows) {
-    const line = element('div', '', 'chart-row');
-    const marks = element('div', '', 'marks');
-    marks.setAttribute('role', 'img');
-    marks.setAttribute('aria-label', `${row.count} votes`);
-    if (kind === 'picture') {
-      for (let index = 0; index < row.count; index++) marks.append(element('span', row.icon));
-    } else {
-      for (const count of tallyGroups(row.count)) {
-        const group = element('span', '', count === 5 ? 'tally crossed' : 'tally');
-        for (let index = 0; index < Math.min(count, 4); index++) group.append(element('i'));
-        marks.append(group);
-      }
-    }
-    line.append(element('strong', row.label), marks);
-    figure.append(line);
-  }
-  return figure;
 }
 
 function renderResponse() {
@@ -127,8 +104,10 @@ function renderPosition() {
 
 byId('math-tools').addEventListener('click', () => {
   const panel = byId('math-model');
-  if (!panel.hasChildNodes()) panel.append(buildModel(session.current.models[step]));
+  const config = session.current.models[step];
+  if (!panel.hasChildNodes()) panel.append(buildModel(config));
   panel.hidden = !panel.hidden;
+  if (config.kind === 'chart-grow') byId('visual').hidden = !panel.hidden;
   byId('math-tools').setAttribute('aria-expanded', String(!panel.hidden));
   session.assisted = true;
 });
@@ -141,7 +120,7 @@ function renderQuestion() {
   renderMathTools();
   byId('trail-progress').value = session.index;
   byId('prompt').textContent = question.prompt;
-  byId('visual').replaceChildren(...(question.visual ? [chart(question.visual)] : []));
+  byId('visual').replaceChildren(...(question.visual ? [buildChart(question.visual)] : []));
   byId('visual').hidden = !question.visual;
   for (const id of ['hint-copy', 'drawing', 'next']) byId(id).hidden = true;
   byId('draw').setAttribute('aria-expanded', 'false');
@@ -190,7 +169,7 @@ byId('answer-form').addEventListener('submit', event => {
   }
   if (checkpoint) {
     if (Number(value) !== checkpoint.answer) {
-      feedback.textContent = 'Try putting the two groups together first.';
+      feedback.textContent = checkpoint.retry ?? 'Try putting the two groups together first.';
       return;
     }
     const keepToolsOpen = !byId('math-model').hidden;
@@ -199,7 +178,7 @@ byId('answer-form').addEventListener('submit', event => {
     byId('hint-copy').hidden = true;
     renderMathTools(keepToolsOpen);
     renderResponse();
-    feedback.textContent = `You found ${checkpoint.answer} altogether. Now solve the last question.`;
+    feedback.textContent = `You found ${checkpoint.answer}${checkpoint.suffix ?? ' altogether'}. Now solve the last question.`;
     byId('response').querySelector('input').focus();
     return;
   }

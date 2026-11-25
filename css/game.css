@@ -100,3 +100,14 @@ dialog h2 { margin-top: 0; }
 .number-line { display: flex; gap: 3px; margin-bottom: 10px; border-bottom: 2px solid var(--green); }
 .number-line span { flex: 1; text-align: center; padding-block: 4px; }
 .number-line .current { color: white; background: var(--green); font-weight: 800; border-radius: 6px 6px 0 0; }
+
+.drag-source { touch-action: none; user-select: none; cursor: grab; }
+.drag-source:active { cursor: grabbing; }
+.drag-ghost {
+  position: fixed; z-index: 5; pointer-events: none; transform: translate(-50%, -50%);
+  display: grid; place-items: center; min-width: 48px; min-height: 48px; padding: 6px;
+  color: var(--ink); background: #ffedb1; border: 2px solid var(--green); border-radius: 12px;
+}
+.track, .math-model .chart-row { min-height: 48px; }
+.remove-tray { min-height: 55px; padding: 12px; border: 2px dashed #658779; border-radius: 12px; }
+.drop-ready { outline: 2px dashed var(--green); outline-offset: -2px; background: #ffedb1; }

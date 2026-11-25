@@ -27,8 +27,8 @@ test('seeded sessions exercise every template and stay within first-grade bounds
           assert.equal(valueOf(compact(match[1])), valueOf(compact(match[2])));
         }
         if (q.intermediate.length) {
-          const [a, b] = q.equation.match(/\d+/g).map(Number);
-          assert.equal(q.intermediate[0].answer, a + b);
+          const firstExpression = q.equation.split(' = ')[0];
+          assert.equal(q.intermediate[0].answer, valueOf(compact(firstExpression)));
         }
         if (q.skill === 'exceed') {
           const [small, big] = q.prompt.match(/\d+/g).map(Number);
@@ -46,6 +46,14 @@ test('seeded sessions exercise every template and stay within first-grade bounds
           if (q.skill === 'count-votes') assert.equal(q.answer, values[1]);
           if (q.skill === 'compare-votes') assert.equal(q.answer, values[2] - values[0]);
           if (q.skill === 'exceed-votes') assert.equal(q.answer + values[0], values[2] + 1);
+          if (q.skill === 'tie-votes') assert.equal(q.answer + values[0], values[2]);
+          if (q.models[0]?.kind === 'chart-grow') {
+            const { label, target, visual } = q.models[0];
+            assert.deepEqual(visual, q.visual);
+            assert.equal(visual.rows.find(row => row.label === label).count, values[0]);
+            assert.equal(visual.rows.find(row => row.label === target).count, values[2]);
+          }
+          if (q.skill === 'fewest-votes') assert.equal(q.visual.rows.find(row => row.label === q.answer).count, values[0]);
           if (q.skill === 'total-votes') assert.equal(q.answer, values.reduce((sum, n) => sum + n, 0));
           if (q.skill === 'most-votes') assert.equal(q.visual.rows.find(row => row.label === q.answer).count, values[2]);
           if (q.skill === 'graph-statements') {
@@ -57,7 +65,7 @@ test('seeded sessions exercise every template and stay within first-grade bounds
       }
     }
   }
-  assert.equal(templates.size, 24);
+  assert.equal(templates.size, 31);
 });
 
 test('tally groups cross the fifth mark and leave remaining singles', () => {
@@ -118,9 +126,15 @@ test('multistep tools and hints follow the stage without losing assistance histo
   for (let seed = 0; seed < 50; seed++) {
     const session = new Session(generateSession('steps', seed));
     const question = session.current;
-    assert.equal(question.models[0].parts.reduce((a, b) => a + b), question.intermediate[0].answer);
-    const final = question.models[1];
-    assert.equal(final.kind === 'line' ? final.target - final.start : final.start - final.change, question.answer);
+    const [initial, final] = question.models;
+    const subtotal = initial.kind === 'join' ? initial.parts.reduce((a, b) => a + b) : initial.start - initial.change;
+    assert.equal(subtotal, question.intermediate[0].answer);
+    const modelAnswers = {
+      line: model => model.target - model.start,
+      remove: model => model.start - model.change,
+      pair: model => Math.abs(model.rows[0][1] - model.rows[1][1]),
+    };
+    assert.equal(modelAnswers[final.kind](final), question.answer);
     assert.equal(session.hint(0), question.stageHints[0][0]);
     session.hints = 0;
     assert.equal(session.hint(1), question.stageHints[1][0]);

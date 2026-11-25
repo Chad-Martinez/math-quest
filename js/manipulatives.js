@@ -1,3 +1,6 @@
+import { dragTo } from './drag.js';
+import { tallyGroups } from './engine.js';
+
 export function compareQuantities(first, second) {
   if (first === second) return 'the same number as';
   return first < second ? 'fewer than' : 'more than';
@@ -41,18 +44,22 @@ function comparison(container, config) {
   tracks.style.setProperty('--track-columns', limit);
   const status = node('p', '', 'model-status');
   status.setAttribute('role', 'status');
-  const advance = button(matching ? 'Match a pair' : `Add one to ${first}`, () => {
+  function advanceTrack() {
     if (matching) paired++;
     else added++;
     render();
-  });
+  }
+  const advance = button(matching ? 'Match a pair' : `Add one to ${first}`, advanceTrack);
+  advance.dataset.dragIcon = config.icon;
+  dragTo(advance, () => tracks.children[matching ? 1 : 0], advanceTrack,
+    () => advance.getAttribute('aria-disabled') === 'false');
   const undo = button('Undo', () => {
     if (matching) paired = Math.max(0, paired - 1);
     else added = Math.max(0, added - 1);
     render();
   });
   function track(label, count, flag) {
-    const lane = node('div', '', 'track');
+    const lane = node('div', '', 'track drop-zone');
     lane.setAttribute('role', 'group');
     lane.setAttribute('aria-label', `${label}: ${count}`);
     const line = counterRow(count, config.icon, index => {
@@ -68,12 +75,12 @@ function comparison(container, config) {
     tracks.replaceChildren(track(first, firstCount, true), track(second, other, false));
     const pairsDone = paired === Math.min(initial, other);
     status.textContent = matching
-      ? (pairsDone ? 'Every possible pair is matched. Count the objects without a partner.' : `${paired} pairs matched. ${first} has ${initial} and ${second} has ${other}.`)
+      ? (pairsDone ? 'Every possible pair is matched. Count the objects without a partner.' : `${paired} ${paired === 1 ? 'pair' : 'pairs'} matched. ${first} has ${initial} and ${second} has ${other}.`)
       : `${first} has ${compareQuantities(firstCount, other)} ${second}. Added: ${added}.`;
     advance.setAttribute('aria-disabled', String(matching ? pairsDone : firstCount === limit));
     undo.setAttribute('aria-disabled', String(paired + added === 0));
   }
-  container.append(node('p', matching ? 'Match the objects one pair at a time.' : 'Add one object at a time. Watch how the groups compare.'), tracks, status, advance, undo);
+  container.append(node('p', matching ? `Tap Match a pair or drag that button to ${second}’s row.` : `Tap Add one or drag that button to ${first}’s row.`), tracks, status, advance, undo);
   render();
 }
 
@@ -124,9 +131,11 @@ function remove(container, { start, change, icon }) {
   const status = node('p', '', 'model-status');
   status.setAttribute('role', 'status');
   const items = node('div', '', 'remove-items');
+  const tray = node('div', 'Taken-away tray', 'remove-tray drop-zone');
   const removed = new Set();
   function update() {
     status.textContent = `${removed.size} taken away. Take away ${change}, then count what is left.`;
+    tray.textContent = `Taken-away tray · ${removed.size}`;
     for (const [index, control] of [...items.children].entries()) {
       control.setAttribute('aria-pressed', String(removed.has(index)));
     }
@@ -138,9 +147,13 @@ function remove(container, { start, change, icon }) {
       update();
     });
     control.setAttribute('aria-label', `Object ${index + 1}, taken away`);
+    dragTo(control, () => tray, () => {
+      removed.add(index);
+      update();
+    }, () => !removed.has(index));
     items.append(control);
   }
-  container.append(status, items);
+  container.append(node('p', 'Tap an object or drag it to the tray. Tap a crossed-out object to put it back.'), status, items, tray);
   update();
 }
 
@@ -168,7 +181,64 @@ function numberLine(container, { start, target }) {
   update();
 }
 
-const renderers = { pair: comparison, grow: comparison, join, remove, line: numberLine };
+export function buildChart({ kind, rows }) {
+  const figure = node('div', '', 'chart');
+  figure.append(node('p', kind === 'picture' ? 'Each picture is one vote.' : 'Each mark is one vote.'));
+  for (const row of rows) {
+    const line = node('div', '', 'chart-row');
+    line.dataset.label = row.label;
+    const marks = node('div', '', 'marks');
+    marks.setAttribute('role', 'img');
+    marks.setAttribute('aria-label', `${row.count} votes`);
+    if (kind === 'picture') {
+      for (let index = 0; index < row.count; index++) marks.append(node('span', row.icon));
+    } else {
+      for (const count of tallyGroups(row.count)) {
+        const group = node('span', '', count === 5 ? 'tally crossed' : 'tally');
+        for (let index = 0; index < Math.min(count, 4); index++) group.append(node('i'));
+        marks.append(group);
+      }
+    }
+    line.append(node('strong', row.label), marks);
+    figure.append(line);
+  }
+  return figure;
+}
+
+function growChart(container, { visual, label, target }) {
+  const [source, goal] = [label, target].map(name => visual.rows.find(row => row.label === name));
+  const maximum = goal.count + 1;
+  let count = source.count;
+  const plot = node('div');
+  const status = node('p', '', 'model-status');
+  status.setAttribute('role', 'status');
+  function addVote() {
+    count++;
+    update();
+  }
+  const add = button(`Add a vote for ${label}`, addVote);
+  add.dataset.dragIcon = source.icon || '|';
+  dragTo(add, () => [...plot.querySelectorAll('.chart-row')].find(row => row.dataset.label === label),
+    addVote, () => count < maximum);
+  const undo = button('Undo', () => {
+    count--;
+    update();
+  });
+  function update() {
+    const rows = visual.rows.map(row => row === source ? { ...row, count } : row);
+    plot.replaceChildren(buildChart({ ...visual, rows }));
+    const relationship = count === goal.count
+      ? `${label} and ${target} are tied.`
+      : `${label} has ${count > goal.count ? 'more' : 'fewer'} votes than ${target}.`;
+    status.textContent = `${relationship} Added: ${count - source.count}.`;
+    add.setAttribute('aria-disabled', String(count === maximum));
+    undo.setAttribute('aria-disabled', String(count === source.count));
+  }
+  container.append(node('p', `Tap Add a vote or drag that button to the ${label} row.`), plot, status, add, undo);
+  update();
+}
+
+const renderers = { pair: comparison, grow: comparison, join, remove, line: numberLine, 'chart-grow': growChart };
 
 export function buildModel(config) {
   const container = node('section', '', 'math-model');
