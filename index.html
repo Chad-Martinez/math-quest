@@ -32,9 +32,11 @@
         <div class="tools">
           <button class="quiet" id="read">Read aloud</button>
           <button class="quiet" id="hint">Hint</button>
+          <button class="quiet" id="math-tools" aria-expanded="false" aria-controls="math-model" hidden>Math tools</button>
           <button class="quiet" id="draw" aria-expanded="false">Draw</button>
         </div>
         <p id="hint-copy" class="note" role="status" hidden></p>
+        <div id="math-model" hidden></div>
         <div id="drawing" hidden>
           <canvas id="pad" width="800" height="220" aria-label="Drawing area"></canvas>
           <button id="clear" class="quiet">Clear drawing</button>

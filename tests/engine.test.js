@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { worlds } from '../js/curriculum.js';
 import { generateSession, Session, tallyGroups, validateAnswer } from '../js/engine.js';
+import { compareQuantities, frameSlots } from '../js/manipulatives.js';
 import { readProgress, saveProgress } from '../js/storage.js';
 
 const valueOf = expression => expression.match(/^[+-]?\d+|[+-]\d+/g).reduce((sum, item) => sum + Number(item), 0);
@@ -87,14 +88,44 @@ test('sessions support retries, hints, worked examples, and one reward per solve
   for (const hint of session.current.hints) assert.equal(session.hint(), hint);
   assert.match(session.hint(), /^Worked example/);
   assert.equal(session.stars, 1);
+  const worked = session.current;
   session.next();
+  assert.equal(session.current.practice, true);
+  assert.equal(session.current.templateId, worked.templateId);
+  assert.notEqual(session.current.answer, worked.answer);
+  assert.notEqual(session.current.prompt, worked.prompt);
   assert.equal(session.hints, 0);
   while (session.status !== 'complete') {
     session.answer(String(session.current.answer));
     session.next();
   }
-  assert.equal(session.stars, 4);
+  assert.equal(session.stars, 5);
   assert.equal(session.next(), false);
+});
+
+test('comparison and ten-frame models represent changes across equality and ten', () => {
+  assert.equal(compareQuantities(8, 9), 'fewer than');
+  assert.equal(compareQuantities(9, 9), 'the same number as');
+  assert.equal(compareQuantities(10, 9), 'more than');
+  for (let count = 0; count <= 20; count++) {
+    const slots = frameSlots(count);
+    assert.equal(slots.length, count > 10 ? 20 : 10);
+    assert.deepEqual(slots, slots.map((slot, index) => index < count));
+  }
+});
+
+test('multistep tools and hints follow the stage without losing assistance history', () => {
+  for (let seed = 0; seed < 50; seed++) {
+    const session = new Session(generateSession('steps', seed));
+    const question = session.current;
+    assert.equal(question.models[0].parts.reduce((a, b) => a + b), question.intermediate[0].answer);
+    const final = question.models[1];
+    assert.equal(final.kind === 'line' ? final.target - final.start : final.start - final.change, question.answer);
+    assert.equal(session.hint(0), question.stageHints[0][0]);
+    session.hints = 0;
+    assert.equal(session.hint(1), question.stageHints[1][0]);
+    assert.deepEqual(session.answer(String(question.answer)), { correct: true, assisted: true });
+  }
 });
 
 test('storage migrates prototype stars, validates stored values and tolerates errors', () => {

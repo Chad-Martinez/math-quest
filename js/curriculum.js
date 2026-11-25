@@ -11,37 +11,61 @@ export const worlds = [
 const number = (skill, prompt, answer, equation, hints, extras = {}) =>
   ({ skill, prompt, answer, equation, hints, answerType: 'number', ...extras });
 
+const rows = (kind, first, second, icon) => ({ kind, rows: [first, second], icon });
+
 const story = {
   join: (a, b) => number('join', `Mia finds ${a} acorns. She finds ${b} more. How many acorns does she have altogether?`,
-    a + b, `${a} + ${b} = ${a + b}`, ['Find both groups of acorns.', 'Draw both groups and count them together.'], { vocabulary: ['altogether'] }),
+    a + b, `${a} + ${b} = ${a + b}`, ['Find both groups of acorns.', 'Draw both groups and count them together.'], { vocabulary: ['altogether'], models: [{ kind: 'join', parts: [a, b], icon: '🌰' }], misconceptions: { [a]: 'That is the first group. Count the acorns from both groups.' } }),
   separate: (a, b) => number('separate', `Sam has ${a + b} apples. He gives away ${b}. How many apples are left?`,
-    a, `${a + b} − ${b} = ${a}`, ['Find how many apples Sam starts with.', `Draw ${a + b} apples and cross out ${b}.`], { vocabulary: ['left'] }),
+    a, `${a + b} − ${b} = ${a}`, ['Find how many apples Sam starts with.', `Draw ${a + b} apples and cross out ${b}.`], {
+      vocabulary: ['left'],
+      models: [{ kind: 'remove', start: a + b, change: b, icon: '🍎' }],
+      misconceptions: { ...(a !== b && { [b]: 'That is how many Sam gave away. Count the apples still there.' }) },
+    }),
 };
 
 const compare = {
   difference: (a, b) => number('difference', `Ben has ${a + b} toy cars. Leo has ${a}. How many more cars does Ben have?`,
-    b, `${a + b} − ${a} = ${b}`, ['Look for the difference between the two groups.', 'Draw two rows and match the cars. Count the cars without a partner.'], { vocabulary: ['difference', 'more'] }),
+    b, `${a + b} − ${a} = ${b}`, ['Look for the difference between the two groups.', 'Open the math tools and pair the cars. Count the cars without a partner.'], { vocabulary: ['difference', 'more'], models: [rows('pair', ['Ben', a + b], ['Leo', a], '🚗')] }),
   fewer: (a, b) => number('fewer', `Ana has ${a} flags. Jo has ${a + b}. How many fewer flags does Ana have?`,
-    b, `${a + b} − ${a} = ${b}`, ['Find the gap between the two groups.', 'Match flags in pairs. Count the extras in Jo’s group.'], { vocabulary: ['fewer'] }),
+    b, `${a + b} − ${a} = ${b}`, ['Find the gap between the two groups.', 'Match flags in pairs. Count the extras in Jo’s group.'], { vocabulary: ['fewer'], models: [rows('pair', ['Ana', a], ['Jo', a + b], '⚑')] }),
   match: (a, b) => number('match', `Mia has ${a} stickers. Ava has ${a + b}. How many more stickers does Mia need to have the same number as Ava?`,
-    b, `${a} + ${b} = ${a + b}`, ['Both groups need the same number.', `Count up from ${a} until you reach ${a + b}.`], { vocabulary: ['same', 'equal'] }),
+    b, `${a} + ${b} = ${a + b}`, ['Both groups need the same number.', `Count up from ${a} until you reach ${a + b}.`], { vocabulary: ['same', 'equal'], models: [rows('grow', ['Mia', a], ['Ava', a + b], '★')] }),
   exceed: (a, b) => number('exceed', `Pip has ${a} shells. Sol has ${a + b}. What is the smallest number of shells Pip needs to add to have more than Sol?`,
     b + 1, `${a} + ${b + 1} = ${a + b + 1}`, ['Pip needs just one more shell than Sol.', `Count from ${a} to ${a + b} to tie. Then count one more.`],
-    { vocabulary: ['more', 'equal'], misconceptions: { [b]: `Adding ${b} makes the groups equal. Add one more to get ahead.` } }),
+    { vocabulary: ['more', 'equal'], models: [rows('grow', ['Pip', a], ['Sol', a + b], '🐚')], misconceptions: { [b]: `Adding ${b} makes the groups equal. Add one more to get ahead.` } }),
 };
 
 const steps = {
   reach: (a, b, c) => number('reach-target', `The bridge needs ${a + b + c} gems. You have ${a} green gems and ${b} blue gems. How many more gems do you need?`,
     c, `${a} + ${b} = ${a + b}. ${a + b + c} − ${a + b} = ${c}.`, ['First find how many gems you have altogether.', 'Count up from your total to the number the bridge needs.'],
-    { intermediate: [{ prompt: 'How many gems do you have now?', answer: a + b }], vocabulary: ['altogether'] }),
+    {
+      intermediate: [{ prompt: 'How many gems do you have now?', answer: a + b }],
+      stageHints: [
+        ['Find the green gems and the blue gems.', 'Put both groups together and count them.'],
+        ['Compare your total with the bridge target.', 'Count the jumps from your total to the target.'],
+      ],
+      models: [{ kind: 'join', parts: [a, b], icon: '◆' }, { kind: 'line', start: a + b, target: a + b + c }],
+      misconceptions: { ...(a + b !== c && { [a + b]: 'That is your starting total. Count how many more gems will reach the target.' }) },
+      vocabulary: ['altogether'],
+    }),
   remaining: (a, b, c) => number('combine-remove', `A dinosaur finds ${a} red berries and ${b} blue berries. It eats ${c} berries. How many are left?`,
     a + b - c, `${a} + ${b} = ${a + b}. ${a + b} − ${c} = ${a + b - c}.`, ['Combine the red berries and the blue berries first.', `Cross out ${c} berries from the combined group.`],
-    { intermediate: [{ prompt: 'How many berries did the dinosaur find?', answer: a + b }], vocabulary: ['left'] }),
+    {
+      intermediate: [{ prompt: 'How many berries did the dinosaur find?', answer: a + b }],
+      stageHints: [
+        ['Find the two groups of berries.', 'Put both groups together and count them.'],
+        ['Start with all the berries the dinosaur found.', 'Remove the berries it ate and count what remains.'],
+      ],
+      models: [{ kind: 'join', parts: [a, b], icon: '●' }, { kind: 'remove', start: a + b, change: c, icon: '●' }],
+      misconceptions: { [a + b]: 'That was the total before the dinosaur ate. Count the berries that are left.' },
+      vocabulary: ['left'],
+    }),
 };
 
 const equation = {
   blank: (a, b) => number('missing-addend', `${a + b} = □ + ${b}`, a,
-    `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], { vocabulary: ['equal', 'addend'] }),
+    `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], { vocabulary: ['equal', 'addend'], models: [{ kind: 'line', start: b, target: a + b }] }),
   balance: (a, b, c) => number('balance', `${a + b + c} − □ = ${a} + ${b}`, c,
     `${a + b + c} − ${c} = ${a + b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`]),
   truth: (a, b, c, random) => {

@@ -5,6 +5,7 @@ The repository root is the deployable site. Static HTML, CSS, and JavaScript mod
 - `js/curriculum.js` contains the world catalog and relationship-driven question templates.
 - `js/engine.js` rotates template variations, prevents duplicate prompts with identical visuals, validates responses, and handles session transitions.
 - `js/app.js` handles rendering, support tools, intermediate prompts, and navigation.
+- `js/manipulatives.js` renders optional, stage-specific models from curriculum data. Counter positions and model interactions live in memory for the active step.
 - `js/storage.js` loads and writes the versioned local progress record. It can migrate prototype stars when the legacy key exists on the same origin.
 - `assets/trail.svg` is original local artwork. No external assets are fetched by the game.
 

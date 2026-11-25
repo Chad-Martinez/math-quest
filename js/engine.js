@@ -8,6 +8,14 @@ export function seededRandom(seed) {
   };
 }
 
+function questionRecord(id, theme, category, key, content) {
+  return {
+    id, templateId: `${category}/${key}`, category, theme, difficulty: 1,
+    intermediate: [], vocabulary: [], visual: null, models: [], misconceptions: {},
+    ...content, explanation: content.equation,
+  };
+}
+
 export function generateSession(world, seed, length = 5) {
   if (!worlds.some(item => item.id === world)) throw new RangeError('Unknown adventure');
   if (!Number.isInteger(length) || length < 1 || length > 7) throw new RangeError('Choose 1 to 7 challenges');
@@ -32,12 +40,7 @@ export function generateSession(world, seed, length = 5) {
     if (seen.has(signature)) continue;
     seen.add(signature);
     rotation.get(category).shift();
-    questions.push({
-      id: `${world}-${seed}-${questions.length}`, templateId: `${category}/${key}`, category,
-      theme: world, difficulty: 1, intermediate: [], vocabulary: [], visual: null,
-      manipulative: null, misconceptions: {}, ...content,
-      explanation: content.equation,
-    });
+    questions.push(questionRecord(`${world}-${seed}-${questions.length}`, world, category, key, content));
   }
   return questions;
 }
@@ -59,7 +62,8 @@ export function tallyGroups(count) {
 
 export class Session {
   constructor(questions) {
-    this.questions = questions;
+    this.questions = [...questions];
+    this.extraPractice = false;
     this.index = 0;
     this.stars = 0;
     this.prepare();
@@ -67,16 +71,38 @@ export class Session {
 
   prepare() {
     this.hints = 0;
+    this.assisted = false;
     this.status = 'solving';
   }
 
   get current() { return this.questions[this.index]; }
 
-  hint() {
+  hint(step = 0) {
     if (this.status !== 'solving') return '';
-    if (this.hints < this.current.hints.length) return this.current.hints[this.hints++];
+    this.assisted = true;
+    const hints = this.current.stageHints?.[step] ?? this.current.hints;
+    if (this.hints < hints.length) return hints[this.hints++];
+    this.addPractice();
     this.status = 'guided';
     return `Worked example. ${this.current.explanation}`;
+  }
+
+  addPractice() {
+    if (this.extraPractice) return;
+    const question = this.current;
+    const key = question.templateId.split('/')[1];
+    const seed = [...question.id].reduce((hash, char) => Math.imul(hash, 31) + char.charCodeAt(0), 0);
+    const random = seededRandom(seed);
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const content = questionsFor(question.category, random)[key];
+      const repeats = this.questions.some(item => item.prompt === content.prompt &&
+        JSON.stringify(item.visual) === JSON.stringify(content.visual ?? null));
+      if (repeats || JSON.stringify(content.answer) === JSON.stringify(question.answer)) continue;
+      const practice = questionRecord(`${question.id}-practice`, question.theme, question.category, key, content);
+      this.questions.splice(this.index + 1, 0, { ...practice, practice: true });
+      this.extraPractice = true;
+      return;
+    }
   }
 
   answer(value) {
@@ -84,7 +110,7 @@ export class Session {
     if (!validateAnswer(this.current, value)) return { correct: false };
     this.status = 'solved';
     this.stars++;
-    return { correct: true, assisted: this.hints > 0 };
+    return { correct: true, assisted: this.assisted };
   }
 
   next() {

@@ -1,3 +1,4 @@
+import { buildModel } from './manipulatives.js';
 import { worlds } from './curriculum.js';
 import { generateSession, Session, tallyGroups } from './engine.js';
 import { readProgress, saveProgress } from './storage.js';
@@ -108,12 +109,36 @@ function clearDrawing() {
   ink.clearRect(0, 0, pad.width, pad.height);
 }
 
+function renderMathTools(open = false) {
+  const config = session.current.models?.[step];
+  const control = byId('math-tools');
+  const panel = byId('math-model');
+  control.hidden = !config;
+  panel.hidden = !config || !open;
+  panel.replaceChildren(...(config && open ? [buildModel(config)] : []));
+  control.setAttribute('aria-expanded', String(!panel.hidden));
+}
+
+function renderPosition() {
+  const prefix = session.current.practice ? 'Extra practice · ' : '';
+  byId('position').textContent = `${prefix}${session.index + 1} of ${session.questions.length}`;
+  byId('trail-progress').max = session.questions.length;
+}
+
+byId('math-tools').addEventListener('click', () => {
+  const panel = byId('math-model');
+  if (!panel.hasChildNodes()) panel.append(buildModel(session.current.models[step]));
+  panel.hidden = !panel.hidden;
+  byId('math-tools').setAttribute('aria-expanded', String(!panel.hidden));
+  session.assisted = true;
+});
+
 function renderQuestion() {
   step = 0;
   stopReading();
   const question = session.current;
-  byId('position').textContent = `${session.index + 1} of ${session.questions.length}`;
-  byId('trail-progress').max = session.questions.length;
+  renderPosition();
+  renderMathTools();
   byId('trail-progress').value = session.index;
   byId('prompt').textContent = question.prompt;
   byId('visual').replaceChildren(...(question.visual ? [chart(question.visual)] : []));
@@ -159,7 +184,7 @@ byId('answer-form').addEventListener('submit', event => {
     feedback.textContent = 'Choose two statements before you check.';
     return;
   }
-  if (!value || ((checkpoint || question.answerType === 'number') && !/^\d{1,2}$/.test(value))) {
+  if (!value || ((checkpoint || question.answerType === 'number') && (!/^\d{1,2}$/.test(value) || Number(value) > 20))) {
     feedback.textContent = checkpoint || question.answerType === 'number' ? 'Enter a number from 0 to 20.' : 'Choose an answer first.';
     return;
   }
@@ -168,7 +193,11 @@ byId('answer-form').addEventListener('submit', event => {
       feedback.textContent = 'Try putting the two groups together first.';
       return;
     }
+    const keepToolsOpen = !byId('math-model').hidden;
     step++;
+    session.hints = 0;
+    byId('hint-copy').hidden = true;
+    renderMathTools(keepToolsOpen);
     renderResponse();
     feedback.textContent = `You found ${checkpoint.answer} altogether. Now solve the last question.`;
     byId('response').querySelector('input').focus();
@@ -187,8 +216,14 @@ byId('answer-form').addEventListener('submit', event => {
 
 byId('hint').addEventListener('click', () => {
   byId('hint-copy').hidden = false;
-  byId('hint-copy').textContent = session.hint();
-  if (session.status === 'guided') readyToAdvance();
+  byId('hint-copy').textContent = session.hint(step);
+  if (session.status === 'guided') {
+    renderPosition();
+    if (session.questions[session.index + 1]?.practice) {
+      byId('hint-copy').textContent += ' Try a similar challenge next.';
+    }
+    readyToAdvance();
+  }
 });
 
 byId('next').addEventListener('click', () => {
