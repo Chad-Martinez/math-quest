@@ -111,3 +111,8 @@ dialog h2 { margin-top: 0; }
 .track, .math-model .chart-row { min-height: 48px; }
 .remove-tray { min-height: 55px; padding: 12px; border: 2px dashed #658779; border-radius: 12px; }
 .drop-ready { outline: 2px dashed var(--green); outline-offset: -2px; background: #ffedb1; }
+
+.reset-options { margin: 16px 0; border-top: 1px solid var(--line); padding-top: 8px; }
+.reset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.reset-row select { max-width: 100%; }
+.danger { background: #9b372d; }

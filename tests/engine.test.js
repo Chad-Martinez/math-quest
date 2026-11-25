@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { worlds } from '../js/curriculum.js';
 import { generateSession, Session, tallyGroups, validateAnswer } from '../js/engine.js';
 import { compareQuantities, frameSlots } from '../js/manipulatives.js';
-import { readProgress, saveProgress } from '../js/storage.js';
+import { addProgress, progressTotals, readProgress, resetProgress, saveProgress } from '../js/storage.js';
 
 const valueOf = expression => expression.match(/^[+-]?\d+|[+-]\d+/g).reduce((sum, item) => sum + Number(item), 0);
 const compact = expression => expression.replaceAll(' ', '').replaceAll('−', '-');
@@ -142,18 +142,41 @@ test('multistep tools and hints follow the stage without losing assistance histo
   }
 });
 
-test('storage migrates prototype stars, validates stored values and tolerates errors', () => {
+test('storage migrates old totals, validates saved counts, and tolerates errors', () => {
   const map = new Map([['mathquestStars', '6']]);
   const storage = { getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, value) };
-  assert.deepEqual(readProgress(storage), { version: 1, stars: 6, adventures: 0, length: 5 });
-  const progress = { version: 1, stars: 12, adventures: 2, length: 7 };
+  assert.deepEqual(readProgress(storage), { version: 2, length: 5, legacy: { stars: 6, adventures: 0 }, byAdventure: {} });
+  map.set('math-quest.progress', '{"version":1,"stars":12,"adventures":2,"length":7}');
+  const migrated = readProgress(storage);
+  assert.deepEqual(migrated, { version: 2, length: 7, legacy: { stars: 12, adventures: 2 }, byAdventure: {} });
+  const progress = addProgress(migrated, 'story', 'stars');
   assert.equal(saveProgress(storage, progress), true);
   assert.deepEqual(readProgress(storage), progress);
   map.set('math-quest.progress', '{');
-  assert.equal(readProgress(storage).stars, 0);
-  map.set('math-quest.progress', '{"version":1,"stars":-2,"length":100}');
+  assert.equal(progressTotals(readProgress(storage)).stars, 0);
+  map.set('math-quest.progress', '{"version":2,"legacy":{"stars":-2},"length":100,"byAdventure":{"story":{"stars":3},"unknown":{"stars":12}}}');
   assert.equal(readProgress(storage).length, 5);
-  assert.equal(readProgress(storage).stars, 0);
+  assert.deepEqual(progressTotals(readProgress(storage)), { stars: 3, adventures: 0 });
   assert.equal(readProgress().length, 5);
   assert.equal(saveProgress(undefined, progress), false);
+});
+
+test('adventure reset preserves other adventures and old totals, while whole reset clears all', () => {
+  const progress = { version: 2, length: 3, legacy: { stars: 6, adventures: 1 }, byAdventure: {
+    story: { stars: 3, adventures: 1 },
+    mixed: { stars: 2, adventures: 1 },
+  } };
+  const racing = addProgress(progress, 'compare', 'stars');
+  const single = resetProgress(racing, 'story');
+  assert.deepEqual(progressTotals(racing), { stars: 12, adventures: 3 });
+  assert.deepEqual(progressTotals(single), { stars: 9, adventures: 2 });
+  assert.equal(single.length, 3);
+  assert.deepEqual(single.byAdventure, {
+    mixed: { stars: 2, adventures: 1 },
+    compare: { stars: 1, adventures: 0 },
+  });
+  const all = resetProgress(single, 'all');
+  assert.deepEqual(progressTotals(all), { stars: 0, adventures: 0 });
+  assert.deepEqual(all.byAdventure, {});
+  assert.equal(all.length, 5);
 });

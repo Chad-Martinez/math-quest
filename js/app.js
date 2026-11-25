@@ -1,7 +1,7 @@
 import { buildChart, buildModel } from './manipulatives.js';
 import { worlds } from './curriculum.js';
 import { generateSession, Session } from './engine.js';
-import { readProgress, saveProgress } from './storage.js';
+import { addProgress, progressTotals, readProgress, resetProgress, saveProgress } from './storage.js';
 
 const byId = id => document.getElementById(id);
 function element(tag, text, className) {
@@ -13,7 +13,8 @@ function element(tag, text, className) {
 
 let storage;
 try { storage = window.localStorage; } catch { /* Browser storage can be disabled. */ }
-const progress = readProgress(storage);
+let progress = readProgress(storage);
+let unsavedProgress = false;
 const speech = window.speechSynthesis;
 const pad = byId('pad');
 const ink = pad.getContext('2d');
@@ -23,10 +24,26 @@ let step;
 let utterance;
 let pointer;
 
-function persist() {
-  byId('stars').textContent = `★ ${progress.stars}`;
-  byId('stars').setAttribute('aria-label', `${progress.stars} stars`);
-  saveProgress(storage, progress);
+function updateProgressDisplay() {
+  const totals = progressTotals(progress);
+  byId('stars').textContent = `★ ${totals.stars}`;
+  byId('stars').setAttribute('aria-label', `${totals.stars} stars`);
+  byId('length').value = progress.length;
+  byId('history').textContent = `Adventures completed: ${totals.adventures}`;
+  const legacy = byId('legacy-progress');
+  legacy.hidden = !progress.legacy.stars && !progress.legacy.adventures;
+  legacy.textContent = 'Earlier stars and completions were saved together. A whole-game reset clears them.';
+}
+
+function latestProgress() {
+  return unsavedProgress ? progress : readProgress(storage);
+}
+
+function persist(next) {
+  progress = next;
+  unsavedProgress = !saveProgress(storage, progress);
+  updateProgressDisplay();
+  return !unsavedProgress;
 }
 
 function stopReading() {
@@ -187,8 +204,7 @@ byId('answer-form').addEventListener('submit', event => {
     feedback.textContent = question.misconceptions[Number(value)] ?? 'Good try. Look at what the question asks, or tap Hint.';
     return;
   }
-  progress.stars++;
-  persist();
+  persist(addProgress(latestProgress(), world.id, 'stars'));
   feedback.textContent = `You earned a star! ${question.explanation}`;
   readyToAdvance();
 });
@@ -212,8 +228,7 @@ byId('next').addEventListener('click', () => {
     byId('play').scrollIntoView({ block: 'start' });
     return;
   }
-  progress.adventures++;
-  persist();
+  persist(addProgress(latestProgress(), world.id, 'adventures'));
   byId('outcome').textContent = `Quest complete. You helped ${world.goal.charAt(0).toLowerCase() + world.goal.slice(1)}!`;
   byId('earned').textContent = `You earned ${session.stars} ${session.stars === 1 ? 'star' : 'stars'} on this adventure.`;
   show('finish');
@@ -278,14 +293,68 @@ byId('draw').addEventListener('click', () => {
 });
 for (const id of ['back', 'map']) byId(id).addEventListener('click', () => show('home'));
 byId('again').addEventListener('click', () => start(world));
+const preferences = byId('preferences');
+const scope = byId('reset-scope');
+for (const adventure of worlds) {
+  const option = element('option', adventure.name);
+  option.value = adventure.id;
+  scope.append(option);
+}
+
+function reviewReset(reviewing) {
+  byId('settings-panel').hidden = reviewing;
+  byId('reset-confirmation').hidden = !reviewing;
+  (reviewing ? byId('cancel-reset') : byId('request-reset')).focus();
+}
+
 byId('settings').addEventListener('click', () => {
-  byId('length').value = progress.length;
-  byId('history').textContent = `Adventures completed: ${progress.adventures}`;
-  byId('preferences').showModal();
+  progress = latestProgress();
+  updateProgressDisplay();
+  scope.value = 'all';
+  byId('reset-status').hidden = true;
+  byId('reset-confirmation').hidden = true;
+  byId('settings-panel').hidden = false;
+  preferences.showModal();
 });
 byId('length').addEventListener('change', event => {
-  progress.length = Number(event.target.value);
-  persist();
+  persist({ ...latestProgress(), length: Number(event.target.value) });
 });
 
-persist();
+byId('request-reset').addEventListener('click', () => {
+  const adventure = worlds.find(item => item.id === scope.value);
+  byId('reset-title').textContent = adventure ? `Reset ${adventure.name}?` : 'Reset the whole game?';
+  byId('reset-impact').textContent = adventure
+    ? `This clears stars and completions earned in ${adventure.name} since adventure tracking began.`
+    : 'This clears every star and completion in this browser and restores the default practice settings.';
+  reviewReset(true);
+});
+byId('cancel-reset').addEventListener('click', () => reviewReset(false));
+preferences.addEventListener('cancel', event => {
+  if (byId('reset-confirmation').hidden) return;
+  event.preventDefault();
+  reviewReset(false);
+});
+byId('confirm-reset').addEventListener('click', () => {
+  const selected = scope.value;
+  const adventure = worlds.find(item => item.id === selected);
+  if (!adventure && selected !== 'all') return;
+  const saved = persist(resetProgress(latestProgress(), selected));
+  if (selected === 'all' || world?.id === selected) {
+    world = undefined;
+    session = undefined;
+    show('home');
+  }
+  const status = byId('reset-status');
+  status.hidden = false;
+  status.textContent = saved
+    ? (adventure ? `${adventure.name} progress reset.` : 'Game reset.')
+    : 'Progress was reset for this tab. This browser could not save the reset.';
+  reviewReset(false);
+});
+window.addEventListener('storage', () => {
+  if (unsavedProgress) return;
+  progress = readProgress(storage);
+  updateProgressDisplay();
+});
+
+updateProgressDisplay();

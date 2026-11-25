@@ -56,15 +56,34 @@
       <div class="tools"><button id="map">Adventure map</button><button id="again" class="quiet">Play again</button></div>
     </section>
   </main>
-  <dialog id="preferences">
-    <form method="dialog">
-      <h2>Practice settings</h2>
+  <dialog id="preferences" aria-labelledby="preferences-title">
+    <h2 id="preferences-title">Practice settings</h2>
+    <div id="settings-panel">
       <label for="length">Challenges per adventure</label>
       <select id="length"><option value="3">3</option><option value="5">5</option><option value="7">7</option></select>
       <p id="history"></p>
+      <p id="legacy-progress" hidden></p>
       <p>Progress stays in this browser.</p>
-      <button>Done</button>
-    </form>
+      <fieldset class="reset-options">
+        <legend>Reset progress</legend>
+        <label for="reset-scope">What to reset</label>
+        <div class="reset-row">
+          <select id="reset-scope"><option value="all">Whole game</option></select>
+          <button class="quiet" id="request-reset">Review reset</button>
+        </div>
+      </fieldset>
+      <p id="reset-status" role="status" hidden></p>
+      <form method="dialog"><button id="settings-done">Done</button></form>
+    </div>
+    <section id="reset-confirmation" hidden>
+      <h3 id="reset-title"></h3>
+      <p id="reset-impact"></p>
+      <p>This cannot be undone.</p>
+      <div class="tools">
+        <button class="quiet" id="cancel-reset">Cancel</button>
+        <button class="danger" id="confirm-reset">Reset</button>
+      </div>
+    </section>
   </dialog>
 </body>
 </html>

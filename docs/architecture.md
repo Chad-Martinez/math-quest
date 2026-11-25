@@ -10,4 +10,4 @@ The repository root is the deployable site. Static HTML, CSS, and JavaScript mod
 - `js/storage.js` loads and writes the versioned local progress record. It can migrate prototype stars when the legacy key exists on the same origin.
 - `assets/trail.svg` is original local artwork. No external assets are fetched by the game.
 
-Question records include category, subskill, template identity, difficulty, answer format, hints, explanation, and optional visuals and intermediate steps. Each session uses an explicit seed. Local progress aggregates rewards and completed adventures. Per-question evidence and adaptive rules belong in a future phase.
+Question records include category, subskill, template identity, difficulty, answer format, hints, explanation, and optional visuals and intermediate steps. Each session uses an explicit seed. Local progress stores rewards and completed runs by the world selected at the start, including mixed challenges under Treasure Island. The version 2 schema carries forward unattributed totals from earlier versions. Per-question evidence and adaptive rules belong in a future phase.
