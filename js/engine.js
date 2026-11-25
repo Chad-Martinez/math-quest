@@ -71,43 +71,85 @@ export class Session {
 
   prepare() {
     this.hints = 0;
-    this.assisted = false;
+    this.attempts = 0;
+    this.firstAttemptCorrect = null;
+    this.support = { hintLevels: [], parentHelp: false, revealedBeforeSolve: false,
+      reviewedAfterOutcome: false, mathTools: false, drawing: false, narration: false };
     this.status = 'solving';
   }
 
   get current() { return this.questions[this.index]; }
 
+  markSupport(kind) {
+    if (kind === 'reveal') {
+      if (this.status === 'solving') this.support.revealedBeforeSolve = true;
+      if (['guided', 'solved'].includes(this.status)) this.support.reviewedAfterOutcome = true;
+    } else if (this.status === 'solving') {
+      this.support[kind] = true;
+    }
+  }
+
+  get assisted() {
+    const { parentHelp, revealedBeforeSolve, hintLevels } = this.support;
+    return parentHelp || revealedBeforeSolve || hintLevels.some(Boolean);
+  }
+
+  evidence() {
+    if (!['solved', 'guided'].includes(this.status)) return null;
+    const { id, templateId, skill, theme, practice } = this.current;
+    return {
+      id, templateId, skill, world: theme, source: practice ? 'transfer' : 'session',
+      outcome: this.status === 'guided' ? 'worked-example' : this.assisted ? 'assisted-correct' : 'independent-correct',
+      attempts: this.attempts, firstAttemptCorrect: this.firstAttemptCorrect,
+      ...this.support, hintLevels: Array.from(this.support.hintLevels, level => level ?? 0),
+    };
+  }
+
   hint(step = 0) {
     if (this.status !== 'solving') return '';
-    this.assisted = true;
     const hints = this.current.stageHints?.[step] ?? this.current.hints;
+    this.support.hintLevels[step] = this.hints + 1;
     if (this.hints < hints.length) return hints[this.hints++];
+    this.markSupport('reveal');
     this.addPractice();
     this.status = 'guided';
     return `Worked example. ${this.current.explanation}`;
   }
 
   addPractice() {
-    if (this.extraPractice) return;
+    if (this.extraPractice) return 'limit';
+    if (!this.current) return 'unavailable';
     const question = this.current;
     const key = question.templateId.split('/')[1];
     const seed = [...question.id].reduce((hash, char) => Math.imul(hash, 31) + char.charCodeAt(0), 0);
     const random = seededRandom(seed);
+    const signature = item => JSON.stringify([item.prompt, item.visual ?? null]);
+    const used = new Set(this.questions.map(signature));
+    let fallback;
     for (let attempt = 0; attempt < 100; attempt++) {
       const content = questionsFor(question.category, random)[key];
-      const repeats = this.questions.some(item => item.prompt === content.prompt &&
-        JSON.stringify(item.visual) === JSON.stringify(content.visual ?? null));
-      if (repeats || JSON.stringify(content.answer) === JSON.stringify(question.answer)) continue;
-      const practice = questionRecord(`${question.id}-practice`, question.theme, question.category, key, content);
-      this.questions.splice(this.index + 1, 0, { ...practice, practice: true });
-      this.extraPractice = true;
-      return;
+      if (used.has(signature(content))) continue;
+      fallback ??= content;
+      if (question.answerType === 'number' && content.answer === question.answer) continue;
+      return this.queuePractice(key, content);
     }
+    return fallback ? this.queuePractice(key, fallback) : 'unavailable';
+  }
+
+  queuePractice(key, content) {
+    const question = this.current;
+    const practice = questionRecord(`${question.id}-practice`, question.theme, question.category, key, content);
+    this.questions.splice(this.index + 1, 0, { ...practice, practice: true });
+    this.extraPractice = true;
+    return 'queued';
   }
 
   answer(value) {
     if (this.status !== 'solving') return null;
-    if (!validateAnswer(this.current, value)) return { correct: false };
+    const correct = validateAnswer(this.current, value);
+    if (this.attempts === 0) this.firstAttemptCorrect = correct;
+    this.attempts++;
+    if (!correct) return { correct: false };
     this.status = 'solved';
     this.stars++;
     return { correct: true, assisted: this.assisted };

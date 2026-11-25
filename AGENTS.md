@@ -5,3 +5,6 @@
 - Use fictional characters and synthetic examples. Keep personal information and learner records out of source, fixtures, issue text, and documentation.
 - Design for touch and keyboard use. Keep instructions short, allow retries and support, and avoid reporting speed or guided completion as mastery.
 - Run `npm test` and check relevant flows in a browser. Document which devices and features were actually verified.
+
+- Build teaching guides from the validated question data. Keep contextual coverage in sync with the active template catalog and put worked solutions behind an explicit reveal.
+- Keep neutral tools and narration separate from instructional help. Test that Coach preserves draft state, and verify storage migration and both reset scopes when changing local evidence.

@@ -93,28 +93,30 @@ const steps = {
 
 const equation = {
   blank: (a, b) => number('missing-addend', `${a + b} = □ + ${b}`, a,
-    `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], { vocabulary: ['equal', 'addend'], models: [{ kind: 'line', start: b, target: a + b }] }),
+    `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], { parameters: { total: a + b, part: b }, vocabulary: ['equal', 'addend'], models: [{ kind: 'line', start: b, target: a + b }] }),
   missingStart: (a, b) => number('missing-start', `□ − ${b} = ${a}`, a + b,
     `${a + b} − ${b} = ${a}`, ['The blank is the number you started with.', `Put the ${b} that were taken away back with the ${a} that are left.`], {
+      parameters: { removed: b, remainder: a },
       vocabulary: ['left', 'equal'],
       models: [{ kind: 'join', parts: [a, b], icon: '●' }],
       misconceptions: { [a]: 'That is what is left. Put back what was taken away to find the starting number.' },
     }),
   balance: (a, b, c) => number('balance', `${a + b + c} − □ = ${a} + ${b}`, c,
-    `${a + b + c} − ${c} = ${a + b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`]),
+    `${a + b + c} − ${c} = ${a + b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`],
+    { parameters: { start: a + b + c, rightParts: [a, b] } }),
   truth: (a, b, c, random) => {
     const truth = random(0, 1);
     const right = c + (truth ? 0 : 1);
     return number('check-equality', `Is ${a} + ${b} = ${a + b + c} − ${right} true or false?`, truth ? 'True' : 'False',
       `The left side is ${a + b}. The right side is ${a + b + c - right}.`, ['Work out the value on each side.', 'The equation is true when the two values are the same.'],
-      { answerType: 'choice', choices: ['True', 'False'] });
+      { parameters: { leftParts: [a, b], rightStart: a + b + c, rightRemoved: right }, answerType: 'choice', choices: ['True', 'False'] });
   },
   symbol: (a, b, c, random) => {
     const plus = random(0, 1);
     const result = plus ? a + b : a - b;
     return number('operation-symbol', `${a} □ ${b} = ${result}`, plus ? '+' : '−',
       `${a} ${plus ? '+' : '−'} ${b} = ${result}`, ['Ask whether the number gets bigger or smaller.', 'Try both operations and compare the result.'],
-      { answerType: 'choice', choices: ['+', '−'] });
+      { parameters: { first: a, second: b, target: result }, answerType: 'choice', choices: ['+', '−'] });
   },
 };
 
@@ -161,3 +163,8 @@ export function questionsFor(category, random) {
   const c = random(1, 5);
   return Object.fromEntries(Object.entries(templates[category]).map(([id, make]) => [id, make(a, b, c, random)]));
 }
+
+export const activeTemplateSkills = Object.freeze(Object.fromEntries(worlds
+  .filter(world => world.id !== 'mixed')
+  .flatMap(({ id }) => Object.entries(questionsFor(id, min => min))
+    .map(([key, question]) => [`${id}/${key}`, question.skill]))));

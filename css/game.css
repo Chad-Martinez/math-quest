@@ -116,3 +116,13 @@ dialog h2 { margin-top: 0; }
 .reset-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 .reset-row select { max-width: 100%; }
 .danger { background: #9b372d; }
+
+#parent-coach { width: min(580px, calc(100% - 24px)); max-height: calc(100dvh - 24px); overscroll-behavior: contain; }
+.coach-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.coach-heading h2 { margin: 0; }
+#parent-coach summary { display: list-item; min-height: 48px; padding: 12px 6px; font-weight: 750; cursor: pointer; }
+#parent-coach details { border-block-start: 1px solid var(--line); }
+#parent-coach li + li { margin-top: 8px; }
+.coach-actions { margin-block-start: 12px; }
+#coach-status:empty { margin: 0; }
+#coach-help[aria-pressed=true] { border-color: var(--green); }

@@ -24,3 +24,13 @@ Run `npm test` from the repository root. Tests sample 24,500 generated questions
 2. On a subtraction question, drag one object into the taken-away tray. The page should stay still during the gesture. Tap the crossed-out object to restore it.
 3. In Sports Arena, look for a question about tying or taking the lead. Open **Math tools** and add votes until a row has five. Verify the fifth mark crosses the first four. Keep adding until the totals tie, then add one more and try Undo.
 4. Try the same model in Animal Kingdom with picture votes. Close **Math tools** to see the original graph. Reopen it to continue the model.
+
+## Parent Coach release checks
+
+The Coach suite tests 2,000 seeded items per template with independent math checks, all 31 guide IDs, 14 handoff examples, transfer freshness, support classification, and storage migrations and resets.
+
+1. In iPad Safari, open **Teaching tips** in portrait and landscape with a draft answer, an existing drawing, and an active Math tools model. Close and reopen the panel. Verify the draft and tool state are still present.
+2. Test tab order, Escape, Close, VoiceOver announcements, and text zoom. Check that the panel scrolls, touch controls are reachable, and focus returns to Teaching tips.
+3. With a number, choice, and chart statement question, verify that pre-reveal content stays in the panel and gives a strategy. Use **Reveal worked solution**, close the panel, then move to a different question. Its answer should require a new reveal.
+4. Mark parent help, solve, and verify the correct star is still earned. Queue extra practice and verify the current item stays active until Next. Ask a learner to solve the follow-up using the same strategy.
+5. Test spoken prompts in Safari with actual audio, including opening and closing the Coach while narration is active. Test the existing scoped and whole reset controls with disposable progress.

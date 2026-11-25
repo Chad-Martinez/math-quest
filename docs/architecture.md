@@ -4,10 +4,11 @@ The repository root is the deployable site. Static HTML, CSS, and JavaScript mod
 
 - `js/curriculum.js` contains the world catalog and relationship-driven question templates.
 - `js/engine.js` rotates template variations, prevents duplicate prompts with identical visuals, validates responses, and handles session transitions.
+- `js/coach.js` builds pure guides from the active question. `js/coach-panel.js` binds the dialog without rebuilding the learner view.
 - `js/app.js` handles rendering, support tools, intermediate prompts, and navigation.
 - `js/manipulatives.js` renders optional, stage-specific models from curriculum data. Counter positions and model interactions live in memory for the active step. The same chart renderer draws the original chart and the optional model, which uses a copy of the original counts.
 - `js/drag.js` provides pointer input for models that accept a drop. Buttons also support tap and keyboard activation.
 - `js/storage.js` loads and writes the versioned local progress record. It can migrate prototype stars when the legacy key exists on the same origin.
 - `assets/trail.svg` is original local artwork. No external assets are fetched by the game.
 
-Question records include category, subskill, template identity, difficulty, answer format, hints, explanation, and optional visuals and intermediate steps. Each session uses an explicit seed. Local progress stores rewards and completed runs by the world selected at the start, including mixed challenges under Treasure Island. The version 2 schema carries forward unattributed totals from earlier versions. Per-question evidence and adaptive rules belong in a future phase.
+Question records include category, subskill, template identity, difficulty, answer format, hints, explanation, and optional visuals and intermediate steps. Each session uses an explicit seed. Local progress stores rewards and completed runs by the world selected at the start, including mixed challenges under Treasure Island. The version 3 schema carries forward unattributed totals and existing per-adventure totals. It stores bounded [Parent Coach evidence](parent-coach.md) with the rewards so scoped resets apply to both. Adaptive rules and dashboard summaries belong in a future phase.

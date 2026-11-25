@@ -1,7 +1,8 @@
+import { connectCoach } from './coach-panel.js';
 import { buildChart, buildModel } from './manipulatives.js';
 import { worlds } from './curriculum.js';
 import { generateSession, Session } from './engine.js';
-import { addProgress, progressTotals, readProgress, resetProgress, saveProgress } from './storage.js';
+import { addProgress, progressTotals, readProgress, recordEvidence, resetProgress, saveProgress } from './storage.js';
 
 const byId = id => document.getElementById(id);
 function element(tag, text, className) {
@@ -126,7 +127,7 @@ byId('math-tools').addEventListener('click', () => {
   panel.hidden = !panel.hidden;
   if (config.kind === 'chart-grow') byId('visual').hidden = !panel.hidden;
   byId('math-tools').setAttribute('aria-expanded', String(!panel.hidden));
-  session.assisted = true;
+  if (!panel.hidden) session.markSupport('mathTools');
 });
 
 function renderQuestion() {
@@ -149,12 +150,36 @@ function renderQuestion() {
   byId('prompt').focus({ preventScroll: true });
 }
 
+function updateNextLabel() {
+  byId('next').textContent = session.index + 1 === session.questions.length ? 'Finish adventure →' : 'Next challenge →';
+}
+
+connectCoach({
+  current: () => session,
+  currentStep: () => step,
+  markSupport(kind) {
+    session.markSupport(kind);
+    const evidence = session.evidence();
+    if (!evidence) return;
+    const latest = latestProgress();
+    if (latest.evidence.some(item => item.id === evidence.id)) persist(recordEvidence(latest, evidence));
+  },
+  requestPractice() {
+    const result = session.addPractice();
+    if (result === 'queued') {
+      renderPosition();
+      updateNextLabel();
+    }
+    return result;
+  },
+});
+
 function readyToAdvance() {
   byId('answer-form').hidden = true;
   byId('hint').disabled = true;
   byId('trail-progress').value = session.index + 1;
   byId('next').hidden = false;
-  byId('next').textContent = session.index + 1 === session.questions.length ? 'Finish adventure →' : 'Next challenge →';
+  updateNextLabel();
   byId('next').focus();
 }
 
@@ -204,7 +229,7 @@ byId('answer-form').addEventListener('submit', event => {
     feedback.textContent = question.misconceptions[Number(value)] ?? 'Good try. Look at what the question asks, or tap Hint.';
     return;
   }
-  persist(addProgress(latestProgress(), world.id, 'stars'));
+  persist(recordEvidence(addProgress(latestProgress(), world.id, 'stars'), session.evidence()));
   feedback.textContent = `You earned a star! ${question.explanation}`;
   readyToAdvance();
 });
@@ -213,6 +238,7 @@ byId('hint').addEventListener('click', () => {
   byId('hint-copy').hidden = false;
   byId('hint-copy').textContent = session.hint(step);
   if (session.status === 'guided') {
+    persist(recordEvidence(latestProgress(), session.evidence()));
     renderPosition();
     if (session.questions[session.index + 1]?.practice) {
       byId('hint-copy').textContent += ' Try a similar challenge next.';
@@ -257,6 +283,7 @@ byId('read').addEventListener('click', () => {
   utterance = active;
   speech.cancel();
   speech.speak(active);
+  session.markSupport('narration');
   byId('read').textContent = 'Stop reading';
 });
 
@@ -289,6 +316,7 @@ byId('clear').addEventListener('click', clearDrawing);
 byId('draw').addEventListener('click', () => {
   const drawing = byId('drawing');
   drawing.hidden = !drawing.hidden;
+  if (!drawing.hidden) session.markSupport('drawing');
   byId('draw').setAttribute('aria-expanded', String(!drawing.hidden));
 });
 for (const id of ['back', 'map']) byId(id).addEventListener('click', () => show('home'));
@@ -324,8 +352,8 @@ byId('request-reset').addEventListener('click', () => {
   const adventure = worlds.find(item => item.id === scope.value);
   byId('reset-title').textContent = adventure ? `Reset ${adventure.name}?` : 'Reset the whole game?';
   byId('reset-impact').textContent = adventure
-    ? `This clears stars and completions earned in ${adventure.name} since adventure tracking began.`
-    : 'This clears every star and completion in this browser and restores the default practice settings.';
+    ? `This clears the tracked stars, completions, and teaching assistance history in ${adventure.name}.`
+    : 'This clears all progress and teaching assistance history in this browser and restores the default practice settings.';
   reviewReset(true);
 });
 byId('cancel-reset').addEventListener('click', () => reviewReset(false));

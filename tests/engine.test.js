@@ -145,10 +145,10 @@ test('multistep tools and hints follow the stage without losing assistance histo
 test('storage migrates old totals, validates saved counts, and tolerates errors', () => {
   const map = new Map([['mathquestStars', '6']]);
   const storage = { getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, value) };
-  assert.deepEqual(readProgress(storage), { version: 2, length: 5, legacy: { stars: 6, adventures: 0 }, byAdventure: {} });
+  assert.deepEqual(readProgress(storage), { version: 3, length: 5, legacy: { stars: 6, adventures: 0 }, byAdventure: {}, evidence: [] });
   map.set('math-quest.progress', '{"version":1,"stars":12,"adventures":2,"length":7}');
   const migrated = readProgress(storage);
-  assert.deepEqual(migrated, { version: 2, length: 7, legacy: { stars: 12, adventures: 2 }, byAdventure: {} });
+  assert.deepEqual(migrated, { version: 3, length: 7, legacy: { stars: 12, adventures: 2 }, byAdventure: {}, evidence: [] });
   const progress = addProgress(migrated, 'story', 'stars');
   assert.equal(saveProgress(storage, progress), true);
   assert.deepEqual(readProgress(storage), progress);
@@ -162,7 +162,7 @@ test('storage migrates old totals, validates saved counts, and tolerates errors'
 });
 
 test('adventure reset preserves other adventures and old totals, while whole reset clears all', () => {
-  const progress = { version: 2, length: 3, legacy: { stars: 6, adventures: 1 }, byAdventure: {
+  const progress = { version: 3, length: 3, evidence: [], legacy: { stars: 6, adventures: 1 }, byAdventure: {
     story: { stars: 3, adventures: 1 },
     mixed: { stars: 2, adventures: 1 },
   } };

@@ -33,6 +33,7 @@
           <button class="quiet" id="read">Read aloud</button>
           <button class="quiet" id="hint">Hint</button>
           <button class="quiet" id="math-tools" aria-expanded="false" aria-controls="math-model" hidden>Math tools</button>
+          <button class="quiet" id="teaching-tips" aria-haspopup="dialog" aria-controls="parent-coach">Teaching tips</button>
           <button class="quiet" id="draw" aria-expanded="false">Draw</button>
         </div>
         <p id="hint-copy" class="note" role="status" hidden></p>
@@ -56,6 +57,33 @@
       <div class="tools"><button id="map">Adventure map</button><button id="again" class="quiet">Play again</button></div>
     </section>
   </main>
+  <dialog id="parent-coach" aria-labelledby="coach-title">
+    <div class="coach-heading">
+      <h2 id="coach-title">Teaching tips</h2>
+      <form method="dialog"><button class="quiet" id="coach-close" autofocus>Close</button></form>
+    </div>
+    <p id="coach-objective"></p>
+    <p id="coach-tip" class="note"></p>
+    <p id="coach-stage" hidden></p>
+    <details id="coach-demonstration">
+      <summary>Show demonstration</summary>
+      <ol id="coach-steps"></ol>
+    </details>
+    <details id="coach-more">
+      <summary>More ways to help</summary>
+      <p id="coach-prerequisite"></p>
+      <ul id="coach-misconceptions"></ul>
+      <p id="coach-accommodation"></p>
+      <p id="coach-offline"></p>
+    </details>
+    <div class="tools coach-actions">
+      <button class="quiet" id="coach-reveal" aria-controls="coach-solution" aria-expanded="false">Reveal worked solution</button>
+      <button class="quiet" id="coach-help" aria-pressed="false">I helped with this problem</button>
+      <button class="quiet" id="coach-transfer">Try a similar problem</button>
+    </div>
+    <p id="coach-solution" class="note" role="status" hidden></p>
+    <p id="coach-status" role="status"></p>
+  </dialog>
   <dialog id="preferences" aria-labelledby="preferences-title">
     <h2 id="preferences-title">Practice settings</h2>
     <div id="settings-panel">

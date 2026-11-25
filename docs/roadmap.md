@@ -1,8 +1,12 @@
 # Roadmap
 
-1. **Foundation** — static game, seven worlds, question engine, rewards, Pages.
-2. **Interactive learning** — initial tools include tap-to-match rows, counters, ten frames, and number-line jumps. Multistep questions use stage-specific models and hints. One worked example per adventure can add a fresh challenge on the same skill. Drag alternatives support matching, adding, and removing counters. Chart tools let players add votes to explore ties and leads. Practice now includes finding the smaller group from a given difference, removing then comparing, and finding a missing starting value.
-3. **iPad and PWA** — icons, manifest, versioned offline cache, and installation and update validation.
-4. **Adventure design** — themed environments and gameplay actions tied directly to the mathematical result.
-5. **Adaptive practice and parent views** — report skill-level educational patterns, distinguish assisted and independent performance, and add local controls and export.
-6. **Expansion** — explore new curriculum and languages after core experiences are validated.
+The revised roadmap starts with the educational and product handoff audit. The earlier foundation and interactive learning releases already cover the static game, seven worlds, local rewards and resets, and parts of the workspace below.
+
+1. **Parent Coach** — contextual teaching tips and follow-up practice for all active question templates, with deliberate worked-solution reveal and local assistance evidence.
+2. **Structured teaching** — expand combine, change, and compare problem structures and unknown positions. Add flexible guided and independent sequences with fresh review.
+3. **Math workspace** — build on existing drag and tap counters, rows, ten frames, number-line jumps, and interactive chart votes. Expand missing-part, balance, and drawing tools where they teach the target relationship.
+4. **Attention supports** — optional focus, narration controls, breaks, and check prompts. Verify portrait and landscape, keyboard, zoom, VoiceOver, and physical iPad behavior.
+5. **Adaptive practice and dashboard** — local skill evidence, explainable recommendations, descriptive summaries, and explicit parent controls.
+6. **Narrative play** — test one adventure in which the mathematical action changes the world before extending that design to other worlds.
+
+Installability and offline use are a separate PWA milestone. Verify Pages scope, cache updates, and preservation of progress before relying on offline play. Review tests, privacy, and accessibility, then obtain approval before deploying each phase.
