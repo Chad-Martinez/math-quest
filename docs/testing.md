@@ -41,3 +41,10 @@ The Coach suite tests 2,000 seeded items per template with independent math chec
 2. Complete the lesson and reload. Open Story Forest and check that **Review** appears on the first challenge and counts toward the chosen session length. Leave before answering, re-enter, and check that the same review remains available.
 3. Finish the review, leave, then start another Story Forest adventure. Verify the completed review does not reappear. A scoped reset should erase pending reviews for that world.
 4. With VoiceOver and the on-screen keyboard, check that the lesson picker, stage changes, and response controls are usable. Ask the learner which quantity the question asks for, then observe whether they can apply the relationship to a fresh problem.
+
+## Math Workspace release checks
+
+1. On iPad, open **Learn a skill → Find a missing part**. In Math tools, tap **Move one to red**, then drag the same control into the red group. Move the required number of beads and count the blue beads. Try moving one back and resetting. Drops outside the target should leave the counts alone.
+2. Open **Learn a skill → Balance by taking away**. Drag **Take one from left** to the tray and watch which side has more. Check that the beam levels when both sides contain the same number of blocks. Put one back. In a missing-addend challenge in Equation Space, try adding a block to the right.
+3. In both models, open and close **Teaching tips** and **Math tools**. Check that the counters and answer draft stay in place. Rotate the iPad and verify that the controls and drop zones are still reachable.
+4. Try the movement controls with Tab and Space or Enter. With VoiceOver, listen for the side relationship and group counts. The answer field should stay blank until the learner enters a value.

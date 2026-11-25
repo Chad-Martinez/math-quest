@@ -23,7 +23,8 @@ export const additionalStories = {
     prompt: `Nia has ${a + b} beads altogether. ${a} are red. The rest are blue. How many are blue?`,
     answer: b, equation: `${a} + ${b} = ${a + b}`,
     hints: ['The whole group has red and blue beads.', 'Mark the red beads. Count how many of the whole group are left to be blue.'],
-    model: line(a, a + b), quantities: { known: a, total: a + b }, unit: ['bead', 'beads'],
+    model: { kind: 'part-whole', known: a, total: a + b, alternative: line(a, a + b) },
+    quantities: { known: a, total: a + b }, unit: ['bead', 'beads'],
     misconception: [a + b, 'That is the whole group. Find only the blue beads.'],
   }),
   joinChange: (a, b) => story({

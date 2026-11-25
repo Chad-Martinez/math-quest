@@ -132,3 +132,30 @@ dialog h2 { margin-top: 0; }
 #learn-topic { display: block; width: 100%; margin: 6px 0 16px; }
 #lesson-support { margin-block-end: 14px; }
 #lesson-support p:last-child { margin-bottom: 0; }
+
+.workspace-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.workspace-group {
+  min-height: 60px; margin-bottom: 8px; padding: 8px;
+  border: 1px solid #819d8b; border-radius: 8px; background: #fffdf7;
+}
+.workspace-counters { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.workspace-counter {
+  display: grid; place-items: center; width: 22px; height: 22px;
+  border-radius: 4px; background: #e0eedc; color: var(--ink); font-size: .95rem;
+}
+.workspace-group.drop-ready { background: #ffedb1; }
+.balance-beam { --angle: 0deg; position: relative; width: min(85%, 300px); height: 34px; margin: 7px auto 1px; }
+.balance-beam[data-tilt=left] { --angle: -5deg; }
+.balance-beam[data-tilt=right] { --angle: 5deg; }
+.balance-beam::before {
+  content: ''; position: absolute; inset: 12px 0 auto; height: 6px;
+  border-radius: 99px; background: var(--green); transform: rotate(var(--angle));
+}
+.balance-beam::after {
+  content: ''; position: absolute; left: calc(50% - 11px); top: 16px;
+  border: solid transparent; border-width: 0 11px 15px; border-bottom-color: var(--green);
+}
+.workspace-controls button[aria-disabled=true] { opacity: .6; }
+.workspace-other { margin-top: 12px; border-top: 1px solid var(--line); }
+.workspace-other summary { min-height: 48px; padding: 12px 4px; cursor: pointer; font-weight: 750; }
+.workspace-other button { margin: 3px 6px 0 0; }

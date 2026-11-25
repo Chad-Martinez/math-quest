@@ -97,7 +97,14 @@ const steps = {
 
 const equation = {
   blank: (a, b) => number('missing-addend', `${a + b} = □ + ${b}`, a,
-    `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], { parameters: { total: a + b, part: b }, vocabulary: ['equal', 'addend'], models: [{ kind: 'line', start: b, target: a + b }] }),
+    `${a + b} = ${a} + ${b}`, ['Both sides must have the same value.', `Count up from ${b} to ${a + b}.`], {
+      parameters: { total: a + b, part: b },
+      vocabulary: ['equal', 'addend'],
+      models: [{
+        kind: 'balance', left: a + b, rightParts: [b], action: 'add-right',
+        alternative: { kind: 'line', start: b, target: a + b },
+      }],
+    }),
   missingStart: (a, b) => number('missing-start', `□ − ${b} = ${a}`, a + b,
     `${a + b} − ${b} = ${a}`, ['The blank is the number you started with.', `Put the ${b} that were taken away back with the ${a} that are left.`], {
       parameters: { removed: b, remainder: a },
@@ -107,7 +114,10 @@ const equation = {
     }),
   balance: (a, b, c) => number('balance', `${a + b + c} − □ = ${a} + ${b}`, c,
     `${a + b + c} − ${c} = ${a + b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`],
-    { parameters: { start: a + b + c, rightParts: [a, b] } }),
+    {
+      parameters: { start: a + b + c, rightParts: [a, b] },
+      models: [{ kind: 'balance', left: a + b + c, rightParts: [a, b], action: 'remove-left' }],
+    }),
   truth: (a, b, c, random) => {
     const truth = random(0, 1);
     const right = c + (truth ? 0 : 1);
@@ -202,4 +212,5 @@ export const lessonTopics = {
   'compare/largerGiven': 'Find the larger group',
   'compare/match': 'Make two groups equal',
   'compare/exceed': 'Find the smallest number to get ahead',
+  'equation/balance': 'Balance by taking away',
 };

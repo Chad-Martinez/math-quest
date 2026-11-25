@@ -1,5 +1,6 @@
 import { dragTo } from './drag.js';
 import { tallyGroups } from './engine.js';
+import { balanceState, moveOne, partWholeState } from './workspace-state.js';
 
 export function compareQuantities(first, second) {
   if (first === second) return 'the same number as';
@@ -238,11 +239,123 @@ function growChart(container, { visual, label, target }) {
   update();
 }
 
-const renderers = { pair: comparison, grow: comparison, join, remove, line: numberLine, 'chart-grow': growChart };
+function workspaceGroup(label) {
+  const area = node('div', '', 'workspace-group drop-zone');
+  const heading = node('strong', label);
+  const contents = node('div', '', 'workspace-counters');
+  area.setAttribute('role', 'group');
+  area.append(heading, contents);
+  return { area, heading, contents };
+}
+
+function showCounters(group, label, counts, icons) {
+  group.heading.textContent = label;
+  const quantity = counts.reduce((total, count) => total + count, 0);
+  group.area.setAttribute('aria-label', `${label}: ${quantity}`);
+  group.contents.replaceChildren(...counts.flatMap((count, index) =>
+    Array.from({ length: count }, () => {
+      const marker = node('span', icons[index], 'workspace-counter');
+      marker.setAttribute('aria-hidden', 'true');
+      return marker;
+    })));
+}
+
+function counterControls({ limit, moveLabel, returnLabel, destination, origin, icon, render }) {
+  let moved = 0;
+  function change(action) {
+    moved = moveOne(moved, action, limit);
+    update();
+  }
+  const advance = button(moveLabel, () => change('move'));
+  const reverse = button(returnLabel, () => change('return'));
+  const reset = button('Reset model', () => change('reset'));
+  for (const [control, target, action] of [[advance, destination, 'move'], [reverse, origin, 'return']]) {
+    control.dataset.dragIcon = icon;
+    dragTo(control, () => target, () => change(action), () => control.getAttribute('aria-disabled') === 'false');
+  }
+
+  function update() {
+    advance.setAttribute('aria-disabled', String(moved === limit));
+    reverse.setAttribute('aria-disabled', String(moved === 0));
+    reset.setAttribute('aria-disabled', String(moved === 0));
+    render(moved);
+  }
+  const controls = node('div', '', 'tools workspace-controls');
+  controls.append(advance, reverse, reset);
+  update();
+  return controls;
+}
+
+function partWhole(container, config) {
+  const unsorted = workspaceGroup('Beads to sort');
+  const red = workspaceGroup('Red beads');
+  const groups = node('div', '', 'workspace-groups');
+  const status = node('p', '', 'model-status');
+  status.setAttribute('role', 'status');
+  groups.append(unsorted.area, red.area);
+  const controls = counterControls({
+    limit: config.total, moveLabel: 'Move one to red', returnLabel: 'Move one back',
+    destination: red.area, origin: unsorted.area, icon: '●',
+    render(moved) {
+      const { red: redCount, remaining, relation } = partWholeState(config, moved);
+      showCounters(unsorted, relation === 0 ? 'Blue beads' : 'Beads to sort', [remaining], [relation === 0 ? '◆' : '●']);
+      showCounters(red, 'Red beads', [redCount], ['▲']);
+      const next = relation === 0 ? 'Count the blue beads.' : relation < 0 ? 'Move more beads to red.' : 'Move some beads back.';
+      status.textContent = `Red group: ${redCount}. Need ${config.known}. ${next}`;
+    },
+  });
+  container.append(node('p', `Whole group: ${config.total} beads. Tap Move one to red or drag that button to the red group.`),
+    groups, status, controls);
+}
+
+function balance(container, config) {
+  const adding = config.action === 'add-right';
+  const left = workspaceGroup('Left side');
+  const right = workspaceGroup('Right side');
+  const tray = workspaceGroup(adding ? 'Block supply' : 'Blocks taken away');
+  const beam = node('div', '', 'balance-beam');
+  beam.setAttribute('aria-hidden', 'true');
+  const pans = node('div', '', 'workspace-groups');
+  const status = node('p', '', 'model-status');
+  status.setAttribute('role', 'status');
+  pans.append(left.area, right.area);
+  const rightInitial = balanceState(config, 0).rightCount;
+  const limit = adding ? 20 - rightInitial : config.left;
+  const controls = counterControls({
+    limit, moveLabel: adding ? 'Add one to right' : 'Take one from left',
+    returnLabel: adding ? 'Return one to supply' : 'Put one back on left',
+    destination: adding ? right.area : tray.area, origin: adding ? tray.area : left.area, icon: '■',
+    render(moved) {
+      const { leftCount, rightCount, relation } = balanceState(config, moved);
+      showCounters(left, 'Left side', [leftCount], ['■']);
+      showCounters(right, 'Right side', adding ? [...config.rightParts, moved] : config.rightParts, ['■', '□']);
+      showCounters(tray, adding ? 'Block supply' : 'Blocks taken away', [adding ? limit - moved : moved], ['□']);
+      beam.dataset.tilt = relation > 0 ? 'left' : relation < 0 ? 'right' : 'level';
+      const relationship = relation > 0 ? 'Left has more.' : relation < 0 ? 'Right has more.' : 'Both sides are equal.';
+      const instruction = relation === 0 ? (adding ? 'Count the blocks you added.' : 'Count the blocks you took away.') : '';
+      status.textContent = [`Left: ${leftCount}. Right: ${rightCount}.`, relationship, instruction].filter(Boolean).join(' ');
+    },
+  });
+  container.append(node('p', adding
+    ? 'Tap Add one to right or drag that button to the right. Make the sides equal.'
+    : 'Tap Take one from left or drag that button to the tray. Make the sides equal.'),
+  beam, pans, tray.area, status, controls);
+}
+
+const renderers = {
+  pair: comparison, grow: comparison, join, remove, line: numberLine,
+  'chart-grow': growChart, 'part-whole': partWhole, balance,
+};
 
 export function buildModel(config) {
   const container = node('section', '', 'math-model');
   container.setAttribute('aria-label', 'Math tools');
   renderers[config.kind](container, config);
+  if (config.alternative) {
+    const alternative = node('details', '', 'workspace-other');
+    alternative.append(node('summary', 'Use a number line'));
+    renderers[config.alternative.kind](alternative, config.alternative);
+    container.append(alternative);
+  }
   return container;
 }
