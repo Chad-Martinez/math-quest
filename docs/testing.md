@@ -27,10 +27,17 @@ Run `npm test` from the repository root. Tests sample 24,500 generated questions
 
 ## Parent Coach release checks
 
-The Coach suite tests 2,000 seeded items per template with independent math checks, all 31 guide IDs, 14 handoff examples, transfer freshness, support classification, and storage migrations and resets.
+The Coach suite tests 2,000 seeded items per template with independent math checks, all active guide IDs, 14 handoff examples, transfer freshness, support classification, and storage migrations and resets.
 
 1. In iPad Safari, open **Teaching tips** in portrait and landscape with a draft answer, an existing drawing, and an active Math tools model. Close and reopen the panel. Verify the draft and tool state are still present.
 2. Test tab order, Escape, Close, VoiceOver announcements, and text zoom. Check that the panel scrolls, touch controls are reachable, and focus returns to Teaching tips.
 3. With a number, choice, and chart statement question, verify that pre-reveal content stays in the panel and gives a strategy. Use **Reveal worked solution**, close the panel, then move to a different question. Its answer should require a new reveal.
 4. Mark parent help, solve, and verify the correct star is still earned. Queue extra practice and verify the current item stays active until Next. Ask a learner to solve the follow-up using the same strategy.
 5. Test spoken prompts in Safari with actual audio, including opening and closing the Coach while narration is active. Test the existing scoped and whole reset controls with disposable progress.
+
+## Structured teaching release checks
+
+1. From the map, open **Learn a skill** and choose **Find a missing part**. Verify the example is worked out, the guided problem shows a starting cue, and the independent problem uses fresh values and offers tools. Check portrait and landscape layout.
+2. Complete the lesson and reload. Open Story Forest and check that **Review** appears on the first challenge and counts toward the chosen session length. Leave before answering, re-enter, and check that the same review remains available.
+3. Finish the review, leave, then start another Story Forest adventure. Verify the completed review does not reappear. A scoped reset should erase pending reviews for that world.
+4. With VoiceOver and the on-screen keyboard, check that the lesson picker, stage changes, and response controls are usable. Ask the learner which quantity the question asks for, then observe whether they can apply the relationship to a fresh problem.

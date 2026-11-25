@@ -40,6 +40,9 @@ function expected(key, question) {
   const [a, b, c] = question.prompt.match(/\d+/g).map(Number);
   const answers = {
     'story/join': a + b, 'story/separate': a - b,
+    'story/combineTotal': a + b, 'story/combinePart': a - b, 'story/joinChange': b - a,
+    'story/joinStart': b - a, 'story/separateChange': a - b, 'story/separateStart': a + b,
+    'compare/largerGiven': a + b,
     'compare/difference': a - b, 'compare/fewer': b - a, 'compare/fewerGiven': a - b,
     'compare/match': b - a, 'compare/exceed': b + 1 - a,
     'steps/reach': a - b - c, 'steps/remaining': a + b - c, 'steps/shareThenMatch': c - (a - b),
@@ -47,7 +50,7 @@ function expected(key, question) {
   return answers[question.templateId];
 }
 
-test('all 31 contextual guides agree with 2,000 independently checked items per template', () => {
+test('all 38 contextual guides agree with 2,000 independently checked items per template', () => {
   const exercised = new Map();
   for (const { id: category } of worlds.filter(world => world.id !== 'mixed')) {
     for (let seed = 0; seed < 2000; seed++) {
@@ -74,7 +77,7 @@ test('all 31 contextual guides agree with 2,000 independently checked items per 
       }
     }
   }
-  assert.equal(exercised.size, 31);
+  assert.equal(exercised.size, 38);
   assert.deepEqual(Object.keys(activeTemplateSkills).sort(), [...exercised.keys()].sort());
   assert.deepEqual([...coachTemplateIds].sort(), [...exercised.keys()].sort());
   assert.ok([...exercised.values()].every(count => count === 2000));
@@ -168,7 +171,7 @@ test('transfer queues once, leaves the active item intact, and avoids answer inv
   assert.ok(sameTruthValue);
 });
 
-test('v3 evidence validates, upserts, caps at 100, and follows adventure resets', () => {
+test('local evidence validates, upserts, caps at 100, and follows adventure resets', () => {
   let saved = JSON.stringify({ version: 2, length: 7, legacy: { stars: 4 }, byAdventure: { story: { stars: 5 } } });
   const storage = { getItem: () => saved, setItem: (_key, value) => { saved = value; } };
   let progress = readProgress(storage);

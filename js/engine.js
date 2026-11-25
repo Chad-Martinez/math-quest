@@ -1,4 +1,4 @@
-import { questionsFor, worlds } from './curriculum.js';
+import { lessonTopics, questionsFor, worlds } from './curriculum.js';
 
 export function seededRandom(seed) {
   let state = seed >>> 0;
@@ -8,22 +8,54 @@ export function seededRandom(seed) {
   };
 }
 
+function seedFromId(id) {
+  return [...id].reduce((hash, char) => Math.imul(hash, 31) + char.charCodeAt(0), 0);
+}
+
 function questionRecord(id, theme, category, key, content) {
+  let choices = content.choices;
+  if (content.visual && choices) {
+    const random = seededRandom(Math.imul(seedFromId(id), 2654435761));
+    const remaining = [...choices];
+    choices = choices.map(() => remaining.splice(random(0, remaining.length - 1), 1)[0]);
+  }
   return {
     id, templateId: `${category}/${key}`, category, theme, difficulty: 1,
     intermediate: [], vocabulary: [], visual: null, models: [], misconceptions: {},
-    ...content, explanation: content.equation,
+    ...content, ...(choices && { choices }), explanation: content.equation,
   };
 }
 
-export function generateSession(world, seed, length = 5) {
+const signature = item => JSON.stringify([item.prompt, item.visual ?? null]);
+
+export function generateLesson(templateId, seed) {
+  if (!Object.hasOwn(lessonTopics, templateId)) throw new RangeError('Unknown lesson');
+  const [world, key] = templateId.split('/');
+  const stages = ['example', 'guided', 'independent', 'review'];
+  const random = seededRandom(seed);
+  const questions = [];
+  for (let attempt = 0; questions.length < stages.length && attempt < 200; attempt++) {
+    const item = questionsFor(world, random)[key];
+    if (questions.some(question => signature(question) === signature(item) || question.answer === item.answer)) continue;
+    const index = questions.length;
+    const lessonStage = stages[index];
+    const suffix = lessonStage === 'review' ? 'review' : 'lesson';
+    questions.push({
+      ...questionRecord(`${world}-${seed}-${index}-${suffix}`, world, world, key, item), lessonStage,
+    });
+  }
+  if (questions.length !== stages.length) throw new Error('Could not generate four fresh problems for this lesson');
+  return { items: questions.slice(0, 3), review: questions[3] };
+}
+
+export function generateSession(world, seed, length = 5, review = null) {
   if (!worlds.some(item => item.id === world)) throw new RangeError('Unknown adventure');
   if (!Number.isInteger(length) || length < 1 || length > 7) throw new RangeError('Choose 1 to 7 challenges');
   const random = seededRandom(seed);
   const categories = world === 'mixed' ? worlds.slice(0, -1).map(item => item.id) : [world];
   const rotation = new Map();
-  const seen = new Set();
-  const questions = [];
+  const questions = review?.theme === world && review.lessonStage === 'review' ? [review] : [];
+  const seen = new Set(questions.map(signature));
   const start = random(0, categories.length - 1);
   while (questions.length < length) {
     const category = categories[(start + questions.length) % categories.length];
@@ -36,9 +68,9 @@ export function generateSession(world, seed, length = 5) {
     }
     const key = rotation.get(category)[0];
     const content = bank[key];
-    const signature = JSON.stringify([content.prompt, content.visual]);
-    if (seen.has(signature)) continue;
-    seen.add(signature);
+    const currentSignature = signature(content);
+    if (seen.has(currentSignature)) continue;
+    seen.add(currentSignature);
     rotation.get(category).shift();
     questions.push(questionRecord(`${world}-${seed}-${questions.length}`, world, category, key, content));
   }
@@ -75,7 +107,7 @@ export class Session {
     this.firstAttemptCorrect = null;
     this.support = { hintLevels: [], parentHelp: false, revealedBeforeSolve: false,
       reviewedAfterOutcome: false, mathTools: false, drawing: false, narration: false };
-    this.status = 'solving';
+    this.status = this.current?.lessonStage === 'example' ? 'guided' : 'solving';
   }
 
   get current() { return this.questions[this.index]; }
@@ -91,15 +123,16 @@ export class Session {
 
   get assisted() {
     const { parentHelp, revealedBeforeSolve, hintLevels } = this.support;
-    return parentHelp || revealedBeforeSolve || hintLevels.some(Boolean);
+    return this.current?.lessonStage === 'guided' || parentHelp || revealedBeforeSolve || hintLevels.some(Boolean);
   }
 
   evidence() {
     if (!['solved', 'guided'].includes(this.status)) return null;
-    const { id, templateId, skill, theme, practice } = this.current;
+    const { id, templateId, skill, theme, practice, lessonStage } = this.current;
     return {
       id, templateId, skill, world: theme, source: practice ? 'transfer' : 'session',
       outcome: this.status === 'guided' ? 'worked-example' : this.assisted ? 'assisted-correct' : 'independent-correct',
+      ...(lessonStage && { lessonStage }),
       attempts: this.attempts, firstAttemptCorrect: this.firstAttemptCorrect,
       ...this.support, hintLevels: Array.from(this.support.hintLevels, level => level ?? 0),
     };
@@ -118,12 +151,10 @@ export class Session {
 
   addPractice() {
     if (this.extraPractice) return 'limit';
-    if (!this.current) return 'unavailable';
+    if (!this.current || ['example', 'guided', 'independent'].includes(this.current.lessonStage)) return 'unavailable';
     const question = this.current;
     const key = question.templateId.split('/')[1];
-    const seed = [...question.id].reduce((hash, char) => Math.imul(hash, 31) + char.charCodeAt(0), 0);
-    const random = seededRandom(seed);
-    const signature = item => JSON.stringify([item.prompt, item.visual ?? null]);
+    const random = seededRandom(seedFromId(question.id));
     const used = new Set(this.questions.map(signature));
     let fallback;
     for (let attempt = 0; attempt < 100; attempt++) {

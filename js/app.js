@@ -1,8 +1,9 @@
+import { buildCoachGuide } from './coach.js';
 import { connectCoach } from './coach-panel.js';
 import { buildChart, buildModel } from './manipulatives.js';
-import { worlds } from './curriculum.js';
-import { generateSession, Session } from './engine.js';
-import { addProgress, progressTotals, readProgress, recordEvidence, resetProgress, saveProgress } from './storage.js';
+import { lessonTopics, worlds } from './curriculum.js';
+import { generateLesson, generateSession, Session } from './engine.js';
+import { addProgress, clearReview, progressTotals, readProgress, recordEvidence, resetProgress, saveProgress, saveReview } from './storage.js';
 
 const byId = id => document.getElementById(id);
 function element(tag, text, className) {
@@ -21,6 +22,8 @@ const pad = byId('pad');
 const ink = pad.getContext('2d');
 let world;
 let session;
+let lesson;
+let activeReview;
 let step;
 let utterance;
 let pointer;
@@ -60,13 +63,32 @@ function show(screen) {
   if (screen !== 'play') byId(screen).querySelector('h1').focus({ preventScroll: true });
 }
 
-function start(selected) {
+function randomSeed() {
+  return crypto.getRandomValues(new Uint32Array(1))[0];
+}
+
+function openSession(selected, questions) {
   world = selected;
-  const seed = crypto.getRandomValues(new Uint32Array(1))[0];
-  session = new Session(generateSession(world.id, seed, progress.length));
-  byId('world-name').textContent = world.name;
+  session = new Session(questions);
+  byId('world-name').textContent = lesson ? lessonTopics[lesson.templateId] : world.name;
   show('play');
   renderQuestion();
+}
+
+function start(selected) {
+  lesson = null;
+  const latest = latestProgress();
+  activeReview = latest.reviews[selected.id]?.[0];
+  const review = activeReview ? generateLesson(activeReview.templateId, activeReview.seed).review : null;
+  openSession(selected, generateSession(selected.id, randomSeed(), latest.length, review));
+}
+
+function startLesson(templateId) {
+  const selected = worlds.find(adventure => templateId.startsWith(`${adventure.id}/`));
+  const seed = randomSeed();
+  lesson = { templateId, seed };
+  activeReview = null;
+  openSession(selected, generateLesson(templateId, seed).items);
 }
 
 function renderResponse() {
@@ -115,7 +137,10 @@ function renderMathTools(open = false) {
 }
 
 function renderPosition() {
-  const prefix = session.current.practice ? 'Extra practice · ' : '';
+  const title = {
+    example: 'See an example', guided: 'Try with help', independent: 'Try on your own', review: 'Review',
+  }[session.current.lessonStage];
+  const prefix = title ? `${title} · ` : session.current.practice ? 'Extra practice · ' : '';
   byId('position').textContent = `${prefix}${session.index + 1} of ${session.questions.length}`;
   byId('trail-progress').max = session.questions.length;
 }
@@ -135,7 +160,7 @@ function renderQuestion() {
   stopReading();
   const question = session.current;
   renderPosition();
-  renderMathTools();
+  renderMathTools(question.lessonStage === 'example');
   byId('trail-progress').value = session.index;
   byId('prompt').textContent = question.prompt;
   byId('visual').replaceChildren(...(question.visual ? [buildChart(question.visual)] : []));
@@ -147,11 +172,41 @@ function renderQuestion() {
   byId('answer-form').hidden = false;
   clearDrawing();
   renderResponse();
+  renderLessonSupport(question);
   byId('prompt').focus({ preventScroll: true });
 }
 
+function renderLessonSupport(question) {
+  const support = byId('lesson-support');
+  support.replaceChildren();
+  const example = question.lessonStage === 'example';
+  const guided = question.lessonStage === 'guided';
+  support.hidden = !example && !guided;
+  if (example) {
+    const guide = buildCoachGuide(question);
+    const steps = element('ol');
+    steps.append(...guide.steps.map(instruction => element('li', instruction)));
+    support.append(element('strong', guide.objective), steps, element('p', question.explanation));
+    byId('answer-form').hidden = true;
+    byId('hint').disabled = true;
+    byId('next').hidden = false;
+    updateNextLabel();
+  } else if (guided) {
+    support.append(element('strong', 'Start here'), element('p', question.hints[0]));
+  }
+}
+
 function updateNextLabel() {
-  byId('next').textContent = session.index + 1 === session.questions.length ? 'Finish adventure →' : 'Next challenge →';
+  const last = session.index + 1 === session.questions.length;
+  if (session.current.lessonStage === 'example') {
+    byId('next').textContent = 'Try with help →';
+  } else if (session.current.lessonStage === 'guided') {
+    byId('next').textContent = 'Try on your own →';
+  } else if (last) {
+    byId('next').textContent = lesson ? 'Finish lesson →' : 'Finish adventure →';
+  } else {
+    byId('next').textContent = 'Next challenge →';
+  }
 }
 
 connectCoach({
@@ -194,6 +249,14 @@ for (const adventure of worlds) {
   byId('worlds').append(button);
 }
 
+function saveOutcome(earnStar = false) {
+  const item = session.current;
+  let latest = latestProgress();
+  if (earnStar) latest = addProgress(latest, world.id, 'stars');
+  if (item.lessonStage === 'review' && activeReview) latest = clearReview(latest, world.id, activeReview);
+  persist(recordEvidence(latest, session.evidence()));
+}
+
 byId('answer-form').addEventListener('submit', event => {
   event.preventDefault();
   const question = session.current;
@@ -229,7 +292,7 @@ byId('answer-form').addEventListener('submit', event => {
     feedback.textContent = question.misconceptions[Number(value)] ?? 'Good try. Look at what the question asks, or tap Hint.';
     return;
   }
-  persist(recordEvidence(addProgress(latestProgress(), world.id, 'stars'), session.evidence()));
+  saveOutcome(true);
   feedback.textContent = `You earned a star! ${question.explanation}`;
   readyToAdvance();
 });
@@ -238,7 +301,7 @@ byId('hint').addEventListener('click', () => {
   byId('hint-copy').hidden = false;
   byId('hint-copy').textContent = session.hint(step);
   if (session.status === 'guided') {
-    persist(recordEvidence(latestProgress(), session.evidence()));
+    saveOutcome();
     renderPosition();
     if (session.questions[session.index + 1]?.practice) {
       byId('hint-copy').textContent += ' Try a similar challenge next.';
@@ -248,14 +311,23 @@ byId('hint').addEventListener('click', () => {
 });
 
 byId('next').addEventListener('click', () => {
+  if (session.current?.lessonStage === 'example') saveOutcome();
   if (!session.next()) return;
   if (session.status !== 'complete') {
     renderQuestion();
     byId('play').scrollIntoView({ block: 'start' });
     return;
   }
-  persist(addProgress(latestProgress(), world.id, 'adventures'));
-  byId('outcome').textContent = `Quest complete. You helped ${world.goal.charAt(0).toLowerCase() + world.goal.slice(1)}!`;
+  byId('finish-title').textContent = lesson ? 'Lesson complete!' : 'Adventure complete!';
+  byId('again').textContent = lesson ? 'Practice this skill again' : 'Play again';
+  if (lesson) {
+    const saved = persist(saveReview(latestProgress(), world.id, lesson));
+    byId('outcome').textContent = saved ? `A fresh review was added to ${world.name}.`
+      : `A fresh review is ready in ${world.name} while this tab stays open.`;
+  } else {
+    persist(addProgress(latestProgress(), world.id, 'adventures'));
+    byId('outcome').textContent = `Quest complete. You helped ${world.goal.charAt(0).toLowerCase() + world.goal.slice(1)}!`;
+  }
   byId('earned').textContent = `You earned ${session.stars} ${session.stars === 1 ? 'star' : 'stars'} on this adventure.`;
   show('finish');
 });
@@ -320,7 +392,29 @@ byId('draw').addEventListener('click', () => {
   byId('draw').setAttribute('aria-expanded', String(!drawing.hidden));
 });
 for (const id of ['back', 'map']) byId(id).addEventListener('click', () => show('home'));
-byId('again').addEventListener('click', () => start(world));
+byId('again').addEventListener('click', () => {
+  if (lesson) startLesson(lesson.templateId);
+  else start(world);
+});
+const learnDialog = byId('learn-dialog');
+const topicSelect = byId('learn-topic');
+for (const { id, name } of worlds) {
+  const topics = Object.entries(lessonTopics).filter(([templateId]) => templateId.startsWith(`${id}/`));
+  if (!topics.length) continue;
+  const group = element('optgroup');
+  group.label = name;
+  for (const [value, label] of topics) {
+    const option = element('option', label);
+    option.value = value;
+    group.append(option);
+  }
+  topicSelect.append(group);
+}
+byId('learn').addEventListener('click', () => learnDialog.showModal());
+byId('learn-start').addEventListener('click', () => {
+  learnDialog.close();
+  startLesson(topicSelect.value);
+});
 const preferences = byId('preferences');
 const scope = byId('reset-scope');
 for (const adventure of worlds) {
@@ -352,7 +446,7 @@ byId('request-reset').addEventListener('click', () => {
   const adventure = worlds.find(item => item.id === scope.value);
   byId('reset-title').textContent = adventure ? `Reset ${adventure.name}?` : 'Reset the whole game?';
   byId('reset-impact').textContent = adventure
-    ? `This clears the tracked stars, completions, and teaching assistance history in ${adventure.name}.`
+    ? `This clears the tracked stars, completions, teaching assistance history, and queued review in ${adventure.name}.`
     : 'This clears all progress and teaching assistance history in this browser and restores the default practice settings.';
   reviewReset(true);
 });

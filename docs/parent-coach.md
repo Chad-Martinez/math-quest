@@ -2,7 +2,7 @@
 
 Teaching tips appears on every challenge. The panel opens with a short prompt to try with the learner. Expand **Show demonstration** for steps using the current quantities, or **More ways to help** for a prerequisite, a response to a possible misunderstanding, an accommodation, and an activity with physical objects. The panel is a convenience on a shared screen.
 
-**Reveal worked solution** deliberately shows the answer and explanation inside the panel. Closing returns to the same question, including the draft response, drawing, math model, and progress. **I helped with this problem** records instructional help before the problem is solved. **Try a similar problem** queues a fresh problem of the same template immediately after the current one. Each adventure has one shared slot for this follow-up or the automatic follow-up after a worked hint. Numeric follow-ups prefer a different answer. For formats such as true/false, the underlying numbers must change and the answer class may repeat.
+**Reveal worked solution** deliberately shows the answer and explanation inside the panel. Closing returns to the same question, including the draft response, drawing, math model, and progress. **I helped with this problem** records instructional help before the problem is solved. **Try a similar problem** queues a fresh problem of the same template immediately after the current one. Guided lessons already include their own sequenced practice and later review. Each regular adventure has one shared slot for this follow-up or the automatic follow-up after a worked hint. Numeric follow-ups prefer a different answer. For formats such as true/false, the underlying numbers must change and the answer class may repeat.
 
 ## Coverage and content
 

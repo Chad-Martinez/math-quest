@@ -126,3 +126,9 @@ dialog h2 { margin-top: 0; }
 .coach-actions { margin-block-start: 12px; }
 #coach-status:empty { margin: 0; }
 #coach-help[aria-pressed=true] { border-color: var(--green); }
+
+.map-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 20px 0 13px; }
+.map-heading h2 { margin: 0; }
+#learn-topic { display: block; width: 100%; margin: 6px 0 16px; }
+#lesson-support { margin-block-end: 14px; }
+#lesson-support p:last-child { margin-bottom: 0; }

@@ -20,7 +20,10 @@
         <h1 tabindex="-1">Adventure<br>map</h1>
         <p>Pick a world and set out on a math quest.</p>
       </div></div>
-      <h2>Choose your adventure</h2>
+      <div class="map-heading">
+        <h2>Choose your adventure</h2>
+        <button class="quiet" id="learn" aria-haspopup="dialog">Learn a skill</button>
+      </div>
       <div id="worlds" class="worlds"></div>
     </section>
     <section id="play" hidden>
@@ -28,6 +31,7 @@
       <progress id="trail-progress" aria-label="Adventure progress"></progress>
       <article class="card">
         <h1 id="prompt" tabindex="-1"></h1>
+        <div id="lesson-support" class="note" hidden></div>
         <div id="visual" hidden></div>
         <div class="tools">
           <button class="quiet" id="read">Read aloud</button>
@@ -52,11 +56,21 @@
     </section>
     <section id="finish" class="card finish" hidden>
       <div class="reward" aria-hidden="true">⭐</div>
-      <h1 tabindex="-1">Adventure complete!</h1>
+      <h1 id="finish-title" tabindex="-1">Adventure complete!</h1>
       <p id="outcome"></p><p id="earned"></p>
       <div class="tools"><button id="map">Adventure map</button><button id="again" class="quiet">Play again</button></div>
     </section>
   </main>
+  <dialog id="learn-dialog" aria-labelledby="learn-title">
+    <h2 id="learn-title">Learn a skill</h2>
+    <p>See an example, try with help, then solve a new problem.</p>
+    <label for="learn-topic">Choose a skill</label>
+    <select id="learn-topic"></select>
+    <div class="tools">
+      <button id="learn-start">Start lesson</button>
+      <form method="dialog"><button class="quiet">Cancel</button></form>
+    </div>
+  </dialog>
   <dialog id="parent-coach" aria-labelledby="coach-title">
     <div class="coach-heading">
       <h2 id="coach-title">Teaching tips</h2>

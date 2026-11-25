@@ -112,7 +112,31 @@ const equationGuides = {
     'Use a plus card and a minus card. Test each action with blocks.', [], ['If they choose by the look of the sign, try both actions and compare the resulting counts.']),
 };
 
+const structureScripts = {
+  'story/combineTotal': ['Find the whole from two parts.', 'Ask which beads belong in the whole.', q =>
+    [`Build groups of ${q.first} and ${q.second} beads.`, 'Join and count both groups.']],
+  'story/combinePart': ['Find an unknown part of a known whole.', 'Ask which part the question asks you to find.', q =>
+    [`Make a pile of ${q.total} beads.`, `Move ${q.known} into the red group. Count the beads in the other part.`]],
+  'story/joinChange': ['Find how many objects were added.', 'Ask what changed between the start and the end.', q =>
+    [`Start with ${q.known} stickers. Add one at a time until you reach ${q.total}.`, 'Count only the stickers you added.']],
+  'story/joinStart': ['Find the starting group before an addition.', 'Ask which objects were there before the change.', q =>
+    [`Build the final group of ${q.total} blocks.`, `Move ${q.known} new blocks aside. Count the original group.`]],
+  'story/separateChange': ['Find how many objects were removed.', 'Ask which count shows what was left.', q =>
+    [`Start with ${q.total} plums. Move one away at a time until ${q.known} are left.`, 'Count only the plums you moved.']],
+  'story/separateStart': ['Rebuild a group before objects were removed.', 'Ask which two groups made up the starting collection.', q =>
+    [`Set out ${q.first} cards that stayed and ${q.second} that were given away.`, 'Put both groups together and count the starting collection.']],
+  'compare/largerGiven': ['Find the larger group from a known difference.', 'Ask whose group gets the extras.', q =>
+    [`Give Rae and Sol matching rows of ${q.first} stones.`, `Give Sol ${q.second} extra stones. Count all of Sol’s row.`]],
+};
+
+function structureGuide(question, [objective, tip, steps]) {
+  return card(objective, 'Count and rearrange objects one at a time.', tip, steps(question.parameters),
+    'Use blocks for the objects in the story. Ask the child to show the group that answers the question.',
+    question.unit, ['If the child repeats a number from the story, ask what that number counts and what the question asks for.']);
+}
+
 const guides = {
+  ...Object.fromEntries(Object.entries(structureScripts).map(([id, script]) => [id, q => structureGuide(q, script)])),
   'story/join': q => join(q.models[0].parts),
   'story/separate': q => remove(q.models[0], ['apple', 'apples']),
   'compare/difference': q => compare(q.models[0], ['toy car', 'toy cars'], 'gap'),

@@ -65,7 +65,7 @@ test('seeded sessions exercise every template and stay within first-grade bounds
       }
     }
   }
-  assert.equal(templates.size, 31);
+  assert.equal(templates.size, 38);
 });
 
 test('tally groups cross the fifth mark and leave remaining singles', () => {
@@ -145,10 +145,10 @@ test('multistep tools and hints follow the stage without losing assistance histo
 test('storage migrates old totals, validates saved counts, and tolerates errors', () => {
   const map = new Map([['mathquestStars', '6']]);
   const storage = { getItem: key => map.get(key) ?? null, setItem: (key, value) => map.set(key, value) };
-  assert.deepEqual(readProgress(storage), { version: 3, length: 5, legacy: { stars: 6, adventures: 0 }, byAdventure: {}, evidence: [] });
+  assert.deepEqual(readProgress(storage), { version: 4, length: 5, legacy: { stars: 6, adventures: 0 }, byAdventure: {}, evidence: [], reviews: {} });
   map.set('math-quest.progress', '{"version":1,"stars":12,"adventures":2,"length":7}');
   const migrated = readProgress(storage);
-  assert.deepEqual(migrated, { version: 3, length: 7, legacy: { stars: 12, adventures: 2 }, byAdventure: {}, evidence: [] });
+  assert.deepEqual(migrated, { version: 4, length: 7, legacy: { stars: 12, adventures: 2 }, byAdventure: {}, evidence: [], reviews: {} });
   const progress = addProgress(migrated, 'story', 'stars');
   assert.equal(saveProgress(storage, progress), true);
   assert.deepEqual(readProgress(storage), progress);
@@ -162,7 +162,7 @@ test('storage migrates old totals, validates saved counts, and tolerates errors'
 });
 
 test('adventure reset preserves other adventures and old totals, while whole reset clears all', () => {
-  const progress = { version: 3, length: 3, evidence: [], legacy: { stars: 6, adventures: 1 }, byAdventure: {
+  const progress = { version: 4, length: 3, evidence: [], reviews: {}, legacy: { stars: 6, adventures: 1 }, byAdventure: {
     story: { stars: 3, adventures: 1 },
     mixed: { stars: 2, adventures: 1 },
   } };

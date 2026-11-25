@@ -46,7 +46,7 @@ export function connectCoach({ current, currentStep, markSupport, requestPractic
     solution.textContent = '';
     help.hidden = session.status !== 'solving';
     help.setAttribute('aria-pressed', String(session.support.parentHelp));
-    transfer.hidden = !guide;
+    transfer.hidden = !guide || ['example', 'guided', 'independent'].includes(item.lessonStage);
     status.textContent = session.questions[session.index + 1]?.practice ? 'A similar problem is ready to try next.' : '';
     dialog.showModal();
     dialog.scrollTop = 0;

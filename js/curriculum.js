@@ -1,3 +1,5 @@
+import { additionalComparisons, additionalStories } from './story-structures.js';
+
 export const worlds = [
   { id: 'story', name: 'Story Forest', focus: 'Add and take away', icon: '🌲', color: 'forest', goal: 'Open the forest gate' },
   { id: 'compare', name: 'Racing Valley', focus: 'More, fewer, and equal', icon: '🏁', color: 'race', goal: 'Cross the finish line' },
@@ -14,6 +16,7 @@ const number = (skill, prompt, answer, equation, hints, extras = {}) =>
 const rows = (kind, first, second, icon) => ({ kind, rows: [first, second], icon });
 
 const story = {
+  ...additionalStories,
   join: (a, b) => number('join', `Mia finds ${a} acorns. She finds ${b} more. How many acorns does she have altogether?`,
     a + b, `${a} + ${b} = ${a + b}`, ['Find both groups of acorns.', 'Draw both groups and count them together.'], { vocabulary: ['altogether'], models: [{ kind: 'join', parts: [a, b], icon: '🌰' }], misconceptions: { [a]: 'That is the first group. Count the acorns from both groups.' } }),
   separate: (a, b) => number('separate', `Sam has ${a + b} apples. He gives away ${b}. How many apples are left?`,
@@ -25,6 +28,7 @@ const story = {
 };
 
 const compare = {
+  ...additionalComparisons,
   difference: (a, b) => number('difference', `Ben has ${a + b} toy cars. Leo has ${a}. How many more cars does Ben have?`,
     b, `${a + b} − ${a} = ${b}`, ['Look for the difference between the two groups.', 'Open the math tools and pair the cars. Count the cars without a partner.'], { vocabulary: ['difference', 'more'], models: [rows('pair', ['Ben', a + b], ['Leo', a], '🚗')] }),
   fewer: (a, b) => number('fewer', `Ana has ${a} flags. Jo has ${a + b}. How many fewer flags does Ana have?`,
@@ -154,17 +158,48 @@ function charts(kind, random) {
   };
 }
 
+const roles = {
+  join: 'result', separate: 'result', difference: 'difference', fewer: 'difference',
+  fewerGiven: 'smaller', match: 'change', exceed: 'change', reach: 'change', remaining: 'result',
+  shareThenMatch: 'change', blank: 'part', missingStart: 'start', balance: 'change',
+  truth: 'truth', symbol: 'operation',
+};
+
 export const templates = { story, compare, steps, equation };
 
 export function questionsFor(category, random) {
-  if (category === 'tally' || category === 'picture') return charts(category, random);
+  if (category === 'tally' || category === 'picture') {
+    return Object.fromEntries(Object.entries(charts(category, random)).map(([id, item]) => [id, {
+      ...item, schema: 'graph',
+      unknownRole: item.answerType === 'choice' ? 'category' : item.answerType === 'multiple' ? 'statements' : 'quantity',
+    }]));
+  }
   const a = random(5, 9);
   const b = random(1, 5);
   const c = random(1, 5);
-  return Object.fromEntries(Object.entries(templates[category]).map(([id, make]) => [id, make(a, b, c, random)]));
+  return Object.fromEntries(Object.entries(templates[category]).map(([id, make]) => [id, {
+    schema: { story: 'change', steps: 'multi' }[category] ?? category,
+    unknownRole: roles[id], ...make(a, b, c, random),
+  }]));
 }
 
 export const activeTemplateSkills = Object.freeze(Object.fromEntries(worlds
   .filter(world => world.id !== 'mixed')
   .flatMap(({ id }) => Object.entries(questionsFor(id, min => min))
     .map(([key, question]) => [`${id}/${key}`, question.skill]))));
+
+export const lessonTopics = {
+  'story/combinePart': 'Find a missing part',
+  'story/combineTotal': 'Find the whole',
+  'story/join': 'Find the result after adding',
+  'story/separate': 'Find the result after taking away',
+  'story/joinChange': 'Find how many were added',
+  'story/joinStart': 'Find the start before adding',
+  'story/separateChange': 'Find how many were taken away',
+  'story/separateStart': 'Find the start before taking away',
+  'compare/difference': 'Find the difference',
+  'compare/fewerGiven': 'Find the smaller group',
+  'compare/largerGiven': 'Find the larger group',
+  'compare/match': 'Make two groups equal',
+  'compare/exceed': 'Find the smallest number to get ahead',
+};
