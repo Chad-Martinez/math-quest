@@ -61,18 +61,18 @@
       <div class="tools"><button id="map">Adventure map</button><button id="again" class="quiet">Play again</button></div>
     </section>
   </main>
-  <dialog id="learn-dialog" aria-labelledby="learn-title">
-    <h2 id="learn-title">Learn a skill</h2>
-    <p>See an example, try with help, then solve a new problem.</p>
+  <dialog id="learn-dialog" aria-labelledby="learn-title" aria-describedby="learn-intro">
+    <div class="dialog-heading">
+      <h2 id="learn-title">Learn a skill</h2>
+      <form method="dialog"><button class="quiet" id="learn-cancel" autofocus>Cancel</button></form>
+    </div>
+    <p id="learn-intro">See an example, try with help, then solve a new problem.</p>
     <label for="learn-topic">Choose a skill</label>
     <select id="learn-topic"></select>
-    <div class="tools">
-      <button id="learn-start">Start lesson</button>
-      <form method="dialog"><button class="quiet">Cancel</button></form>
-    </div>
+    <button id="learn-start">Start lesson</button>
   </dialog>
   <dialog id="parent-coach" aria-labelledby="coach-title">
-    <div class="coach-heading">
+    <div class="dialog-heading">
       <h2 id="coach-title">Teaching tips</h2>
       <form method="dialog"><button class="quiet" id="coach-close" autofocus>Close</button></form>
     </div>
