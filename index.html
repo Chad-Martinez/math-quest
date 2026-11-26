@@ -99,7 +99,10 @@
     <p id="coach-status" role="status"></p>
   </dialog>
   <dialog id="preferences" aria-labelledby="preferences-title">
-    <h2 id="preferences-title">Practice settings</h2>
+    <div class="dialog-heading">
+      <h2 id="preferences-title">Practice settings</h2>
+      <form id="settings-close" method="dialog"><button class="quiet" id="settings-done" autofocus>Done</button></form>
+    </div>
     <div id="settings-panel">
       <label for="length">Challenges per adventure</label>
       <select id="length"><option value="3">3</option><option value="5">5</option><option value="7">7</option></select>
@@ -115,7 +118,6 @@
         </div>
       </fieldset>
       <p id="reset-status" role="status" hidden></p>
-      <form method="dialog"><button id="settings-done">Done</button></form>
     </div>
     <section id="reset-confirmation" hidden>
       <h3 id="reset-title"></h3>

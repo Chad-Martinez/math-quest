@@ -425,6 +425,7 @@ for (const adventure of worlds) {
 
 function reviewReset(reviewing) {
   byId('settings-panel').hidden = reviewing;
+  byId('settings-close').hidden = reviewing;
   byId('reset-confirmation').hidden = !reviewing;
   (reviewing ? byId('cancel-reset') : byId('request-reset')).focus();
 }
@@ -436,6 +437,7 @@ byId('settings').addEventListener('click', () => {
   byId('reset-status').hidden = true;
   byId('reset-confirmation').hidden = true;
   byId('settings-panel').hidden = false;
+  byId('settings-close').hidden = false;
   preferences.showModal();
 });
 byId('length').addEventListener('change', event => {
