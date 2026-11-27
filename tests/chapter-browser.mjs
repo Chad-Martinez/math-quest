@@ -37,6 +37,16 @@ async function screen(page, name) {
 
 function button(page, name) { return page.getByRole('button', { name, exact: true }); }
 async function press(page, name) { await button(page, name).click(); }
+async function finishIntroduction(page) {
+  for (const beat of [1, 2, 3]) {
+    await page.locator(`.mission-stage[data-beat="${beat}"]`).waitFor();
+    // The scene filters repeated presses in a short window, independently of its animations.
+    if (beat > 1) await page.waitForTimeout(230);
+    await press(page, 'Continue');
+  }
+  await page.waitForTimeout(230);
+  await press(page, "Let's Find It!");
+}
 async function check(page, value) {
   await page.getByLabel('Your answer').fill(String(value));
   await press(page, 'Check answer');
@@ -96,8 +106,8 @@ try {
   assert.ok(await page.getByText('Stars already earned in Math Quest: 12').isVisible());
   await press(page, 'Close');
   await press(page, 'Start Adventure');
-  await heading(page, 'An egg is missing!');
-  await press(page, 'See the trail');
+  await heading(page, 'The Missing Egg');
+  await finishIntroduction(page);
   assert.equal(await page.locator('.chapter-map-node').count(), 5);
   assert.equal(await page.locator('.chapter-map-node[aria-current=step]').textContent(), '1');
   await screen(page, '02-trail');
@@ -253,12 +263,12 @@ try {
   await heading(page, 'Adventure complete');
   await press(page, 'Return home');
   await press(page, 'Start Adventure');
-  await heading(page, 'An egg is missing!');
+  await heading(page, 'The Missing Egg');
   assert.notEqual((await stored(page)).run.seed, seed);
 
   const portrait = { width: 768, height: 1024 };
   await page.setViewportSize(portrait);
-  await press(page, 'See the trail');
+  await finishIntroduction(page);
   await press(page, 'Go to the first stop');
   await screen(page, '13-ipad-portrait');
   await page.setViewportSize({ width: 390, height: 844 });

@@ -3,6 +3,9 @@ import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, empty
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
 import { createWelcome } from './welcome.js';
+import { createMissingEgg } from './missing-egg.js';
+
+let disposeMission;
 
 const root = document.getElementById('chapter');
 let storage;
@@ -138,6 +141,7 @@ function growUps() {
     modal.close();
     coach();
   }));
+  if (!intro && activeRun()?.scene === 'mission') body.append(button('Back to welcome', home, 'chapter-secondary'));
   const modal = dialog('Grown-ups', body, document.getElementById('chapter-grownups'));
 }
 
@@ -170,10 +174,10 @@ function restartStop() {
   render();
 }
 
-function next() {
+function next({ leavingMission } = {}) {
   stopSpeech();
   write(advanceChapter(progress));
-  render();
+  render(undefined, leavingMission);
 }
 
 function home() {
@@ -195,13 +199,12 @@ function begin(newRun = false, leavingWelcome) {
 }
 
 const stories = {
-  mission: { title: 'An egg is missing!', copy: 'T-Rex needs your help. Follow the island trail and look for clues.', background: 'jungle', art: ['trex-front'] },
   mosasaurus: { title: 'Meet Mosasaurus!', copy: '“I spotted your egg in a little nook inside the cave. Come look!”', background: 'lagoon', art: ['mosa-leap', 'trex-neutral'] },
   discovery: { title: 'You found the egg!', copy: 'The egg is tucked safely in the cave. T-Rex is so glad you came along.', background: 'cave', art: ['trex-celebrate'], bonus: 'egg' },
   complete: { title: 'Chapter 1 complete!', copy: 'You followed the trail and found the missing egg. You earned the Golden Egg badge!', background: 'nest', art: ['trex-celebrate'], bonus: 'reward-egg' },
   replay: { title: 'Adventure complete', copy: 'Your Golden Egg badge is saved. Play again for new math clues, or head home.', background: 'jungle', art: ['trex-neutral'], bonus: 'reward-egg' },
 };
-const storyButtons = { mission: 'See the trail', mosasaurus: 'Look in the cave', discovery: 'Celebrate!', complete: 'Finish chapter' };
+const storyButtons = { mosasaurus: 'Look in the cave', discovery: 'Celebrate!', complete: 'Finish chapter' };
 
 function scenery(data) {
   const frame = el('div', { className: 'chapter-scene-art' });
@@ -515,7 +518,19 @@ function confirmWelcomeRestart(start, trigger) {
     el('p', {}, 'Starting over replaces this adventure’s checkpoint. Your earned rewards are saved.'), restart), trigger);
 }
 
-function render(leavingWelcome) {
+function sceneCrossfade(outgoing, incoming, outClass, inClass, duration) {
+  if (!outgoing) return;
+  outgoing.inert = true;
+  outgoing.querySelector('#chapter-grownups').removeAttribute('id');
+  outgoing.classList.add(outClass);
+  root.append(outgoing);
+  incoming.classList.add(inClass);
+  setTimeout(() => outgoing.remove(), duration);
+}
+
+function render(leavingWelcome, leavingMission) {
+  disposeMission?.();
+  disposeMission = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
   if (scene === 'welcome') {
     const stage = createWelcome({
@@ -528,6 +543,19 @@ function render(leavingWelcome) {
       stopSpeech,
     });
     root.replaceChildren(el('main', { className: 'welcome-main' }, stage, persistWarning));
+    window.scrollTo(0, 0);
+    stage.querySelector('h1').focus({ preventScroll: true });
+    return;
+  }
+  if (scene === 'mission') {
+    const { stage, dispose } = createMissingEgg({
+      listen, stopSpeech, grownUps: growUps,
+      openMap: stage => next({ leavingMission: stage }),
+    });
+    disposeMission = dispose;
+    const main = el('main', { className: 'mission-main' }, stage, persistWarning);
+    root.replaceChildren(main);
+    sceneCrossfade(leavingWelcome, main, 'welcome-leaving', 'welcome-mission-in', 200);
     window.scrollTo(0, 0);
     stage.querySelector('h1').focus({ preventScroll: true });
     return;
@@ -554,15 +582,7 @@ function render(leavingWelcome) {
   else content = stories[scene] ? storyScene(scene) : mathScene(index);
   const main = el('main', { className: 'chapter-main' }, content, persistWarning);
   root.replaceChildren(header, main);
-  if (leavingWelcome) {
-    leavingWelcome.inert = true;
-    leavingWelcome.querySelector('#chapter-grownups').removeAttribute('id');
-    leavingWelcome.classList.add('welcome-leaving');
-    // Keep the outgoing view over the incoming mission during the brief crossfade.
-    root.append(leavingWelcome);
-    main.classList.add('welcome-mission-in');
-    setTimeout(() => leavingWelcome.remove(), 200);
-  }
+  sceneCrossfade(leavingMission, main, 'mission-leaving', 'mission-map-in', 300);
   window.scrollTo(0, 0);
   root.querySelector('h1')?.focus({ preventScroll: true });
 }
