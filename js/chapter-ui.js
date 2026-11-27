@@ -2,6 +2,7 @@ import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, empty
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel, packedSupplies, suppliesNumberLine } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
+import { release } from './release.js';
 
 const root = document.getElementById('chapter');
 let storage;
@@ -430,7 +431,7 @@ function mathScene(index) {
   const question = questions[index];
   const attempt = activeRun().attempt;
   const currentPanel = el('div', { className: 'chapter-work-panel' });
-  const sketch = drawing();
+  const sketch = release.chapterDrawing ? drawing() : null;
   const work = chapterModel(question, attempt.step);
   const line = question.id === 'supplies' && attempt.step === 1 ? suppliesNumberLine(question.params) : null;
   const result = el('p', { id: 'chapter-feedback', role: 'status' }, attempt.error);
@@ -454,12 +455,14 @@ function mathScene(index) {
   }
   const showWork = button(line ? 'Basket' : 'Math tools', () => select('math'), 'chapter-secondary');
   const showLine = line ? button('Number line', () => select('line'), 'chapter-secondary') : null;
-  const showDraw = button('Draw', () => select('draw'), 'chapter-secondary');
+  const showDraw = sketch ? button('Draw', () => select('draw'), 'chapter-secondary') : null;
   function select(view) {
     work.hidden = view !== 'math';
-    sketch.hidden = view !== 'draw';
     showWork.setAttribute('aria-pressed', String(view === 'math'));
-    showDraw.setAttribute('aria-pressed', String(view === 'draw'));
+    if (sketch) {
+      sketch.hidden = view !== 'draw';
+      showDraw.setAttribute('aria-pressed', String(view === 'draw'));
+    }
     if (line) {
       line.hidden = view !== 'line';
       showLine.setAttribute('aria-pressed', String(view === 'line'));
@@ -484,8 +487,8 @@ function mathScene(index) {
   const tools = el('div', { className: 'chapter-actions chapter-math-tools' }, audio, coachHint, breakButton);
   const restart = button('Restart stop', restartStop, 'chapter-secondary');
   const workTools = el('div', { className: 'chapter-actions chapter-work-toggle' },
-    showWork, ...(showLine ? [showLine] : []), showDraw, restart);
-  currentPanel.append(workTools, work, ...(line ? [line] : []), sketch);
+    ...[showWork, showLine, showDraw, restart].filter(Boolean));
+  currentPanel.append(workTools, ...[work, line, sketch].filter(Boolean));
   const form = el('form', { className: 'chapter-answer-form' }, label, el('button', { type: 'submit' }, 'Check answer'));
   function completed(outcome) {
     form.hidden = true;
@@ -561,6 +564,10 @@ function render() {
     headerActions.prepend(map);
   }
   const index = qIndex();
+  const previous = scene === 'wiggle' ? stops.indexOf('share') : index - 1;
+  if (!intro && previous >= 0) {
+    headerActions.prepend(button('Previous stop', () => openStop(previous), 'chapter-secondary'));
+  }
   let content;
   if (scene === 'map') content = trailMap();
   else if (scene === 'wiggle') content = el('section', { className: 'chapter-break' }, el('h1', { tabindex: '-1' }, 'Dino Wiggle Break'),
