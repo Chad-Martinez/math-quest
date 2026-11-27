@@ -20,14 +20,28 @@ const saved = {
   run: { seed: 12345, scene: 'footprints', outcomes: ['assisted', null, null, null, null],
     attempt: { step: 0, draft: '6', hints: 1, assisted: true, solved: false, error: '', teach: false } },
 };
+const greeting = 'Hi, Harrison! Are you ready for a dinosaur adventure?';
 const errors = [];
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 const heading = (page, name) => page.getByRole('heading', { name, exact: true });
+const backdrop = page => page.locator('.welcome-background');
 const stored = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), chapterKey);
 
-async function open(viewport, { fixture, reducedMotion = 'no-preference' } = {}) {
+async function open(viewport, { fixture, reducedMotion = 'no-preference', mockSpeech = false } = {}) {
   const context = await browser.newContext({ viewport, hasTouch: true, reducedMotion });
-  await context.addInitScript(({ chapterKey, fixture }) => {
+  await context.addInitScript(({ chapterKey, fixture, mockSpeech }) => {
+    if (mockSpeech) {
+      window.spoken = [];
+      window.cancellations = 0;
+      Object.defineProperty(window, 'SpeechSynthesisUtterance', { value: class {
+        constructor(text) { this.text = text; }
+      } });
+      Object.defineProperty(window, 'speechSynthesis', { value: {
+        getVoices: () => [],
+        speak: utterance => { window.spoken.push(utterance.text); utterance.onstart(); },
+        cancel: () => window.cancellations++,
+      } });
+    }
     if (fixture && !localStorage.getItem(chapterKey)) localStorage.setItem(chapterKey, JSON.stringify(fixture));
     const original = crypto.getRandomValues.bind(crypto);
     window.sceneStartCount = 0;
@@ -35,7 +49,7 @@ async function open(viewport, { fixture, reducedMotion = 'no-preference' } = {})
       if (list instanceof Uint32Array && list.length === 1) window.sceneStartCount++;
       return original(list);
     };
-  }, { chapterKey, fixture });
+  }, { chapterKey, fixture, mockSpeech });
   const page = await context.newPage();
   page.on('pageerror', error => errors.push(String(error)));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -77,10 +91,17 @@ try {
   assert.ok(await button(reference, 'Start Adventure').isEnabled());
   assert.equal(await button(reference, 'Continue Adventure').count(), 0);
   const animated = reference.locator('.welcome-stage');
-  if (pictures) await reference.screenshot({ path: join(pictures, '01-initial-welcome.png') });
+  if (pictures) {
+    for (const [time, filename] of [[0, '01-initial'], [980, '02-walking'], [1680, '03-settling'], [2100, '04-greeting']]) {
+      await animated.evaluate((stage, time) => stage.getAnimations({ subtree: true }).forEach(animation => {
+        animation.currentTime = time;
+      }), time);
+      await capture(reference, filename);
+    }
+  }
   await animated.evaluate(stage => stage.getAnimations({ subtree: true }).forEach(animation => animation.finish()));
-  assert.equal(await reference.getByText('Hi, explorer! Ready for a dinosaur adventure?', { exact: true }).count(), 1);
-  await capture(reference, '02-entrance-complete');
+  assert.equal(await reference.getByText(greeting, { exact: true }).count(), 1);
+  await capture(reference, '05-desktop');
   assert.ok(await reference.evaluate(() => document.querySelector('.welcome-stage').getBoundingClientRect().height <= innerHeight));
   await reference.close();
 
@@ -88,7 +109,7 @@ try {
   await entranceEnds(landscape);
   await buttonsFit(landscape);
   assert.equal(await landscape.locator('.welcome-primary').textContent(), 'Continue Adventure');
-  await capture(landscape, '03-returning-player');
+  await capture(landscape, '06-returning-player');
   await button(landscape, 'Start Adventure').click();
   const confirmation = landscape.getByRole('dialog', { name: 'Start a new adventure?' });
   await confirmation.waitFor();
@@ -105,13 +126,19 @@ try {
     const tablet = await open({ width, height: width === 1024 ? 768 : 834 });
     await entranceEnds(tablet);
     await buttonsFit(tablet);
-    await capture(tablet, `04-ipad-landscape-${width}`);
+    await capture(tablet, `07-ipad-landscape-${width}`);
     await tablet.close();
   }
   const portrait = await open({ width: 768, height: 1024 });
   await entranceEnds(portrait);
   await buttonsFit(portrait);
-  await capture(portrait, '05-ipad-portrait');
+  await capture(portrait, '08-ipad-portrait');
+  assert.match(await backdrop(portrait).evaluate(img => img.currentSrc), /jungle-portrait\.jpg$/);
+  assert.equal(await portrait.locator('.welcome-egg').isVisible(), false);
+  await portrait.setViewportSize({ width: 1024, height: 768 });
+  await portrait.waitForFunction(() => document.querySelector('.welcome-background').currentSrc.endsWith('jungle-background.webp'));
+  assert.equal(await portrait.locator('.welcome-egg').isVisible(), true);
+  await portrait.setViewportSize({ width: 768, height: 1024 });
   await portrait.addStyleTag({ content: 'html { font-size: 200%; }' });
   await portrait.locator('.welcome-start').scrollIntoViewIfNeeded();
   assert.ok(await portrait.evaluate(() => {
@@ -121,9 +148,36 @@ try {
   }));
   await portrait.close();
 
+  for (const [width, height, screenshot] of [[390, 844, '09-phone-portrait'], [844, 390, '10-phone-landscape']]) {
+    const phone = await open({ width, height });
+    await entranceEnds(phone);
+    await buttonsFit(phone);
+    assert.ok(await phone.evaluate(() => document.documentElement.scrollHeight <= innerHeight));
+    if (width < height) {
+      const pose = await phone.locator('.welcome-character').boundingBox();
+      const start = await button(phone, 'Start Adventure').boundingBox();
+      assert.ok((pose.y + pose.height) / height >= .77 && (pose.y + pose.height) / height <= .85);
+      assert.ok(start.y / height >= .84 && start.y / height <= .93);
+    }
+    await capture(phone, screenshot);
+    const file = width < height ? '/jungle-portrait.jpg' : '/jungle-background.webp';
+    assert.ok((await backdrop(phone).evaluate(img => img.currentSrc)).endsWith(file));
+    await phone.close();
+  }
+
+  for (const [width, height] of [[375, 667], [667, 375], [844, 320]]) {
+    const compact = await open({ width, height }, { fixture: saved, reducedMotion: 'reduce' });
+    await buttonsFit(compact);
+    assert.ok(await compact.evaluate(() =>
+      document.documentElement.scrollWidth <= innerWidth && document.documentElement.scrollHeight <= innerHeight));
+    await compact.close();
+  }
+
   const reduced = await open({ width: 1024, height: 768 }, { reducedMotion: 'reduce' });
   assert.equal(await reduced.locator('.welcome-stage').evaluate(stage => stage.getAnimations({ subtree: true }).length), 0);
-  await capture(reduced, '06-reduced-motion');
+  await capture(reduced, '11-reduced-motion');
+  await reduced.keyboard.press('Tab');
+  assert.equal(await reduced.evaluate(() => document.activeElement.textContent), 'Listen');
   await reduced.keyboard.press('Tab');
   assert.equal(await reduced.evaluate(() => document.activeElement.textContent), 'Start Adventure');
   await reduced.keyboard.press('Enter');
@@ -139,6 +193,15 @@ try {
   await immediate.locator('.welcome-leaving').waitFor({ state: 'detached' });
   assert.equal(await immediate.evaluate(() => window.sceneStartCount), 1);
   await immediate.close();
+
+  const narration = await open({ width: 390, height: 844 }, { mockSpeech: true, reducedMotion: 'reduce' });
+  assert.deepEqual(await narration.evaluate(() => window.spoken), []);
+  await button(narration, 'Listen').tap();
+  assert.deepEqual(await narration.evaluate(() => window.spoken), [greeting]);
+  await button(narration, 'Start Adventure').tap();
+  await heading(narration, 'An egg is missing!').waitFor();
+  assert.equal(await narration.evaluate(() => window.cancellations), 1);
+  await narration.close();
 
   const grownUps = await open({ width: 1024, height: 768 });
   await button(grownUps, 'Grown-ups').click();

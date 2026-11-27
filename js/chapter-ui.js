@@ -62,9 +62,9 @@ function stopSpeech() {
   window.speechSynthesis?.cancel();
 }
 
-function listen(text) {
+function listen(text, { label = '◖ Listen' } = {}) {
   const notice = el('span', { className: 'chapter-speech-status', role: 'status' });
-  const control = button('◖ Listen', () => {
+  const control = button(label, () => {
     if (currentUtterance?.control === control) {
       stopSpeech();
       return;
@@ -85,7 +85,7 @@ function listen(text) {
     notice.textContent = '';
     const active = { control, finish: () => {
       clearTimeout(timer);
-      control.textContent = '◖ Listen';
+      control.textContent = label;
     } };
     function failed() {
       if (currentUtterance !== active) return;
@@ -524,6 +524,8 @@ function render(leavingWelcome) {
       resume: () => begin(),
       grownUps: growUps,
       confirmStart: confirmWelcomeRestart,
+      listen,
+      stopSpeech,
     });
     root.replaceChildren(el('main', { className: 'welcome-main' }, stage, persistWarning));
     window.scrollTo(0, 0);
