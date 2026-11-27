@@ -1,6 +1,6 @@
 import { dragTo } from './drag.js';
 import { tallyGroups } from './engine.js';
-import { balanceState, moveOne, partWholeState } from './workspace-state.js';
+import { balanceState, moveOne, partWholeState, toggleBead } from './workspace-state.js';
 
 export function compareQuantities(first, second) {
   if (first === second) return 'the same number as';
@@ -286,26 +286,84 @@ function counterControls({ limit, moveLabel, returnLabel, destination, origin, i
   return controls;
 }
 
-function partWhole(container, config) {
+function partWhole(container, config, { example = false, onChange } = {}) {
+  container.classList.add('bead-model');
   const unsorted = workspaceGroup('Beads to sort');
-  const red = workspaceGroup('Red beads');
-  const groups = node('div', '', 'workspace-groups');
-  const status = node('p', '', 'model-status');
+  const red = workspaceGroup('Red bowl');
+  red.area.classList.add('red-bowl');
+  unsorted.area.classList.add('bead-bowl');
+  const groups = node('div', '', 'workspace-groups bead-groups');
+  const status = node('p', '', 'model-status bead-instruction');
   status.setAttribute('role', 'status');
   groups.append(unsorted.area, red.area);
-  const controls = counterControls({
-    limit: config.total, moveLabel: 'Move one to red', returnLabel: 'Move one back',
-    destination: red.area, origin: unsorted.area, icon: '●',
-    render(moved) {
-      const { red: redCount, remaining, relation } = partWholeState(config, moved);
-      showCounters(unsorted, relation === 0 ? 'Blue beads' : 'Beads to sort', [remaining], [relation === 0 ? '◆' : '●']);
-      showCounters(red, 'Red beads', [redCount], ['▲']);
-      const next = relation === 0 ? 'Count the blue beads.' : relation < 0 ? 'Move more beads to red.' : 'Move some beads back.';
-      status.textContent = `Red group: ${redCount}. Need ${config.known}. ${next}`;
-    },
+
+  let sorted = new Set();
+  const beads = Array.from({ length: config.total }, (_, index) => {
+    const bead = button('', () => move(index));
+    bead.classList.add('bead-piece');
+    bead.dataset.bead = String(index);
+    bead.dataset.dragIcon = '◉';
+    bead.append(node('span', '', 'bead-face'));
+    dragTo(bead, () => sorted.has(index) ? unsorted.area : red.area, () => move(index));
+    unsorted.contents.append(bead);
+    return bead;
   });
-  container.append(node('p', `Whole group: ${config.total} beads. Tap Move one to red or drag that button to the red group.`),
-    groups, status, controls);
+  const showOne = button('Show me one', () => move(0));
+  const reset = button('Start over', () => {
+    const focused = beads.includes(document.activeElement) ? document.activeElement : null;
+    sorted = new Set();
+    unsorted.contents.append(...beads);
+    focused?.focus({ preventScroll: true });
+    update();
+  });
+
+  function move(index) {
+    const bead = beads[index];
+    const before = bead.getBoundingClientRect();
+    bead.getAnimations?.().forEach(animation => animation.cancel());
+    const focused = document.activeElement === bead;
+    sorted = toggleBead(sorted, index, config.total);
+    const to = sorted.has(index) ? red : unsorted;
+    to.contents.append(bead);
+    if (focused) bead.focus({ preventScroll: true });
+    update();
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && bead.animate) {
+      const after = bead.getBoundingClientRect();
+      bead.animate([
+        { transform: `translate(${before.left - after.left}px, ${before.top - after.top}px)` },
+        { transform: 'translate(0, 0)' },
+      ], { duration: 190, easing: 'ease-out' });
+    }
+  }
+
+  function update() {
+    const { red: count, remaining, relation } = partWholeState(config, sorted.size);
+    const blue = relation === 0;
+    const label = blue ? 'Blue bowl' : 'Beads to sort';
+    unsorted.heading.textContent = label;
+    unsorted.area.setAttribute('aria-label', `${label}, ${remaining} ${remaining === 1 ? 'bead' : 'beads'}`);
+    unsorted.area.classList.toggle('blue-bowl', blue);
+    red.area.setAttribute('aria-label', `Red bowl, ${count} of ${config.known} beads`);
+    for (const [index, bead] of beads.entries()) {
+      const inRed = sorted.has(index);
+      bead.dataset.group = inRed ? 'red' : blue ? 'blue' : 'unsorted';
+      bead.setAttribute('aria-label', inRed
+        ? `Red bead ${index + 1}. Move back.`
+        : `${blue ? 'Blue bead' : 'Bead'} ${index + 1}. Move to the red bowl.`);
+    }
+    const needed = Math.abs(config.known - count);
+    const amount = `${needed} ${needed === 1 ? 'bead' : 'beads'}`;
+    status.textContent = blue ? 'Count the blue beads.' : relation < 0
+      ? `Move ${amount} into the red bowl.` : `Move ${amount} back.`;
+    if (example && count > 0 && document.activeElement === showOne) beads[0].focus({ preventScroll: true });
+    showOne.hidden = !example || count !== 0;
+    reset.setAttribute('aria-disabled', String(count === 0));
+    onChange?.(relation);
+  }
+
+  const total = node('p', `Whole group · ${config.total} beads`, 'bead-total');
+  container.append(total, status, showOne, groups, reset);
+  update();
 }
 
 function balance(container, config) {
@@ -347,15 +405,9 @@ const renderers = {
   'chart-grow': growChart, 'part-whole': partWhole, balance,
 };
 
-export function buildModel(config) {
+export function buildModel(config, options) {
   const container = node('section', '', 'math-model');
-  container.setAttribute('aria-label', 'Math tools');
-  renderers[config.kind](container, config);
-  if (config.alternative) {
-    const alternative = node('details', '', 'workspace-other');
-    alternative.append(node('summary', 'Use a number line'));
-    renderers[config.alternative.kind](alternative, config.alternative);
-    container.append(alternative);
-  }
+  container.setAttribute('aria-label', config.kind === 'line' ? 'Number line' : 'Math tools');
+  renderers[config.kind](container, config, options);
   return container;
 }

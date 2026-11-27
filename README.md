@@ -14,7 +14,7 @@ In the repository, open **Settings → Pages → Build and deployment**. Choose 
 
 ## Play on iPad
 
-Open the Pages URL in Safari. Tap **Learn a skill** for a worked example, guided practice, and a fresh problem to solve on your own. Or tap a world, then use **Read aloud**, **Hint**, or **Draw** as needed. **Teaching tips** opens the [Parent Coach](docs/parent-coach.md) for the current challenge. **Grown-ups** lets you change the number of challenges and reset progress for one adventure or the whole game. Stars and completions from older versions are included in the overall totals and can be cleared with a whole-game reset. See [the iPad test checklist](docs/testing.md) for the full first run.
+Open the Pages URL in Safari. Tap **Learn a skill** for a worked example, guided practice, and a fresh problem to solve on your own. Or tap a world, then use **Read aloud**, **Hint**, or **Draw** as needed. **Grown-ups → Teaching tips** opens the [Parent Coach](docs/parent-coach.md) for the current challenge. **Grown-ups** lets you change the number of challenges and reset progress for one adventure or the whole game. Stars and completions from older versions are included in the overall totals and can be cleared with a whole-game reset. See [the iPad test checklist](docs/testing.md) for the full first run.
 
 Settings, stars, and adventure counts are stored per browser and origin. Private browsing, clearing website data, disabled storage, or changing devices can affect access to saved progress. In-progress adventures are kept in memory. Phase 1 requires a connection to load the hosted game. Speech availability and voice selection depend on the browser and device.
 

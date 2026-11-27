@@ -44,7 +44,14 @@ The Coach suite tests 2,000 seeded items per template with independent math chec
 
 ## Math Workspace release checks
 
-1. On iPad, open **Learn a skill → Find a missing part**. In Math tools, tap **Move one to red**, then drag the same control into the red group. Move the required number of beads and count the blue beads. Try moving one back and resetting. Drops outside the target should leave the counts alone.
+1. On iPad, open **Learn a skill → Find a missing part**. Tap a bead, then drag another bead into the red bowl. Move the required number of beads and count the blue beads. Try moving one back and resetting. Drops outside the target should leave the counts alone.
 2. Open **Learn a skill → Balance by taking away**. Drag **Take one from left** to the tray and watch which side has more. Check that the beam levels when both sides contain the same number of blocks. Put one back. In a missing-addend challenge in Equation Space, try adding a block to the right.
-3. In both models, open and close **Teaching tips** and **Math tools**. Check that the counters and answer draft stay in place. Rotate the iPad and verify that the controls and drop zones are still reachable.
+3. In both models, open and close **Grown-ups → Teaching tips** and **Math tools**. Check that the counters and answer draft stay in place. Rotate the iPad and verify that the controls and drop zones are still reachable.
 4. Try the movement controls with Tab and Space or Enter. With VoiceOver, listen for the side relationship and group counts. The answer field should stay blank until the learner enters a value.
+
+## Child-centered learning screen
+
+1. On a physical iPad in landscape, start **Find a missing part**. Confirm the question stays in view beside the beads. Tap **Show me one**, then move individual beads by tapping and dragging. Check that a canceled or off-target drag leaves the count alone.
+2. Before the red bowl is ready, the completed equation should be absent. After the child sorts the beads, the cue should ask them to count the blue beads. Tap **Show the math**, then continue to the fresh guided challenge. Guided and independent answers should start blank.
+3. Type a draft answer and switch between **Math tools**, **Number line**, and **Draw**. Draw a stroke with a finger or Apple Pencil. Return to the previous tool and verify its state, the ink, and the draft are preserved. Repeat after opening and closing Grown-ups and the Coach.
+4. Repeat in portrait, with Reduce Motion, keyboard, and VoiceOver. Check that beads have distinguishable shapes and readable names, the question stays reachable during drawing, charts remain easy to reopen, and parent pickers stay closed until tapped.

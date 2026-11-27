@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { questionsFor } from '../js/curriculum.js';
 import { seededRandom } from '../js/engine.js';
-import { balanceState, moveOne, partWholeState } from '../js/workspace-state.js';
+import { balanceState, moveOne, partWholeState, toggleBead } from '../js/workspace-state.js';
 
 test('workspace moves stop at bounds, reverse one step and reset', () => {
   assert.equal(moveOne(0, 'return', 20), 0);
@@ -53,4 +53,18 @@ test('each equation balance is level exactly when the blank is correct', () => {
       assert.deepEqual(balanced, [item.answer]);
     }
   }
+});
+
+
+test('moving an individual bead preserves identity, counts, and prior state', () => {
+  const initial = new Set();
+  const red = toggleBead(toggleBead(initial, 4, 12), 9, 12);
+  assert.deepEqual([...red], [4, 9]);
+  assert.equal(initial.size, 0);
+  assert.equal(toggleBead(red, -1, 12), red);
+  assert.equal(toggleBead(red, 12, 12), red);
+  assert.equal(toggleBead(red, 3.5, 12), red);
+  assert.deepEqual([...toggleBead(red, 4, 12)], [9]);
+  assert.deepEqual(partWholeState({ total: 12, known: 2 }, red.size),
+    { red: 2, remaining: 10, relation: 0 });
 });

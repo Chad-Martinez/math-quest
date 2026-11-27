@@ -16,3 +16,11 @@ export function balanceState({ left, rightParts, action }, moved) {
   const rightCount = action === 'add-right' ? fixedRight + moved : fixedRight;
   return { leftCount, rightCount, relation: Math.sign(leftCount - rightCount) };
 }
+
+export function toggleBead(redBeads, bead, total) {
+  if (!Number.isInteger(bead) || bead < 0 || bead >= total) return redBeads;
+  const next = new Set(redBeads);
+  if (next.has(bead)) next.delete(bead);
+  else next.add(bead);
+  return next;
+}

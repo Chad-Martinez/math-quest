@@ -27,6 +27,9 @@ let activeReview;
 let step;
 let utterance;
 let pointer;
+let workspace;
+let beadExampleComplete = false;
+let beadExampleRevealed = false;
 
 function updateProgressDisplay() {
   const totals = progressTotals(progress);
@@ -53,12 +56,13 @@ function persist(next) {
 function stopReading() {
   utterance = null;
   speech?.cancel();
-  byId('read').textContent = 'Read aloud';
+  byId('read-label').textContent = 'Listen';
 }
 
 function show(screen) {
   stopReading();
   for (const id of ['home', 'play', 'finish']) byId(id).hidden = id !== screen;
+  byId('teaching-tips').hidden = screen !== 'play';
   window.scrollTo(0, 0);
   if (screen !== 'play') byId(screen).querySelector('h1').focus({ preventScroll: true });
 }
@@ -126,14 +130,62 @@ function clearDrawing() {
   ink.clearRect(0, 0, pad.width, pad.height);
 }
 
-function renderMathTools(open = false) {
+const workspaceViews = {
+  chart: ['chart-tool', 'visual'],
+  math: ['math-tools', 'math-model'],
+  line: ['line-tool', 'line-model'],
+  draw: ['draw', 'drawing'],
+};
+
+function isBeadExample(question = session?.current) {
+  return question?.templateId === 'story/combinePart' && question.lessonStage === 'example';
+}
+
+function baseWorkspace() {
+  return session.current.visual ? 'chart' : null;
+}
+
+function selectWorkspace(view) {
   const config = session.current.models?.[step];
-  const control = byId('math-tools');
-  const panel = byId('math-model');
-  control.hidden = !config;
-  panel.hidden = !config || !open;
-  panel.replaceChildren(...(config && open ? [buildModel(config)] : []));
-  control.setAttribute('aria-expanded', String(!panel.hidden));
+  const panel = view === 'math' ? byId('math-model') : view === 'line' ? byId('line-model') : null;
+  if (panel && !panel.hasChildNodes()) {
+    const example = view === 'math' && isBeadExample();
+    const model = view === 'math' ? config : config.alternative;
+    panel.append(buildModel(model, {
+      example,
+      onChange(relation) {
+        if (!example || beadExampleRevealed) return;
+        beadExampleComplete = relation === 0;
+        updateExampleAction();
+      },
+    }));
+  }
+  workspace = view;
+  for (const [name, [control, content]] of Object.entries(workspaceViews)) {
+    byId(content).hidden = name !== view;
+    byId(control).setAttribute('aria-expanded', String(name === view));
+  }
+  if (isBeadExample()) updateExampleAction();
+}
+
+function resetWorkspace(view) {
+  const config = session.current.models?.[step];
+  byId('chart-tool').hidden = !session.current.visual;
+  byId('math-tools').hidden = !config;
+  byId('line-tool').hidden = !config?.alternative;
+  byId('math-model').replaceChildren();
+  byId('line-model').replaceChildren();
+  const unavailable = (view === 'math' && !config) || (view === 'line' && !config?.alternative);
+  selectWorkspace(unavailable ? baseWorkspace() : view);
+}
+
+for (const [view, [id]] of Object.entries(workspaceViews)) {
+  byId(id).addEventListener('click', () => {
+    const target = workspace === view ? baseWorkspace() : view;
+    selectWorkspace(target);
+    if (target === 'draw') session.markSupport('drawing');
+    if (target === 'math' || target === 'line') session.markSupport('mathTools');
+  });
 }
 
 function renderPosition() {
@@ -145,34 +197,26 @@ function renderPosition() {
   byId('trail-progress').max = session.questions.length;
 }
 
-byId('math-tools').addEventListener('click', () => {
-  const panel = byId('math-model');
-  const config = session.current.models[step];
-  if (!panel.hasChildNodes()) panel.append(buildModel(config));
-  panel.hidden = !panel.hidden;
-  if (config.kind === 'chart-grow') byId('visual').hidden = !panel.hidden;
-  byId('math-tools').setAttribute('aria-expanded', String(!panel.hidden));
-  if (!panel.hidden) session.markSupport('mathTools');
-});
-
 function renderQuestion() {
   step = 0;
   stopReading();
   const question = session.current;
   renderPosition();
-  renderMathTools(question.lessonStage === 'example');
+  beadExampleComplete = false;
+  beadExampleRevealed = false;
   byId('trail-progress').value = session.index;
   byId('prompt').textContent = question.prompt;
   byId('visual').replaceChildren(...(question.visual ? [buildChart(question.visual)] : []));
-  byId('visual').hidden = !question.visual;
-  for (const id of ['hint-copy', 'drawing', 'next']) byId(id).hidden = true;
-  byId('draw').setAttribute('aria-expanded', 'false');
+  for (const id of ['hint-copy', 'next']) byId(id).hidden = true;
   byId('hint').disabled = false;
   byId('feedback').textContent = '';
   byId('answer-form').hidden = false;
   clearDrawing();
   renderResponse();
   renderLessonSupport(question);
+  const showModel = question.lessonStage === 'example' ||
+    (question.templateId === 'story/combinePart' && question.lessonStage === 'guided');
+  resetWorkspace(showModel && question.models[0] ? 'math' : baseWorkspace());
   byId('prompt').focus({ preventScroll: true });
 }
 
@@ -181,8 +225,12 @@ function renderLessonSupport(question) {
   support.replaceChildren();
   const example = question.lessonStage === 'example';
   const guided = question.lessonStage === 'guided';
-  support.hidden = !example && !guided;
-  if (example) {
+  const beads = question.templateId === 'story/combinePart';
+  support.hidden = beads || (!example && !guided);
+  if (isBeadExample(question)) {
+    byId('answer-form').hidden = true;
+    byId('hint').disabled = true;
+  } else if (example) {
     const guide = buildCoachGuide(question);
     const steps = element('ol');
     steps.append(...guide.steps.map(instruction => element('li', instruction)));
@@ -196,9 +244,17 @@ function renderLessonSupport(question) {
   }
 }
 
+function updateExampleAction() {
+  const next = byId('next');
+  next.hidden = beadExampleRevealed ? false : !beadExampleComplete || workspace !== 'math';
+  next.textContent = beadExampleRevealed ? 'Try with help →' : 'Show the math';
+}
+
 function updateNextLabel() {
   const last = session.index + 1 === session.questions.length;
-  if (session.current.lessonStage === 'example') {
+  if (isBeadExample()) {
+    updateExampleAction();
+  } else if (session.current.lessonStage === 'example') {
     byId('next').textContent = 'Try with help →';
   } else if (session.current.lessonStage === 'guided') {
     byId('next').textContent = 'Try on your own →';
@@ -277,11 +333,11 @@ byId('answer-form').addEventListener('submit', event => {
       feedback.textContent = checkpoint.retry ?? 'Try putting the two groups together first.';
       return;
     }
-    const keepToolsOpen = !byId('math-model').hidden;
+    const previousWorkspace = workspace;
     step++;
     session.hints = 0;
     byId('hint-copy').hidden = true;
-    renderMathTools(keepToolsOpen);
+    resetWorkspace(previousWorkspace);
     renderResponse();
     feedback.textContent = `You found ${checkpoint.answer}${checkpoint.suffix ?? ' altogether'}. Now solve the last question.`;
     byId('response').querySelector('input').focus();
@@ -311,6 +367,16 @@ byId('hint').addEventListener('click', () => {
 });
 
 byId('next').addEventListener('click', () => {
+  if (isBeadExample() && !beadExampleRevealed) {
+    if (!beadExampleComplete || workspace !== 'math') return;
+    beadExampleRevealed = true;
+    const support = byId('lesson-support');
+    const { answer, explanation } = session.current;
+    support.append(element('p', `${answer} blue ${answer === 1 ? 'bead' : 'beads'}. ${explanation}`));
+    support.hidden = false;
+    updateExampleAction();
+    return;
+  }
   if (session.current?.lessonStage === 'example') saveOutcome();
   if (!session.next()) return;
   if (session.status !== 'complete') {
@@ -350,13 +416,13 @@ byId('read').addEventListener('click', () => {
   active.onend = active.onerror = () => {
     if (utterance !== active) return;
     utterance = null;
-    byId('read').textContent = 'Read aloud';
+    byId('read-label').textContent = 'Listen';
   };
   utterance = active;
   speech.cancel();
   speech.speak(active);
   session.markSupport('narration');
-  byId('read').textContent = 'Stop reading';
+  byId('read-label').textContent = 'Stop';
 });
 
 ink.lineWidth = 5;
@@ -385,12 +451,6 @@ pad.addEventListener('lostpointercapture', event => {
   if (event.pointerId === pointer) pointer = undefined;
 });
 byId('clear').addEventListener('click', clearDrawing);
-byId('draw').addEventListener('click', () => {
-  const drawing = byId('drawing');
-  drawing.hidden = !drawing.hidden;
-  if (!drawing.hidden) session.markSupport('drawing');
-  byId('draw').setAttribute('aria-expanded', String(!drawing.hidden));
-});
 for (const id of ['back', 'map']) byId(id).addEventListener('click', () => show('home'));
 byId('again').addEventListener('click', () => {
   if (lesson) startLesson(lesson.templateId);

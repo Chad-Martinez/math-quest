@@ -29,30 +29,40 @@
     <section id="play" hidden>
       <div class="play-top"><button class="quiet" id="back">← Map</button><strong id="world-name"></strong><span id="position"></span></div>
       <progress id="trail-progress" aria-label="Adventure progress"></progress>
-      <article class="card">
-        <h1 id="prompt" tabindex="-1"></h1>
-        <div id="lesson-support" class="note" hidden></div>
-        <div id="visual" hidden></div>
-        <div class="tools">
-          <button class="quiet" id="read">Read aloud</button>
-          <button class="quiet" id="hint">Hint</button>
-          <button class="quiet" id="math-tools" aria-expanded="false" aria-controls="math-model" hidden>Math tools</button>
-          <button class="quiet" id="teaching-tips" aria-haspopup="dialog" aria-controls="parent-coach">Teaching tips</button>
-          <button class="quiet" id="draw" aria-expanded="false">Draw</button>
-        </div>
-        <p id="hint-copy" class="note" role="status" hidden></p>
-        <div id="math-model" hidden></div>
-        <div id="drawing" hidden>
-          <canvas id="pad" width="800" height="220" aria-label="Drawing area"></canvas>
-          <button id="clear" class="quiet">Clear drawing</button>
-        </div>
-        <form id="answer-form">
-          <div id="response"></div>
-          <button id="check">Check answer</button>
-        </form>
-        <p id="feedback" role="status"></p>
-        <button id="next" hidden>Next challenge →</button>
-      </article>
+      <div class="learning-layout">
+        <article class="card learning-question">
+          <h1 id="prompt" tabindex="-1"></h1>
+          <div class="tools" aria-label="Question help">
+            <button class="quiet" id="read"><span aria-hidden="true">◖</span> <span id="read-label">Listen</span></button>
+            <button class="quiet" id="hint"><span aria-hidden="true">✦</span> Hint</button>
+          </div>
+          <div id="lesson-support" class="note" hidden></div>
+          <p id="hint-copy" class="note" role="status" hidden></p>
+        </article>
+        <section class="card learning-workspace" aria-label="Workspace">
+          <div class="tools" aria-label="Workspace tools">
+            <button class="quiet" id="chart-tool" aria-expanded="false" aria-controls="visual" hidden>Chart</button>
+            <button class="quiet" id="math-tools" aria-expanded="false" aria-controls="math-model" hidden><span aria-hidden="true">▦</span> Math tools</button>
+            <button class="quiet" id="line-tool" aria-expanded="false" aria-controls="line-model" hidden>Number line</button>
+            <button class="quiet" id="draw" aria-expanded="false" aria-controls="drawing"><span aria-hidden="true">✎</span> Draw</button>
+          </div>
+          <div id="visual" hidden></div>
+          <div id="math-model" hidden></div>
+          <div id="line-model" hidden></div>
+          <div id="drawing" hidden>
+            <canvas id="pad" width="800" height="300" aria-label="Drawing area"></canvas>
+            <button id="clear" class="quiet">Clear drawing</button>
+          </div>
+        </section>
+        <section class="card learning-answer" aria-label="Answer and continue">
+          <form id="answer-form">
+            <div id="response"></div>
+            <button id="check">Check answer</button>
+          </form>
+          <p id="feedback" role="status"></p>
+          <button id="next" hidden>Next challenge →</button>
+        </section>
+      </div>
     </section>
     <section id="finish" class="card finish" hidden>
       <div class="reward" aria-hidden="true">⭐</div>
@@ -104,8 +114,10 @@
       <form id="settings-close" method="dialog"><button class="quiet" id="settings-done" autofocus>Done</button></form>
     </div>
     <div id="settings-panel">
+      <button class="quiet" id="teaching-tips" aria-haspopup="dialog" aria-controls="parent-coach" hidden>Teaching tips</button>
       <label for="length">Challenges per adventure</label>
       <select id="length"><option value="3">3</option><option value="5">5</option><option value="7">7</option></select>
+      <h3>Learning progress</h3>
       <p id="history"></p>
       <p id="legacy-progress" hidden></p>
       <p>Progress stays in this browser.</p>
