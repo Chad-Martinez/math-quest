@@ -64,6 +64,7 @@ function movable(asset, label, from, to, update, moved = false) {
   piece.dataset.dragIcon = '●';
   dragTo(piece, () => piece.parentElement === from.items ? to.node : from.node, move);
   (moved ? to : from).items.append(piece);
+  return piece;
 }
 
 function statusLine(container) {
@@ -87,6 +88,52 @@ function combine(container, first, second, assets, labels, demonstrated) {
     for (let i = 0; i < count; i++) movable(asset, `${label} ${i + 1}`, source, basket, update, demonstrated);
   }
   update();
+}
+
+function supplyBasket({ a, b, need }, added) {
+  const basket = group('Travel basket');
+  basket.node.classList.add('chapter-supply-basket');
+  basket.node.querySelector('h3').textContent = `Travel basket · Goal: ${need}`;
+  units(basket, a, berry('red'), 'Red berry');
+  units(basket, b, berry('blue'), 'Blue berry');
+  for (let i = 0; i < added; i++) {
+    const extra = token(spareBerry(i), 'Added berry');
+    extra.classList.add('chapter-added-berry');
+    basket.items.append(extra);
+  }
+  return basket;
+}
+
+const spareBerry = index => berry(index % 2 ? 'blue' : 'red');
+
+function packSupplies(container, params, demonstrated) {
+  const { have, need } = params;
+  const basket = supplyBasket(params, 0);
+  const spare = group('Spare berries');
+  container.append(basket.node, spare.node);
+  const status = statusLine(container);
+  const update = () => {
+    const count = basket.items.childElementCount;
+    const next = count === need ? 'Count just the berries you added.'
+      : count > need ? 'Put a berry back.' : 'Tap or drag spare berries into the basket.';
+    status.textContent = `${count} of ${need} berries. ${next}`;
+  };
+  const available = Math.min(20 - have, need - have + 2);
+  for (let i = 0; i < available; i++) {
+    const extra = movable(spareBerry(i), `Spare berry ${i + 1}`, spare, basket, update, demonstrated && i < need - have);
+    extra.classList.add('chapter-added-berry');
+  }
+  update();
+}
+
+export function packedSupplies(params) {
+  const basket = supplyBasket(params, params.need - params.have);
+  basket.node.querySelector('h3').textContent = `Travel basket · ${params.need} berries`;
+  return basket.node;
+}
+
+export function suppliesNumberLine({ have, need }) {
+  return buildModel({ kind: 'line', start: have, target: need, showJumps: true });
 }
 
 function footprints(container, { small, large }, demonstrated) {
@@ -155,7 +202,7 @@ export function chapterModel(question, step, demonstrated = false) {
   const p = question.params;
   if (question.id === 'supplies') {
     if (step === 0) combine(container, p.a, p.b, [berry('red'), berry('blue')], ['Red berries', 'Blue berries', 'Travel basket'], demonstrated);
-    else container.append(buildModel({ kind: 'line', start: p.have, target: p.need, showJumps: true, atTarget: demonstrated }));
+    else packSupplies(container, p, demonstrated);
   } else if (question.id === 'footprints') {
     footprints(container, p, demonstrated);
   } else if (question.id === 'share' || question.id === 'gems') {

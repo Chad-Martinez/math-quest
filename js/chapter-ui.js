@@ -1,6 +1,6 @@
 import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
-import { chapterModel } from './chapter-models.js';
+import { chapterModel, packedSupplies, suppliesNumberLine } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
 
 const root = document.getElementById('chapter');
@@ -411,12 +411,28 @@ function exampleDialog(index, trigger, onWorked) {
   const modal = dialog('See a different example', section, trigger);
 }
 
+function packedSuppliesView(question, outcome) {
+  const { have, need } = question.params;
+  const added = need - have;
+  const summary = outcome === 'worked-example' ? `Adding ${added} berries makes ${need} for the trip.` :
+    `You added ${added} berries. Now we have ${need} for the trip!`;
+  const equations = outcome === 'worked-example' ? question.equations : question.equations.slice(-1);
+  return el('section', { className: 'chapter-packed-supplies', 'aria-labelledby': 'chapter-packed-title' },
+    el('div', { className: 'chapter-packed-art' }, picture(character('trex-celebrate'), 'chapter-packed-trex', 'T-Rex celebrates')),
+    el('div', { className: 'chapter-packed-content' },
+      el('h2', { id: 'chapter-packed-title', tabindex: '-1' }, 'Supplies packed!'),
+      el('p', {}, summary),
+      packedSupplies(question.params),
+      ...equations.map(equation => el('p', { className: 'chapter-worked-equation' }, equation))));
+}
+
 function mathScene(index) {
   const question = questions[index];
   const attempt = activeRun().attempt;
   const currentPanel = el('div', { className: 'chapter-work-panel' });
   const sketch = drawing();
   const work = chapterModel(question, attempt.step);
+  const line = question.id === 'supplies' && attempt.step === 1 ? suppliesNumberLine(question.params) : null;
   const result = el('p', { id: 'chapter-feedback', role: 'status' }, attempt.error);
   const hint = el('p', { className: 'chapter-hint', role: 'status', id: 'chapter-hint' });
   const { field, label } = answerField('Your answer');
@@ -432,17 +448,22 @@ function mathScene(index) {
   const current = el('h2', { id: 'chapter-question', tabindex: '-1' }, question.prompts[attempt.step]);
   const context = el('div', {}, el('p', { className: 'chapter-story-text' }, question.story), current);
   if (attempt.step) {
-    const label = question.id === 'supplies' ? `In your basket: ${question.answers[0]} berries.` :
+    const label = question.id === 'supplies' ? `You started with ${question.answers[0]} berries.` :
       `Right-side total: ${question.answers[0]} stones.`;
     current.before(el('p', { className: 'chapter-known' }, label));
   }
-  const showWork = button('Math tools', () => select('math'), 'chapter-secondary');
+  const showWork = button(line ? 'Basket' : 'Math tools', () => select('math'), 'chapter-secondary');
+  const showLine = line ? button('Number line', () => select('line'), 'chapter-secondary') : null;
   const showDraw = button('Draw', () => select('draw'), 'chapter-secondary');
   function select(view) {
     work.hidden = view !== 'math';
     sketch.hidden = view !== 'draw';
     showWork.setAttribute('aria-pressed', String(view === 'math'));
     showDraw.setAttribute('aria-pressed', String(view === 'draw'));
+    if (line) {
+      line.hidden = view !== 'line';
+      showLine.setAttribute('aria-pressed', String(view === 'line'));
+    }
   }
   function presentHints() {
     const current = activeRun().attempt;
@@ -461,8 +482,10 @@ function mathScene(index) {
   const breakButton = button('Take a break', () => movementBreak(breakButton), 'chapter-secondary');
   const audio = listen(() => [question.story, attempt.step ? context.querySelector('.chapter-known').textContent : '', question.prompts[attempt.step]].join(' '));
   const tools = el('div', { className: 'chapter-actions chapter-math-tools' }, audio, coachHint, breakButton);
-  currentPanel.append(el('div', { className: 'chapter-actions chapter-work-toggle' }, showWork, showDraw,
-    button('Restart stop', restartStop, 'chapter-secondary')), work, sketch);
+  const restart = button('Restart stop', restartStop, 'chapter-secondary');
+  const workTools = el('div', { className: 'chapter-actions chapter-work-toggle' },
+    showWork, ...(showLine ? [showLine] : []), showDraw, restart);
+  currentPanel.append(workTools, work, ...(line ? [line] : []), sketch);
   const form = el('form', { className: 'chapter-answer-form' }, label, el('button', { type: 'submit' }, 'Check answer'));
   function completed(outcome) {
     form.hidden = true;
@@ -470,12 +493,23 @@ function mathScene(index) {
     coachHint.disabled = true;
     result.textContent = outcome === 'worked-example' ? 'You followed the worked example.' : question.success;
     result.classList.add('chapter-success');
-    const equations = outcome === 'worked-example' ? question.equations : question.equations.slice(-1);
-    result.after(...equations.map(equation => el('p', { className: 'chapter-worked-equation' }, equation)));
+    if (question.id === 'supplies') {
+      context.hidden = true;
+      tools.hidden = true;
+      workTools.replaceChildren(restart);
+      currentPanel.replaceChildren(workTools, packedSuppliesView(question, outcome));
+    } else {
+      const equations = outcome === 'worked-example' ? question.equations : question.equations.slice(-1);
+      result.after(...equations.map(equation => el('p', { className: 'chapter-worked-equation' }, equation)));
+    }
     const continueButton = practiceRun ? button('Back to adventure', returnToAdventure) :
       button(index === 4 ? 'Follow the clue' : 'Continue the search', next);
     actions.replaceChildren(continueButton);
-    actions.querySelector('button').focus({ preventScroll: true });
+    const packedTitle = currentPanel.querySelector('#chapter-packed-title');
+    if (packedTitle) {
+      packedTitle.focus({ preventScroll: true });
+      packedTitle.scrollIntoView({ block: 'nearest' });
+    } else continueButton.focus({ preventScroll: true });
   }
   function worked() {
     writeRun(finishChallenge(activeRun(), 'worked-example'));
