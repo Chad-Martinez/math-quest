@@ -222,3 +222,10 @@ body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
 #chapter :is(h1, h2, h3)[tabindex="-1"]:focus { outline: 0; }
 
 .chapter-release .drag-ghost img { width: 32px; height: 32px; object-fit: contain; }
+
+#chapter .chapter-share-recipient .chapter-token.chapter-added-berry {
+  background-color: #ffdfa0;
+  border-color: #a4642f;
+  border-style: dashed;
+  border-radius: 50%;
+}
