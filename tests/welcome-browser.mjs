@@ -200,7 +200,7 @@ try {
   await reduced.keyboard.press('Tab');
   assert.equal(await reduced.evaluate(() => document.activeElement.textContent), 'Start Adventure');
   await reduced.keyboard.press('Enter');
-  await heading(reduced, 'An egg is missing!').waitFor();
+  await heading(reduced, 'The Missing Egg').waitFor();
   assert.equal(await reduced.locator('.welcome-leaving').count(), 0);
   await reduced.close();
 
@@ -209,7 +209,7 @@ try {
   await immediate.locator('.welcome-celebrating').waitFor();
   assert.deepEqual(await visiblePoses(immediate), ['trex-celebrate.png']);
   assert.equal(await stored(immediate), null);
-  await heading(immediate, 'An egg is missing!').waitFor();
+  await heading(immediate, 'The Missing Egg').waitFor();
   await immediate.locator('.welcome-leaving').waitFor({ state: 'detached' });
   assert.equal(await immediate.evaluate(() => window.sceneStartCount), 1);
   await immediate.close();
@@ -219,7 +219,7 @@ try {
   await button(narration, 'Listen').tap();
   assert.deepEqual(await narration.evaluate(() => window.spoken), [greeting]);
   await button(narration, 'Start Adventure').tap();
-  await heading(narration, 'An egg is missing!').waitFor();
+  await heading(narration, 'The Missing Egg').waitFor();
   assert.equal(await narration.evaluate(() => window.cancellations), 1);
   await narration.close();
 
@@ -233,7 +233,7 @@ try {
   const restart = await open({ width: 1024, height: 768 }, { fixture: saved, reducedMotion: 'reduce' });
   await button(restart, 'Start Adventure').click();
   await button(restart, 'Start over').click();
-  await heading(restart, 'An egg is missing!').waitFor();
+  await heading(restart, 'The Missing Egg').waitFor();
   const replaced = await stored(restart);
   assert.notEqual(replaced.run.seed, saved.run.seed);
   assert.equal(replaced.badge, saved.badge);
@@ -246,7 +246,7 @@ try {
   });
   assert.equal(await button(complete, 'Continue Adventure').count(), 0);
   await button(complete, 'Start Adventure').click();
-  await heading(complete, 'An egg is missing!').waitFor();
+  await heading(complete, 'The Missing Egg').waitFor();
   assert.equal((await stored(complete)).runs, saved.runs);
 
   assert.deepEqual(errors, []);

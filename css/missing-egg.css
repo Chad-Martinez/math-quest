@@ -1,0 +1,193 @@
+#chapter .mission-main { width: 100%; padding: 0; }
+
+.mission-stage {
+  --welcome-cream: #fff3d6;
+  --welcome-green: #075b35;
+  --welcome-gold: #f7c84d;
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: max(55px, 14svh) auto 1fr auto;
+  min-height: 100svh;
+  padding: 0 max(4vw, env(safe-area-inset-right)) max(4svh, env(safe-area-inset-bottom))
+    max(4vw, env(safe-area-inset-left));
+  overflow: hidden;
+  background: var(--welcome-cream);
+  color: #123925;
+}
+.mission-heading {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.mission-picture { display: contents; }
+.mission-background, .mission-clues {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center bottom;
+  pointer-events: none;
+}
+.mission-background { z-index: -3; }
+.mission-background[data-environment=trail] { z-index: -2; opacity: 0; }
+.mission-stage[data-beat="3"] .mission-background[data-environment=trail],
+.mission-stage[data-beat="4"] .mission-background[data-environment=trail] { opacity: 1; }
+.mission-clues { display: none; z-index: -1; }
+@media (orientation: landscape) {
+  .mission-stage[data-beat="2"] .mission-nest-clues.mission-clues-landscape,
+  .mission-stage[data-beat="3"] .mission-trail-clues.mission-clues-landscape { display: block; }
+}
+.mission-clue {
+  fill: #fdd76b25;
+  stroke: #ffe38d;
+  stroke-width: 2.5;
+  vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.mission-character {
+  position: absolute;
+  left: 6%;
+  bottom: 8%;
+  width: 35%;
+  height: 67%;
+  pointer-events: none;
+}
+.mission-pose {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+}
+.mission-walk-frame { opacity: 0; }
+.mission-dialogue {
+  grid-area: 2 / 1;
+  align-self: start;
+  width: 49%;
+  margin-left: 42%;
+}
+.mission-line { font-size: clamp(1.125rem, 2.8vw, 2rem); line-height: 1.13; }
+.mission-audio { display: flex; justify-content: center; margin-top: .3rem; }
+.mission-audio .chapter-listen { justify-content: center; }
+.mission-audio .chapter-speech-status:not(:empty) {
+  padding: .25rem;
+  border-radius: .4rem;
+  background: var(--welcome-cream);
+}
+#chapter .mission-stage button { min-height: 44px; border-radius: 4rem; }
+#chapter .mission-audio button {
+  padding: .34em .82em;
+  border: 2px solid var(--welcome-green);
+  background: var(--welcome-cream);
+  color: #123925;
+}
+#chapter .mission-advance {
+  grid-area: 4 / 1;
+  justify-self: end;
+  width: min(37%, 25rem);
+  font-size: clamp(1.15rem, 3vw, 2.15rem);
+  white-space: normal;
+}
+#chapter .mission-advance:active, #chapter .mission-accepting .mission-advance {
+  filter: brightness(.9);
+  box-shadow: inset 0 2px 5px #0a331d, 0 1px 0 #713a13;
+}
+#chapter .mission-stage .welcome-parents { font-size: clamp(.875rem, 1.6vw, 1.12rem); min-width: 0; }
+
+@media (orientation: portrait) {
+  .mission-stage {
+    grid-template-rows: max(59px, 12svh) auto 1fr auto;
+    padding-bottom: max(2.6svh, calc(env(safe-area-inset-bottom) + .45rem));
+  }
+  .mission-stage[data-beat="2"] .mission-nest-clues.mission-clues-portrait,
+  .mission-stage[data-beat="3"] .mission-trail-clues.mission-clues-portrait { display: block; }
+  .mission-character { left: 4%; bottom: 13%; width: 45%; height: 49%; }
+  .mission-stage:is([data-beat="3"], [data-beat="4"]) .mission-character {
+    left: 2.5%;
+    bottom: 17.5%;
+    width: 43%;
+  }
+  .mission-dialogue {
+    justify-self: center;
+    margin-left: 0;
+    width: min(87%, 32rem);
+  }
+  .mission-line { font-size: clamp(1.125rem, 3.25vw, 1.75rem); }
+  .mission-line::before, .mission-line::after {
+    left: 11%;
+    top: 95%;
+    width: 14%;
+    height: 25%;
+    clip-path: polygon(0 100%, 29% 0, 100% 0);
+  }
+  .mission-line::after { left: calc(11% + 3px); top: 93%; width: calc(14% - 5px); height: 24%; }
+  #chapter .mission-advance { justify-self: center; width: min(94%, 27rem); }
+}
+
+@media (orientation: landscape) and (max-height: 480px) {
+  #chapter .mission-stage .welcome-parents { top: max(6px, env(safe-area-inset-top)); }
+  .mission-stage { grid-template-rows: 55px auto 1fr auto; }
+  .mission-line { font-size: clamp(1.125rem, 2.6vw, 1.4rem); }
+  #chapter .mission-advance { padding-block: .29em; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mission-stage[data-beat="1"] .mission-background[data-environment=nest] { animation: welcome-fade .25s both; }
+  .mission-stage[data-beat="1"] .mission-character { animation: mission-walk-in 1.2s linear both; }
+  .mission-stage[data-beat="1"] .mission-current-pose {
+    opacity: 0;
+    animation: mission-show-pose 1ms 1.2s forwards;
+  }
+  .mission-stage[data-beat="1"] .mission-walk-frame {
+    inset: auto 6% 0;
+    width: 88%;
+    height: 90%;
+    animation: .44s step-end 2.727272727;
+  }
+  .mission-stage[data-beat="1"] .mission-walk-frame:nth-of-type(2) { animation-name: welcome-step-one; }
+  .mission-stage[data-beat="1"] .mission-walk-frame:nth-of-type(3) { animation-name: welcome-step-two; }
+  .mission-stage[data-beat="1"] .mission-walk-frame:nth-of-type(4) { animation-name: welcome-step-three; }
+  .mission-stage[data-beat="1"] .mission-walk-frame:nth-of-type(5) { animation-name: welcome-step-four; }
+  .mission-stage[data-beat="1"] .mission-line { animation: welcome-fade .2s 1.2s both; }
+  .mission-stage[data-beat="2"] .mission-current-pose { animation: welcome-fade .2s both; }
+  .mission-stage[data-beat="2"] .mission-nest-clues .mission-clue { animation: mission-nest-pulse .4s .2s both; }
+  .mission-stage[data-beat="2"] .mission-line { animation: welcome-fade .2s .4s both; }
+  .mission-stage[data-beat="3"] .mission-background[data-environment=trail] { animation: welcome-fade .25s both; }
+  .mission-stage[data-beat="3"] .mission-line { animation: welcome-fade .2s .25s both; }
+  .mission-trail-clues .mission-clue { animation: mission-clue-pulse .25s var(--clue-delay) both; }
+  .mission-stage[data-beat="4"] .mission-line { animation: welcome-fade .2s both; }
+  .mission-stage[data-beat="4"] .mission-current-pose { animation: mission-determined .5s ease-out both; }
+  .mission-stage.mission-accepting[data-beat="4"] .mission-current-pose { animation: welcome-pop .4s ease-out both; }
+  .mission-map-in { animation: welcome-fade .3s both; }
+  .mission-stage.mission-leaving {
+    position: absolute;
+    inset: 0 0 auto;
+    pointer-events: none;
+    z-index: 4;
+    animation: welcome-fade .3s reverse both;
+  }
+  .mission-leaving * { animation: none; }
+  @keyframes mission-walk-in { from { transform: translateX(-121%); } to { transform: translateX(0); } }
+  @keyframes mission-show-pose { from, to { opacity: 1; } }
+  @keyframes mission-nest-pulse {
+    from { opacity: 0; scale: 1; }
+    55% { opacity: .9; scale: 1.03; }
+    to { opacity: 0; scale: 1; }
+  }
+  @keyframes mission-clue-pulse {
+    from, to { opacity: 0; }
+    45% { opacity: .9; }
+  }
+  @keyframes mission-determined {
+    from, to { transform: translateY(0); }
+    45% { transform: translateY(-.24rem); }
+  }
+}
