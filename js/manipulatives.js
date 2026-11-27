@@ -161,7 +161,16 @@ function remove(container, { start, change, icon }) {
 function numberLine(container, { start, target, showJumps = false, atTarget = false }) {
   let position = atTarget ? target : start;
   const track = node('div', '', 'number-line');
-  const ticks = Array.from({ length: target - start + 1 }, (_, index) => node('span', String(index + start)));
+  const ticks = Array.from({ length: target - start + 1 }, (_, index) => {
+    const value = start + index;
+    if (!showJumps) return node('span', String(value));
+    const tick = button(String(value), () => {
+      position = value;
+      update();
+    });
+    tick.type = 'button';
+    return tick;
+  });
   track.append(...ticks);
   if (showJumps) track.classList.add('number-line-jumps');
   const status = node('p', '', 'model-status');
@@ -177,11 +186,16 @@ function numberLine(container, { start, target, showJumps = false, atTarget = fa
   function update() {
     for (const [index, tick] of ticks.entries()) {
       tick.classList.toggle('current', index + start === position);
-      if (showJumps) tick.classList.toggle('jumped', index + start < position);
+      if (showJumps) {
+        const value = index + start;
+        tick.classList.toggle('jumped', value < position);
+        tick.setAttribute('aria-current', String(value === position));
+        tick.setAttribute('aria-disabled', String(value === position || value > position + 1));
+      }
     }
     const reached = position === target;
     status.textContent = showJumps
-      ? `At ${position}. Jumps: ${position - start}.${reached ? ' You reached the goal.' : ''}`
+      ? `At ${position}. Jumps: ${position - start}.${reached ? ' You reached the goal.' : ' Tap the next number.'}`
       : reached ? `You reached ${target}. How many jumps did you make?` : `At ${position}. Count the jumps to ${target}.`;
     jump.setAttribute('aria-disabled', String(reached));
   }
