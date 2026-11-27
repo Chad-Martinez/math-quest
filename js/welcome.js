@@ -1,7 +1,10 @@
+const greetingOpening = 'Hi, Harrison!';
+const greetingQuestion = 'Are you ready for a dinosaur adventure?';
+const greeting = `${greetingOpening} ${greetingQuestion}`;
 const art = './assets/scene-01/';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-export function createWelcome({ resumable, start, resume, grownUps, confirmStart }) {
+export function createWelcome({ resumable, start, resume, grownUps, confirmStart, listen, stopSpeech }) {
   const stage = document.createElement('section');
   stage.className = 'welcome-stage';
   stage.setAttribute('aria-labelledby', 'welcome-title');
@@ -22,13 +25,23 @@ export function createWelcome({ resumable, start, resume, grownUps, confirmStart
     <img class="welcome-leaves" src="${art}foliage-leaves.png" alt="">
     <img class="welcome-rock" src="${art}foliage-rock.png" alt="">
     <img class="welcome-grass" src="${art}foliage-grass.png" alt="">
-    <p class="welcome-greeting">Hi, explorer! Ready for a dinosaur adventure?</p>
+    <div class="welcome-dialogue">
+      <p class="welcome-greeting"></p>
+    </div>
     <div class="welcome-actions">
       ${resumable ? '<button type="button" class="welcome-continue welcome-primary">Continue Adventure</button>' : ''}
       <button type="button" class="welcome-start ${resumable ? 'welcome-secondary' : 'welcome-primary'}">Start Adventure</button>
     </div>
     <button type="button" id="chapter-grownups" class="welcome-parents welcome-secondary">Grown-ups</button>
   `;
+
+  const dialogue = stage.querySelector('.welcome-dialogue');
+  const opening = document.createElement('span');
+  opening.textContent = greetingOpening;
+  dialogue.querySelector('.welcome-greeting').append(opening, ' ', greetingQuestion);
+  const audio = listen(greeting, { label: 'Listen' });
+  audio.classList.add('welcome-audio');
+  dialogue.append(audio);
 
   let startTimer;
   const startButton = stage.querySelector('.welcome-start');
@@ -54,11 +67,13 @@ export function createWelcome({ resumable, start, resume, grownUps, confirmStart
 
   startButton.addEventListener('click', () => {
     if (startTimer !== undefined) return;
+    stopSpeech();
     if (resumable) confirmStart(celebrate, startButton);
     else celebrate();
   });
   stage.querySelector('.welcome-continue')?.addEventListener('click', () => {
     cancelStart();
+    stopSpeech();
     resume();
   });
   stage.querySelector('#chapter-grownups').addEventListener('click', () => {
