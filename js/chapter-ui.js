@@ -2,6 +2,7 @@ import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, empty
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
+import { createWelcome } from './welcome.js';
 
 const root = document.getElementById('chapter');
 let storage;
@@ -182,19 +183,18 @@ function home() {
   render();
 }
 
-function begin() {
-  if (!progress.run || progress.run.scene === 'replay') {
+function begin(newRun = false, leavingWelcome) {
+  if (newRun || !progress.run || progress.run.scene === 'replay') {
     const candidate = crypto.getRandomValues(new Uint32Array(1))[0];
     const seed = candidate === progress.run?.seed ? (candidate + 1) >>> 0 : candidate;
     write(startChapter(progress, seed));
     questions = chapterQuestions(seed);
   }
   intro = false;
-  render();
+  render(leavingWelcome);
 }
 
 const stories = {
-  welcome: { title: 'The Lost Egg', subtitle: 'Dinosaur Island · Chapter 1', copy: 'Help T-Rex follow clues and find the missing egg.', background: 'jungle', art: ['trex-neutral'], bonus: 'egg' },
   mission: { title: 'An egg is missing!', copy: 'T-Rex needs your help. Follow the island trail and look for clues.', background: 'jungle', art: ['trex-front'] },
   mosasaurus: { title: 'Meet Mosasaurus!', copy: '“I spotted your egg in a little nook inside the cave. Come look!”', background: 'lagoon', art: ['mosa-leap', 'trex-neutral'] },
   discovery: { title: 'You found the egg!', copy: 'The egg is tucked safely in the cave. T-Rex is so glad you came along.', background: 'cave', art: ['trex-celebrate'], bonus: 'egg' },
@@ -214,14 +214,10 @@ function scenery(data) {
 function storyScene(scene) {
   const data = stories[scene];
   const heading = el('div', { className: 'chapter-scene-copy' });
-  if (scene === 'welcome') heading.append(picture(assets + 'ui/logo.png', 'chapter-logo'));
-  if (data.subtitle) heading.append(el('p', { className: 'chapter-kicker' }, data.subtitle));
   heading.append(el('h1', { tabindex: '-1' }, data.title), el('p', { className: 'chapter-intro-line' }, data.copy));
   if (scene === 'complete') heading.append(picture(reward('star'), 'chapter-star', ''));
-  if (scene === 'welcome') {
-    heading.append(button(progress.run && progress.run.scene !== 'replay' ? 'Continue adventure' : progress.badge ? 'Replay adventure' : 'Start adventure', begin));
-  } else if (scene === 'replay') {
-    heading.append(el('div', { className: 'chapter-actions' }, button('Replay adventure', begin), button('Return home', home, 'chapter-secondary')));
+  if (scene === 'replay') {
+    heading.append(el('div', { className: 'chapter-actions' }, button('Replay adventure', () => begin()), button('Return home', home, 'chapter-secondary')));
   } else {
     heading.append(el('div', { className: 'chapter-actions' }, button(storyButtons[scene], next), listen(data.copy)));
   }
@@ -510,8 +506,30 @@ function mathScene(index) {
   return layout;
 }
 
-function render() {
+function confirmWelcomeRestart(start, trigger) {
+  const restart = button('Start over', () => {
+    modal.close();
+    start();
+  });
+  const modal = dialog('Start a new adventure?', el('div', {},
+    el('p', {}, 'Starting over replaces this adventure’s checkpoint. Your earned rewards are saved.'), restart), trigger);
+}
+
+function render(leavingWelcome) {
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
+  if (scene === 'welcome') {
+    const stage = createWelcome({
+      resumable: Boolean(progress.run && progress.run.scene !== 'replay'),
+      start: previous => begin(true, previous),
+      resume: () => begin(),
+      grownUps: growUps,
+      confirmStart: confirmWelcomeRestart,
+    });
+    root.replaceChildren(el('main', { className: 'welcome-main' }, stage, persistWarning));
+    window.scrollTo(0, 0);
+    stage.querySelector('h1').focus({ preventScroll: true });
+    return;
+  }
   const header = el('header', { className: 'chapter-header' },
     button('Math Quest', home, 'chapter-brand'), el('div', { className: 'chapter-actions' },
       ...(progress.badge ? [picture(reward('reward-egg'), 'chapter-header-badge', 'Golden Egg badge')] : []),
@@ -532,7 +550,17 @@ function render() {
   else if (scene === 'wiggle') content = el('section', { className: 'chapter-break' }, el('h1', { tabindex: '-1' }, 'Dino Wiggle Break'),
     el('p', {}, 'Take a little movement break if you want.'), movementBody(next));
   else content = stories[scene] ? storyScene(scene) : mathScene(index);
-  root.replaceChildren(header, el('main', { className: 'chapter-main' }, content, persistWarning));
+  const main = el('main', { className: 'chapter-main' }, content, persistWarning);
+  root.replaceChildren(header, main);
+  if (leavingWelcome) {
+    leavingWelcome.inert = true;
+    leavingWelcome.querySelector('#chapter-grownups').removeAttribute('id');
+    leavingWelcome.classList.add('welcome-leaving');
+    // Keep the outgoing view over the incoming mission during the brief crossfade.
+    root.append(leavingWelcome);
+    main.classList.add('welcome-mission-in');
+    setTimeout(() => leavingWelcome.remove(), 200);
+  }
   window.scrollTo(0, 0);
   root.querySelector('h1')?.focus({ preventScroll: true });
 }
