@@ -113,7 +113,7 @@ const equation = {
       misconceptions: { [a]: 'That is what is left. Put back what was taken away to find the starting number.' },
     }),
   balance: (a, b, c) => number('balance', `${a + b + c} − □ = ${a} + ${b}`, c,
-    `${a + b + c} − ${c} = ${a + b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`],
+    `${a + b + c} − ${c} = ${a} + ${b}`, ['Find the value of the right side first.', `How much must you take away from ${a + b + c} to get ${a + b}?`],
     {
       parameters: { start: a + b + c, rightParts: [a, b] },
       models: [{ kind: 'balance', left: a + b + c, rightParts: [a, b], action: 'remove-left' }],

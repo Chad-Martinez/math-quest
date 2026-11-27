@@ -15,6 +15,6 @@ Correct responses in lessons earn stars. Worked examples award no star, and fini
 
 ## Part–part–whole and equality
 
-In **Find a missing part**, move the known number of beads into the red group. Count the remaining beads as the other part. The model always preserves the given whole.
+In **Find a missing part**, move the known number of beads into the red group. Count the remaining beads as the other part. The model always preserves the given whole. Tap or drag individual beads into the bowl.
 
-In Equation Space, the balance compares both sides. Take away from the left for a missing subtraction amount or add to the right for a missing addend. Count the blocks moved when both sides have the same value. **Balance by taking away** is also available from **Learn a skill**. These models support the reasoning process while the learner enters and checks their own answer.
+In Equation Space, the balance compares both sides. Take away from the left for a missing subtraction amount or add to the right for a missing addend. Tap or drag individual blocks and count what you moved when both sides match. Fixed groups on the right represent the separate equation terms. In the worked lesson, **Show the math** links the level scale to the full equation. **Balance by taking away** is also available from **Learn a skill**. These models support the reasoning process while the learner enters and checks their own answer.

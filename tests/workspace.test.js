@@ -2,17 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { questionsFor } from '../js/curriculum.js';
 import { seededRandom } from '../js/engine.js';
-import { balanceState, moveOne, partWholeState, toggleBead } from '../js/workspace-state.js';
-
-test('workspace moves stop at bounds, reverse one step and reset', () => {
-  assert.equal(moveOne(0, 'return', 20), 0);
-  assert.equal(moveOne(0, 'move', 0), 0);
-  assert.equal(moveOne(19, 'move', 20), 20);
-  assert.equal(moveOne(20, 'move', 20), 20);
-  assert.equal(moveOne(20, 'return', 20), 19);
-  assert.equal(moveOne(19, 'reset', 20), 0);
-  assert.equal(moveOne(10, 'unknown', 20), 10);
-});
+import { balanceState, partWholeState, togglePiece } from '../js/workspace-state.js';
 
 test('part–part–whole conserves beads and identifies the unknown part', () => {
   for (let seed = 0; seed < 2000; seed++) {
@@ -58,13 +48,31 @@ test('each equation balance is level exactly when the blank is correct', () => {
 
 test('moving an individual bead preserves identity, counts, and prior state', () => {
   const initial = new Set();
-  const red = toggleBead(toggleBead(initial, 4, 12), 9, 12);
+  const red = togglePiece(togglePiece(initial, 4, 12), 9, 12);
   assert.deepEqual([...red], [4, 9]);
   assert.equal(initial.size, 0);
-  assert.equal(toggleBead(red, -1, 12), red);
-  assert.equal(toggleBead(red, 12, 12), red);
-  assert.equal(toggleBead(red, 3.5, 12), red);
-  assert.deepEqual([...toggleBead(red, 4, 12)], [9]);
+  assert.equal(togglePiece(red, -1, 12), red);
+  assert.equal(togglePiece(red, 12, 12), red);
+  assert.equal(togglePiece(red, 3.5, 12), red);
+  assert.deepEqual([...togglePiece(red, 4, 12)], [9]);
   assert.deepEqual(partWholeState({ total: 12, known: 2 }, red.size),
     { red: 2, remaining: 10, relation: 0 });
+});
+
+test('moving the same blocks back restores both pans in addition and subtraction', () => {
+  for (const [config, limit] of [
+    [{ left: 12, rightParts: [8, 2], action: 'remove-left' }, 12],
+    [{ left: 10, rightParts: [8], action: 'add-right' }, 12],
+  ]) {
+    const start = new Set();
+    const a = togglePiece(start, 2, limit);
+    const b = togglePiece(a, 4, limit);
+    assert.deepEqual([...b], [2, 4]);
+    assert.equal(balanceState(config, b.size).relation, 0);
+    const past = togglePiece(b, 9, limit);
+    assert.equal(balanceState(config, past.size).relation, -1);
+    const back = togglePiece(togglePiece(togglePiece(past, 4, limit), 2, limit), 9, limit);
+    assert.deepEqual(balanceState(config, back.size), balanceState(config, start.size));
+    assert.equal(start.size, 0);
+  }
 });

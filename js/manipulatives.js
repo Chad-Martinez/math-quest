@@ -1,6 +1,6 @@
 import { dragTo } from './drag.js';
 import { tallyGroups } from './engine.js';
-import { balanceState, moveOne, partWholeState, toggleBead } from './workspace-state.js';
+import { balanceState, partWholeState, togglePiece } from './workspace-state.js';
 
 export function compareQuantities(first, second) {
   if (first === second) return 'the same number as';
@@ -248,42 +248,19 @@ function workspaceGroup(label) {
   return { area, heading, contents };
 }
 
-function showCounters(group, label, counts, icons) {
-  group.heading.textContent = label;
-  const quantity = counts.reduce((total, count) => total + count, 0);
-  group.area.setAttribute('aria-label', `${label}: ${quantity}`);
-  group.contents.replaceChildren(...counts.flatMap((count, index) =>
-    Array.from({ length: count }, () => {
-      const marker = node('span', icons[index], 'workspace-counter');
-      marker.setAttribute('aria-hidden', 'true');
-      return marker;
-    })));
-}
-
-function counterControls({ limit, moveLabel, returnLabel, destination, origin, icon, render }) {
-  let moved = 0;
-  function change(action) {
-    moved = moveOne(moved, action, limit);
-    update();
-  }
-  const advance = button(moveLabel, () => change('move'));
-  const reverse = button(returnLabel, () => change('return'));
-  const reset = button('Reset model', () => change('reset'));
-  for (const [control, target, action] of [[advance, destination, 'move'], [reverse, origin, 'return']]) {
-    control.dataset.dragIcon = icon;
-    dragTo(control, () => target, () => change(action), () => control.getAttribute('aria-disabled') === 'false');
-  }
-
-  function update() {
-    advance.setAttribute('aria-disabled', String(moved === limit));
-    reverse.setAttribute('aria-disabled', String(moved === 0));
-    reset.setAttribute('aria-disabled', String(moved === 0));
-    render(moved);
-  }
-  const controls = node('div', '', 'tools workspace-controls');
-  controls.append(advance, reverse, reset);
+function movePiece(piece, destination, update) {
+  const before = piece.getBoundingClientRect();
+  const focused = document.activeElement === piece;
+  piece.getAnimations?.().forEach(animation => animation.cancel());
+  destination.append(piece);
+  if (focused) piece.focus({ preventScroll: true });
   update();
-  return controls;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !piece.animate) return;
+  const after = piece.getBoundingClientRect();
+  piece.animate([
+    { transform: `translate(${before.left - after.left}px, ${before.top - after.top}px)` },
+    { transform: 'translate(0, 0)' },
+  ], { duration: 190, easing: 'ease-out' });
 }
 
 function partWhole(container, config, { example = false, onChange } = {}) {
@@ -318,22 +295,9 @@ function partWhole(container, config, { example = false, onChange } = {}) {
   });
 
   function move(index) {
-    const bead = beads[index];
-    const before = bead.getBoundingClientRect();
-    bead.getAnimations?.().forEach(animation => animation.cancel());
-    const focused = document.activeElement === bead;
-    sorted = toggleBead(sorted, index, config.total);
+    sorted = togglePiece(sorted, index, config.total);
     const to = sorted.has(index) ? red : unsorted;
-    to.contents.append(bead);
-    if (focused) bead.focus({ preventScroll: true });
-    update();
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && bead.animate) {
-      const after = bead.getBoundingClientRect();
-      bead.animate([
-        { transform: `translate(${before.left - after.left}px, ${before.top - after.top}px)` },
-        { transform: 'translate(0, 0)' },
-      ], { duration: 190, easing: 'ease-out' });
-    }
+    movePiece(beads[index], to.contents, update);
   }
 
   function update() {
@@ -366,38 +330,106 @@ function partWhole(container, config, { example = false, onChange } = {}) {
   update();
 }
 
-function balance(container, config) {
+const blockCount = count => `${count} ${count === 1 ? 'block' : 'blocks'}`;
+
+function fixedBlocks(container, count, term) {
+  const group = node('div', '', `scale-term scale-term-${term}`);
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-label', blockCount(count));
+  group.append(...Array.from({ length: count }, () => {
+    const block = node('span', '', 'scale-block');
+    block.setAttribute('aria-hidden', 'true');
+    return block;
+  }));
+  container.append(group);
+}
+
+function balance(container, config, { example = false, onChange } = {}) {
   const adding = config.action === 'add-right';
-  const left = workspaceGroup('Left side');
-  const right = workspaceGroup('Right side');
-  const tray = workspaceGroup(adding ? 'Block supply' : 'Blocks taken away');
-  const beam = node('div', '', 'balance-beam');
+  const left = workspaceGroup('Left pan');
+  const right = workspaceGroup('Right pan');
+  const tray = workspaceGroup(adding ? 'Spare blocks' : 'Blocks taken away');
+  const rack = node('div', '', 'scale');
+  const beam = node('div', '', 'scale-beam');
+  const stand = node('div', '', 'scale-stand');
   beam.setAttribute('aria-hidden', 'true');
-  const pans = node('div', '', 'workspace-groups');
+  stand.setAttribute('aria-hidden', 'true');
+
+  const pans = node('div', '', 'workspace-groups scale-pans');
+  for (const [side, pan] of [['left', left], ['right', right]]) {
+    const column = node('div', '', `scale-column scale-${side}`);
+    const hanger = node('div', '', 'scale-hanger');
+    hanger.setAttribute('aria-hidden', 'true');
+    pan.area.classList.add('scale-pan');
+    column.append(hanger, pan.area);
+    pans.append(column);
+  }
+  rack.append(stand, beam, pans);
+  tray.area.classList.add('block-tray');
+  const instruction = node('p', '', 'scale-instruction');
   const status = node('p', '', 'model-status');
   status.setAttribute('role', 'status');
-  pans.append(left.area, right.area);
-  const rightInitial = balanceState(config, 0).rightCount;
-  const limit = adding ? 20 - rightInitial : config.left;
-  const controls = counterControls({
-    limit, moveLabel: adding ? 'Add one to right' : 'Take one from left',
-    returnLabel: adding ? 'Return one to supply' : 'Put one back on left',
-    destination: adding ? right.area : tray.area, origin: adding ? tray.area : left.area, icon: '■',
-    render(moved) {
-      const { leftCount, rightCount, relation } = balanceState(config, moved);
-      showCounters(left, 'Left side', [leftCount], ['■']);
-      showCounters(right, 'Right side', adding ? [...config.rightParts, moved] : config.rightParts, ['■', '□']);
-      showCounters(tray, adding ? 'Block supply' : 'Blocks taken away', [adding ? limit - moved : moved], ['□']);
-      beam.dataset.tilt = relation > 0 ? 'left' : relation < 0 ? 'right' : 'level';
-      const relationship = relation > 0 ? 'Left has more.' : relation < 0 ? 'Right has more.' : 'Both sides are equal.';
-      const instruction = relation === 0 ? (adding ? 'Count the blocks you added.' : 'Count the blocks you took away.') : '';
-      status.textContent = [`Left: ${leftCount}. Right: ${rightCount}.`, relationship, instruction].filter(Boolean).join(' ');
-    },
+
+  const origin = adding ? tray : left;
+  const destination = adding ? right : tray;
+  const limit = adding ? 20 - balanceState(config, 0).rightCount : config.left;
+  let moved = new Set();
+  if (adding) fixedBlocks(left.contents, config.left, 'first');
+  config.rightParts.forEach((count, index) => fixedBlocks(right.contents, count, index === 0 ? 'first' : 'second'));
+  const blocks = Array.from({ length: limit }, (_, index) => {
+    const block = button('', () => move(index));
+    block.classList.add('block-piece');
+    block.dataset.block = String(index);
+    block.dataset.dragIcon = '■';
+    block.append(node('span', '', 'scale-block'));
+    dragTo(block, () => moved.has(index) ? origin.area : destination.area, () => move(index));
+    origin.contents.append(block);
+    return block;
   });
-  container.append(node('p', adding
-    ? 'Tap Add one to right or drag that button to the right. Make the sides equal.'
-    : 'Tap Take one from left or drag that button to the tray. Make the sides equal.'),
-  beam, pans, tray.area, status, controls);
+  const showOne = button('Show me one', () => move(0));
+  const reset = button('Start over', () => {
+    moved = new Set();
+    origin.contents.append(...blocks);
+    update();
+  });
+
+  function move(index) {
+    moved = togglePiece(moved, index, limit);
+    const group = moved.has(index) ? destination : origin;
+    movePiece(blocks[index], group.contents, update);
+  }
+
+  function update() {
+    const { leftCount, rightCount, relation } = balanceState(config, moved.size);
+    left.area.setAttribute('aria-label', `Left pan, ${blockCount(leftCount)}`);
+    right.area.setAttribute('aria-label', `Right pan, ${blockCount(rightCount)}`);
+    tray.area.setAttribute('aria-label', `${tray.heading.textContent}, ${blockCount(adding ? limit - moved.size : moved.size)}`);
+    for (const [index, block] of blocks.entries()) {
+      const wasMoved = moved.has(index);
+      block.dataset.moved = String(wasMoved);
+      const action = wasMoved ? (adding ? 'Return to the spare blocks.' : 'Put back on the left pan.')
+        : (adding ? 'Add to the right pan.' : 'Move to the tray.');
+      block.setAttribute('aria-label', `Block ${index + 1}. ${action}`);
+    }
+    rack.dataset.tilt = relation > 0 ? 'left' : relation < 0 ? 'right' : 'level';
+    status.textContent = relation === 0 ? 'Both sides match.'
+      : relation > 0 ? 'The left pan has more.' : 'The right pan has more.';
+    if (relation === 0) {
+      instruction.textContent = adding ? 'Count the blocks you added.' : 'Count the blocks in the tray.';
+    } else if (relation < 0) {
+      instruction.textContent = adding ? 'Move a block back to the spare blocks.' : 'Put a block back on the left pan.';
+    } else {
+      instruction.textContent = adding ? 'Put blocks on the right pan to make both sides match.'
+        : 'Move blocks from the left pan to the tray. Make both sides match.';
+    }
+    if (example && moved.size > 0 && document.activeElement === showOne) blocks[0].focus({ preventScroll: true });
+    showOne.hidden = !example || moved.size !== 0;
+    reset.setAttribute('aria-disabled', String(moved.size === 0));
+    onChange?.(relation);
+  }
+
+  container.append(instruction, showOne, rack, tray.area, status, reset);
+  update();
 }
 
 const renderers = {

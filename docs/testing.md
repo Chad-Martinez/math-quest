@@ -45,7 +45,7 @@ The Coach suite tests 2,000 seeded items per template with independent math chec
 ## Math Workspace release checks
 
 1. On iPad, open **Learn a skill → Find a missing part**. Tap a bead, then drag another bead into the red bowl. Move the required number of beads and count the blue beads. Try moving one back and resetting. Drops outside the target should leave the counts alone.
-2. Open **Learn a skill → Balance by taking away**. Drag **Take one from left** to the tray and watch which side has more. Check that the beam levels when both sides contain the same number of blocks. Put one back. In a missing-addend challenge in Equation Space, try adding a block to the right.
+2. Open **Learn a skill → Balance by taking away**. Tap or drag individual blocks from the left pan into the tray and watch the pans tilt. Check that the beam levels when both sides match. Try one extra block, put it back, then tap **Show the math**. The next practice problem should keep the equation blank until the learner checks their answer. In a missing-addend challenge, try adding individual spare blocks to the right.
 3. In both models, open and close **Grown-ups → Teaching tips** and **Math tools**. Check that the counters and answer draft stay in place. Rotate the iPad and verify that the controls and drop zones are still reachable.
 4. Try the movement controls with Tab and Space or Enter. With VoiceOver, listen for the side relationship and group counts. The answer field should stay blank until the learner enters a value.
 

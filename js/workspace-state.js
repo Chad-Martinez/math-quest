@@ -1,10 +1,3 @@
-export function moveOne(moved, action, limit) {
-  if (action === 'move') return Math.min(limit, moved + 1);
-  if (action === 'return') return Math.max(0, moved - 1);
-  if (action === 'reset') return 0;
-  return moved;
-}
-
 export function partWholeState({ total, known }, moved) {
   const relation = Math.sign(moved - known);
   return { red: moved, remaining: total - moved, relation };
@@ -17,10 +10,10 @@ export function balanceState({ left, rightParts, action }, moved) {
   return { leftCount, rightCount, relation: Math.sign(leftCount - rightCount) };
 }
 
-export function toggleBead(redBeads, bead, total) {
-  if (!Number.isInteger(bead) || bead < 0 || bead >= total) return redBeads;
-  const next = new Set(redBeads);
-  if (next.has(bead)) next.delete(bead);
-  else next.add(bead);
+export function togglePiece(moved, piece, total) {
+  if (!Number.isInteger(piece) || piece < 0 || piece >= total) return moved;
+  const next = new Set(moved);
+  if (next.has(piece)) next.delete(piece);
+  else next.add(piece);
   return next;
 }

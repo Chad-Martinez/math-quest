@@ -28,8 +28,8 @@ let step;
 let utterance;
 let pointer;
 let workspace;
-let beadExampleComplete = false;
-let beadExampleRevealed = false;
+let modelExampleComplete = false;
+let modelExampleRevealed = false;
 
 function updateProgressDisplay() {
   const totals = progressTotals(progress);
@@ -137,8 +137,12 @@ const workspaceViews = {
   draw: ['draw', 'drawing'],
 };
 
-function isBeadExample(question = session?.current) {
-  return question?.templateId === 'story/combinePart' && question.lessonStage === 'example';
+function hasModelLesson(question) {
+  return ['part-whole', 'balance'].includes(question?.models[0]?.kind);
+}
+
+function isModelExample(question = session?.current) {
+  return question?.lessonStage === 'example' && hasModelLesson(question);
 }
 
 function baseWorkspace() {
@@ -149,13 +153,13 @@ function selectWorkspace(view) {
   const config = session.current.models?.[step];
   const panel = view === 'math' ? byId('math-model') : view === 'line' ? byId('line-model') : null;
   if (panel && !panel.hasChildNodes()) {
-    const example = view === 'math' && isBeadExample();
+    const example = view === 'math' && isModelExample();
     const model = view === 'math' ? config : config.alternative;
     panel.append(buildModel(model, {
       example,
       onChange(relation) {
-        if (!example || beadExampleRevealed) return;
-        beadExampleComplete = relation === 0;
+        if (!example || modelExampleRevealed) return;
+        modelExampleComplete = relation === 0;
         updateExampleAction();
       },
     }));
@@ -165,7 +169,7 @@ function selectWorkspace(view) {
     byId(content).hidden = name !== view;
     byId(control).setAttribute('aria-expanded', String(name === view));
   }
-  if (isBeadExample()) updateExampleAction();
+  if (isModelExample()) updateExampleAction();
 }
 
 function resetWorkspace(view) {
@@ -202,8 +206,8 @@ function renderQuestion() {
   stopReading();
   const question = session.current;
   renderPosition();
-  beadExampleComplete = false;
-  beadExampleRevealed = false;
+  modelExampleComplete = false;
+  modelExampleRevealed = false;
   byId('trail-progress').value = session.index;
   byId('prompt').textContent = question.prompt;
   byId('visual').replaceChildren(...(question.visual ? [buildChart(question.visual)] : []));
@@ -215,7 +219,7 @@ function renderQuestion() {
   renderResponse();
   renderLessonSupport(question);
   const showModel = question.lessonStage === 'example' ||
-    (question.templateId === 'story/combinePart' && question.lessonStage === 'guided');
+    (hasModelLesson(question) && question.lessonStage === 'guided');
   resetWorkspace(showModel && question.models[0] ? 'math' : baseWorkspace());
   byId('prompt').focus({ preventScroll: true });
 }
@@ -225,9 +229,8 @@ function renderLessonSupport(question) {
   support.replaceChildren();
   const example = question.lessonStage === 'example';
   const guided = question.lessonStage === 'guided';
-  const beads = question.templateId === 'story/combinePart';
-  support.hidden = beads || (!example && !guided);
-  if (isBeadExample(question)) {
+  support.hidden = hasModelLesson(question) || (!example && !guided);
+  if (isModelExample(question)) {
     byId('answer-form').hidden = true;
     byId('hint').disabled = true;
   } else if (example) {
@@ -246,13 +249,13 @@ function renderLessonSupport(question) {
 
 function updateExampleAction() {
   const next = byId('next');
-  next.hidden = beadExampleRevealed ? false : !beadExampleComplete || workspace !== 'math';
-  next.textContent = beadExampleRevealed ? 'Try with help →' : 'Show the math';
+  next.hidden = modelExampleRevealed ? false : !modelExampleComplete || workspace !== 'math';
+  next.textContent = modelExampleRevealed ? 'Try with help →' : 'Show the math';
 }
 
 function updateNextLabel() {
   const last = session.index + 1 === session.questions.length;
-  if (isBeadExample()) {
+  if (isModelExample()) {
     updateExampleAction();
   } else if (session.current.lessonStage === 'example') {
     byId('next').textContent = 'Try with help →';
@@ -367,12 +370,14 @@ byId('hint').addEventListener('click', () => {
 });
 
 byId('next').addEventListener('click', () => {
-  if (isBeadExample() && !beadExampleRevealed) {
-    if (!beadExampleComplete || workspace !== 'math') return;
-    beadExampleRevealed = true;
+  if (isModelExample() && !modelExampleRevealed) {
+    if (!modelExampleComplete || workspace !== 'math') return;
+    modelExampleRevealed = true;
     const support = byId('lesson-support');
-    const { answer, explanation } = session.current;
-    support.append(element('p', `${answer} blue ${answer === 1 ? 'bead' : 'beads'}. ${explanation}`));
+    const { answer, explanation, models } = session.current;
+    const worked = models[0].kind === 'balance' ? `Both sides match. ${explanation}`
+      : `${answer} blue ${answer === 1 ? 'bead' : 'beads'}. ${explanation}`;
+    support.append(element('p', worked));
     support.hidden = false;
     updateExampleAction();
     return;
