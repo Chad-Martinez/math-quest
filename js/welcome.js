@@ -9,7 +9,10 @@ export function createWelcome({ resumable, start, resume, grownUps, confirmStart
   stage.className = 'welcome-stage';
   stage.setAttribute('aria-labelledby', 'welcome-title');
   stage.innerHTML = `
-    <img class="welcome-background" src="${art}jungle-background.webp" alt="">
+    <picture class="welcome-background-art">
+      <source media="(orientation: portrait)" srcset="${art}jungle-portrait.jpg">
+      <img class="welcome-background" src="${art}jungle-background.webp" alt="">
+    </picture>
     <div class="welcome-titles">
       <img class="welcome-logo" src="${art}logo.png" alt="Math Quest">
       <img class="welcome-island-sign" src="${art}island-sign.png" alt="Dinosaur Island">

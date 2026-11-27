@@ -17,6 +17,7 @@
   background: var(--welcome-cream);
   color: #123925;
 }
+.welcome-background-art { display: contents; }
 .welcome-background {
   position: absolute;
   inset: 0;
@@ -202,7 +203,10 @@
   .welcome-stage:has(.welcome-continue) {
     padding-bottom: max(2.5svh, calc(env(safe-area-inset-bottom) + .75rem));
   }
-  .welcome-background { object-position: 51% bottom; }
+  .welcome-background { object-position: 75% bottom; }
+  .welcome-stage :is(.welcome-egg, .welcome-flower, .welcome-leaves, .welcome-rock, .welcome-grass) {
+    display: none;
+  }
   #chapter .welcome-parents {
     top: max(3.2%, env(safe-area-inset-top));
     right: max(4%, env(safe-area-inset-right));
@@ -235,8 +239,6 @@
   }
   .welcome-greeting { font-size: clamp(1rem, 3.3vw, 1.65rem); line-height: 1.12; }
   .welcome-greeting > span { display: block; margin-bottom: .16em; }
-  .welcome-egg { left: auto; right: 1%; bottom: 1%; width: min(25%, 10rem); height: auto; }
-  .welcome-rock { right: 0; bottom: 0; width: 14%; }
   .welcome-actions { grid-row: 4; width: min(94%, 31rem); margin: 2.5svh auto 0; }
 }
 

@@ -21,4 +21,4 @@ CHAPTER_URL=http://127.0.0.1:8421/math-quest/ node tests/chapter-browser.mjs
 
 Set `CHAPTER_BROWSER=webkit` to use the Playwright WebKit browser. The browser checks use isolated save data.
 
-The welcome uses tap-to-listen with the browser’s narration service. Speech availability and voice quality vary by device. The portrait crop keeps the trail beneath T-Rex. A dedicated 1536 × 3072 portrait background with foreground near the lower fifth would let more landmarks fit in the phone composition.
+The welcome uses tap-to-listen with the browser’s narration service. Speech availability and voice quality vary by device. Portrait uses the supplied 640 × 1280 illustration. It includes the egg and foreground foliage. Landscape uses the original landscape illustration and separate foreground assets. A wider tablet portrait viewport crops some of the sky to keep the foreground in view.

@@ -24,6 +24,7 @@ const greeting = 'Hi, Harrison! Are you ready for a dinosaur adventure?';
 const errors = [];
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 const heading = (page, name) => page.getByRole('heading', { name, exact: true });
+const backdrop = page => page.locator('.welcome-background');
 const stored = page => page.evaluate(key => JSON.parse(localStorage.getItem(key)), chapterKey);
 
 async function open(viewport, { fixture, reducedMotion = 'no-preference', mockSpeech = false } = {}) {
@@ -132,6 +133,12 @@ try {
   await entranceEnds(portrait);
   await buttonsFit(portrait);
   await capture(portrait, '08-ipad-portrait');
+  assert.match(await backdrop(portrait).evaluate(img => img.currentSrc), /jungle-portrait\.jpg$/);
+  assert.equal(await portrait.locator('.welcome-egg').isVisible(), false);
+  await portrait.setViewportSize({ width: 1024, height: 768 });
+  await portrait.waitForFunction(() => document.querySelector('.welcome-background').currentSrc.endsWith('jungle-background.webp'));
+  assert.equal(await portrait.locator('.welcome-egg').isVisible(), true);
+  await portrait.setViewportSize({ width: 768, height: 1024 });
   await portrait.addStyleTag({ content: 'html { font-size: 200%; }' });
   await portrait.locator('.welcome-start').scrollIntoViewIfNeeded();
   assert.ok(await portrait.evaluate(() => {
@@ -153,6 +160,8 @@ try {
       assert.ok(start.y / height >= .84 && start.y / height <= .93);
     }
     await capture(phone, screenshot);
+    const file = width < height ? '/jungle-portrait.jpg' : '/jungle-background.webp';
+    assert.ok((await backdrop(phone).evaluate(img => img.currentSrc)).endsWith(file));
     await phone.close();
   }
 
