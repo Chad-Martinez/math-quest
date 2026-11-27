@@ -95,7 +95,7 @@ try {
   await press(page, 'Grown-ups');
   assert.ok(await page.getByText('Stars already earned in Math Quest: 12').isVisible());
   await press(page, 'Close');
-  await press(page, 'Start adventure');
+  await press(page, 'Start Adventure');
   await heading(page, 'An egg is missing!');
   await press(page, 'See the trail');
   assert.equal(await page.locator('.chapter-map-node').count(), 5);
@@ -145,7 +145,7 @@ try {
   await heading(page, qs[0].prompts[1]);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'chapter-question');
   await page.reload();
-  await press(page, 'Continue adventure');
+  await press(page, 'Continue Adventure');
   await heading(page, qs[0].prompts[1]);
   await page.getByLabel('Your answer').fill('1');
   await press(page, 'Restart stop');
@@ -198,7 +198,7 @@ try {
   await heading(page, 'Dino Wiggle Break');
   await screen(page, '07-wiggle-break');
   await page.reload();
-  await press(page, 'Continue adventure');
+  await press(page, 'Continue Adventure');
   await heading(page, 'Dino Wiggle Break');
   await press(page, 'Skip for now');
 
@@ -244,7 +244,7 @@ try {
   await heading(page, 'Chapter 1 complete!');
   await screen(page, '12-finale');
   await page.reload();
-  await press(page, 'Continue adventure');
+  await press(page, 'Continue Adventure');
   await heading(page, 'Chapter 1 complete!');
   assert.equal((await stored(page)).runs, 1);
   assert.equal((await stored(page)).badge, true);
@@ -252,7 +252,7 @@ try {
   await press(page, 'Finish chapter');
   await heading(page, 'Adventure complete');
   await press(page, 'Return home');
-  await press(page, 'Replay adventure');
+  await press(page, 'Start Adventure');
   await heading(page, 'An egg is missing!');
   assert.notEqual((await stored(page)).run.seed, seed);
 
