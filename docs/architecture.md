@@ -18,3 +18,11 @@ Question records include category, subskill, template identity, difficulty, answ
 Pending review queues store only stable template IDs and seeds. This reconstructs a fresh fourth item without saving the story text or the learner’s response. Scoped resets remove that adventure’s pending reviews and evidence.
 
 The learning layout mounts the prompt and answer separately from the workspace. The controller switches between chart, model, number line, and drawing without recreating the current view state. The missing-part and balance models track stable piece IDs and share movement, focus, and animation handling across tap, drag, and keyboard input. The demonstrations reveal equations only after the model reaches the target relationship and the learner chooses to see the math.
+
+## Chapter 1 playtest
+
+`js/release.js` selects the Chapter 1 entry point. The legacy entry point remains available by setting `legacyAdventures` to `true` for local development. The release decision is centralized so no other adventures or lessons enter Chapter 1 navigation.
+
+`js/chapter.js` owns the ordered scenes, seeded math relationships and chapter progress. `js/chapter-ui.js` renders scene and checkpoint state. `js/chapter-models.js` renders one SVG per unit and shares the existing drag, number-line and balance components. The generated numbers drive questions, visuals, feedback, teaching tips and worked solutions. Checking an answer uses the stored mathematical relationship independently of whether the learner uses the model.
+
+Chapter progress lives under `math-quest.lost-egg-1` with its own version. Earlier Math Quest storage can be read to display the existing stars. Chapter play writes the checkpoint, draft answer, hint and assistance state, outcomes, settings and badge to the chapter key. Model arrangements and drawings are kept in memory while an activity stays open.

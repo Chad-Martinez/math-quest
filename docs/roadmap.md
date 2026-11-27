@@ -1,5 +1,11 @@
 # Roadmap
 
+## Current release milestone
+
+**Dinosaur Island: The Lost Egg, Chapter 1.** Review the five-stop adventure on a physical iPad, observe a full play session, and adjust any unclear instructions, touch interactions, or transitions. Keep Chapter 2 and the other adventures out of playtest navigation pending feedback. [Chapter 1 review checklist](chapter-1.md)
+
+## Prior work and future options
+
 The revised roadmap starts with the educational and product handoff audit. The earlier foundation and interactive learning releases already cover the static game, seven worlds, local rewards and resets, and parts of the workspace below.
 
 1. **Parent Coach** — contextual teaching tips and follow-up practice for all active question templates, with deliberate worked-solution reveal and local assistance evidence.

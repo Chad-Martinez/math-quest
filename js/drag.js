@@ -32,7 +32,9 @@ export function dragTo(source, targetFor, onDrop, canDrag = () => true) {
       if (Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) < 9) return;
       const ghost = document.createElement('span');
       ghost.className = 'drag-ghost';
-      ghost.textContent = source.dataset.dragIcon || source.textContent;
+      const artwork = source.querySelector('img');
+      if (artwork) ghost.append(artwork.cloneNode());
+      else ghost.textContent = source.dataset.dragIcon || source.textContent;
       ghost.setAttribute('aria-hidden', 'true');
       document.body.append(ghost);
       gesture.ghost = ghost;

@@ -1,21 +1,21 @@
 # Math Quest
 
-Math Quest is a touch-friendly math adventure for early elementary learners. Choose one of seven worlds, work through short challenges, and earn stars for solving them.
+Math Quest is a touch-friendly math adventure for early elementary learners. The Chapter 1 playtest, **Dinosaur Island — The Lost Egg**, follows T-Rex through five math challenges to find a missing egg.
 
 ## Run locally
 
-From the repository root, run `python3 -m http.server 8000` and open http://localhost:8000/. An HTTP server is required to load JavaScript modules. To check the project-site path, serve the parent directory and open http://localhost:8000/math-quest/.
+From the repository root, run `python3 -m http.server 8000` and open http://localhost:8000/. Use an HTTP server to load the JavaScript modules. To check GitHub Pages project paths, serve the parent of the checkout and open `/math-quest/` from a checkout named `math-quest`.
 
-Run `npm test` with Node.js 20 or newer. The game and tests have no package dependencies.
-
-## Publish on GitHub Pages
-
-In the repository, open **Settings → Pages → Build and deployment**. Choose **Deploy from a branch**, select **main** and **/ (root)**, and click **Save**. Once GitHub reports a successful deployment, open https://chad-martinez.github.io/math-quest/.
+Run `npm test` with Node.js 20 or newer. The game and its unit tests have no package dependencies. [Chapter 1 review](docs/chapter-1.md) describes the optional Playwright run, iPad checklist, and release criteria.
 
 ## Play on iPad
 
-Open the Pages URL in Safari. Tap **Learn a skill** for a worked example, guided practice, and a fresh problem to solve on your own. Or tap a world, then use **Read aloud**, **Hint**, or **Draw** as needed. **Grown-ups → Teaching tips** opens the [Parent Coach](docs/parent-coach.md) for the current challenge. **Grown-ups** lets you change the number of challenges and reset progress for one adventure or the whole game. Stars and completions from older versions are included in the overall totals and can be cleared with a whole-game reset. See [the iPad test checklist](docs/testing.md) for the full first run.
+Open the hosted build in Safari. Tap **Start adventure** and follow the trail. **Listen** reads the story and current question where speech is available. **Hint** offers step-by-step help. **Math tools** and **Draw** switch the workspace. **Grown-ups → Teaching tips for this problem** opens instructions for the current challenge. The grown-ups panel also controls the optional offer of a wiggle break after the third challenge.
 
-Settings, stars, and adventure counts are stored per browser and origin. Private browsing, clearing website data, disabled storage, or changing devices can affect access to saved progress. In-progress adventures are kept in memory. Phase 1 requires a connection to load the hosted game. Speech availability and voice selection depend on the browser and device.
+The browser saves chapter checkpoints, badges and break preferences on that device. Chapter data and earlier Math Quest progress use separate local records. Clearing site data, private browsing, or changing browsers or devices can affect access to saved progress. Load the game over a connection for this release.
+
+## Publish on GitHub Pages
+
+Review the development branch before merging to `main`. GitHub Pages uses **Settings → Pages → Deploy from a branch → main → / (root)**. After approval and merge, confirm the deployment succeeded and the site loads the correct version. [Math Quest production](https://chad-martinez.github.io/math-quest/)
 
 See [architecture](docs/architecture.md), [curriculum](docs/curriculum.md), [game design](docs/game-design.md), and [roadmap](docs/roadmap.md).
