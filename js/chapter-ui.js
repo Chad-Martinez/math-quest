@@ -1,4 +1,4 @@
-import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, finishChallenge, freshQuestion,
+import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
@@ -8,6 +8,7 @@ let storage;
 try { storage = window.localStorage; } catch { /* Storage may be disabled. */ }
 let progress = readChapter(storage);
 let questions = progress.run ? chapterQuestions(progress.run.seed) : [];
+let practiceRun;
 let currentUtterance;
 let intro = true;
 let dialogCount = 0;
@@ -16,7 +17,8 @@ const assets = './assets/';
 const character = name => assets + 'characters/' + name + '.png';
 const reward = name => assets + 'rewards/' + name + '.png';
 const environment = name => assets + 'environments/' + name + '.webp';
-const qIndex = () => stops.indexOf(progress.run?.scene);
+const activeRun = () => practiceRun ?? progress.run;
+const qIndex = () => stops.indexOf(activeRun()?.scene);
 const persistWarning = document.createElement('p');
 persistWarning.className = 'chapter-storage-note';
 persistWarning.setAttribute('role', 'status');
@@ -138,6 +140,35 @@ function growUps() {
   const modal = dialog('Grown-ups', body, document.getElementById('chapter-grownups'));
 }
 
+function writeRun(run) {
+  if (practiceRun) practiceRun = run;
+  else write({ ...progress, run });
+}
+
+function returnToAdventure() {
+  stopSpeech();
+  practiceRun = undefined;
+  render();
+}
+
+function openStop(index) {
+  stopSpeech();
+  practiceRun = { seed: progress.run.seed, scene: stops[index], outcomes: Array(stops.length).fill(null), attempt: emptyAttempt() };
+  render();
+}
+
+function restartStop() {
+  const run = activeRun();
+  if (run.attempt.solved) {
+    openStop(qIndex());
+    return;
+  }
+  stopSpeech();
+  const { assisted, teach } = run.attempt;
+  writeRun({ ...run, attempt: { ...emptyAttempt(), assisted, teach } });
+  render();
+}
+
 function next() {
   stopSpeech();
   write(advanceChapter(progress));
@@ -146,6 +177,7 @@ function next() {
 
 function home() {
   stopSpeech();
+  practiceRun = undefined;
   intro = true;
   render();
 }
@@ -196,7 +228,7 @@ function storyScene(scene) {
   return el('section', { className: 'chapter-hero chapter-' + scene }, heading, scenery(data));
 }
 
-function trailMap(preview = false) {
+function trailMap(close) {
   const trail = el('div', { className: 'chapter-trail' });
   trail.append(picture(assets + 'maps/trail-background.webp', 'chapter-map-background'));
   const positions = [[11, 69], [28, 51], [47, 65], [66, 42], [85, 33]];
@@ -209,18 +241,28 @@ function trailMap(preview = false) {
   line.setAttribute('points', points);
   svg.append(line);
   trail.append(svg);
-  const current = progress.run.outcomes.findIndex(outcome => !outcome);
+  const current = progress.run.scene === 'map' ? 0 : stops.indexOf(progress.run.scene);
   for (const [i, [x,y]] of positions.entries()) {
     const complete = Boolean(progress.run.outcomes[i]);
-    const mark = el('span', { className: 'chapter-map-node', style: `left:${x}%;top:${y}%`,
-      'aria-label': `${i + 1}. ${stopNames[i]}${complete ? ', done' : ''}` }, complete ? '✓' : String(i + 1));
+    const mark = button(String(i + 1), () => {
+      if (i === current && !complete) {
+        if (close) close();
+        else next();
+      } else {
+        close?.();
+        openStop(i);
+      }
+    }, 'chapter-map-node');
+    mark.style.left = `${x}%`;
+    mark.style.top = `${y}%`;
+    mark.setAttribute('aria-label', `${i + 1}. ${stopNames[i]}${complete ? ', done' : ''}`);
     if (complete) mark.dataset.complete = '';
     if (i === current) mark.setAttribute('aria-current', 'step');
     trail.append(mark);
   }
-  if (preview) return trail;
+  if (close) return el('div', {}, trail, el('p', {}, 'Tap a number to open that stop.'));
   return el('section', { className: 'chapter-map-card' }, el('h1', { tabindex: '-1' }, 'Follow the island trail'),
-    trail, el('p', {}, 'Five stops. Let’s gather supplies first.'), button('Go to the first stop', next));
+    trail, el('p', {}, 'Tap a number to visit a stop.'), button('Go to the first stop', next));
 }
 
 const moves = [
@@ -273,21 +315,21 @@ function coach() {
     el('h3', {}, 'What this teaches'), el('p', {}, question.objective),
     el('h3', {}, 'Try it with objects'), el('p', {}, question.activity),
     el('h3', {}, 'Hints to try'), el('ul', {}, ...question.hints.flat().map(hint => el('li', {}, hint))),
-    el('h3', {}, 'If they get stuck'), el('p', {}, Object.values(question.mistakes[progress.run.attempt.step]).join(' ')));
-  if (!progress.run.attempt.solved) {
+    el('h3', {}, 'If they get stuck'), el('p', {}, Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
+  if (!activeRun().attempt.solved) {
     const helped = button('I helped with this problem', () => {
       updateAttempt({ assisted: true, teach: true });
       helped.setAttribute('aria-pressed', 'true');
     }, 'chapter-secondary');
-    helped.setAttribute('aria-pressed', String(progress.run.attempt.teach));
+    helped.setAttribute('aria-pressed', String(activeRun().attempt.teach));
     body.append(helped);
   }
   const solution = el('div', { role: 'status' });
   body.append(button('Reveal worked solution', () => {
-    if (!progress.run.attempt.solved) updateAttempt({ assisted: true });
+    if (!activeRun().attempt.solved) updateAttempt({ assisted: true });
     solution.replaceChildren(...question.equations.map(equation => el('p', {}, equation)));
   }, 'chapter-secondary'), solution);
-  const transfer = freshQuestion(progress.run.seed, index);
+  const transfer = freshQuestion(activeRun().seed, index);
   if (transfer) {
     const transferDetails = el('details', {}, el('summary', {}, 'Try an independent transfer problem'));
     const { field, label } = answerField('Transfer answer');
@@ -306,7 +348,8 @@ function coach() {
 }
 
 function updateAttempt(changes) {
-  write({ ...progress, run: { ...progress.run, attempt: { ...progress.run.attempt, ...changes } } });
+  const run = activeRun();
+  writeRun({ ...run, attempt: { ...run.attempt, ...changes } });
 }
 
 function drawing() {
@@ -341,7 +384,7 @@ function drawing() {
 }
 
 function exampleDialog(index, trigger, onWorked) {
-  const alternate = freshQuestion(progress.run.seed, index);
+  const alternate = freshQuestion(activeRun().seed, index);
   if (!alternate) return;
   updateAttempt({ assisted: true });
   const section = el('div', {});
@@ -370,7 +413,7 @@ function exampleDialog(index, trigger, onWorked) {
 
 function mathScene(index) {
   const question = questions[index];
-  const attempt = progress.run.attempt;
+  const attempt = activeRun().attempt;
   const currentPanel = el('div', { className: 'chapter-work-panel' });
   const sketch = drawing();
   const work = chapterModel(question, attempt.step);
@@ -402,13 +445,13 @@ function mathScene(index) {
     showDraw.setAttribute('aria-pressed', String(view === 'draw'));
   }
   function presentHints() {
-    const current = progress.run.attempt;
+    const current = activeRun().attempt;
     hint.hidden = current.hints === 0 || current.solved;
     if (!hint.hidden) hint.textContent = question.hints[current.step][current.hints - 1];
     coachHint.textContent = current.hints === 0 ? 'Hint' : current.hints === question.hints[current.step].length ? 'See an example' : 'Another hint';
   }
   const coachHint = button('Hint', () => {
-    const active = progress.run.attempt;
+    const active = activeRun().attempt;
     if (active.hints < question.hints[active.step].length) {
       updateAttempt({ hints: active.hints + 1, assisted: true });
       presentHints();
@@ -418,7 +461,8 @@ function mathScene(index) {
   const breakButton = button('Take a break', () => movementBreak(breakButton), 'chapter-secondary');
   const audio = listen(() => [question.story, attempt.step ? context.querySelector('.chapter-known').textContent : '', question.prompts[attempt.step]].join(' '));
   const tools = el('div', { className: 'chapter-actions chapter-math-tools' }, audio, coachHint, breakButton);
-  currentPanel.append(el('div', { className: 'chapter-actions chapter-work-toggle' }, showWork, showDraw), work, sketch);
+  currentPanel.append(el('div', { className: 'chapter-actions chapter-work-toggle' }, showWork, showDraw,
+    button('Restart stop', restartStop, 'chapter-secondary')), work, sketch);
   const form = el('form', { className: 'chapter-answer-form' }, label, el('button', { type: 'submit' }, 'Check answer'));
   function completed(outcome) {
     form.hidden = true;
@@ -428,11 +472,13 @@ function mathScene(index) {
     result.classList.add('chapter-success');
     const equations = outcome === 'worked-example' ? question.equations : question.equations.slice(-1);
     result.after(...equations.map(equation => el('p', { className: 'chapter-worked-equation' }, equation)));
-    actions.replaceChildren(button(index === 4 ? 'Follow the clue' : 'Continue the search', next));
+    const continueButton = practiceRun ? button('Back to adventure', returnToAdventure) :
+      button(index === 4 ? 'Follow the clue' : 'Continue the search', next);
+    actions.replaceChildren(continueButton);
     actions.querySelector('button').focus({ preventScroll: true });
   }
   function worked() {
-    write({ ...progress, run: finishChallenge(progress.run, 'worked-example') });
+    writeRun(finishChallenge(activeRun(), 'worked-example'));
     completed('worked-example');
   }
   form.addEventListener('submit', event => {
@@ -442,9 +488,9 @@ function mathScene(index) {
       result.textContent = 'Enter a number from zero to twenty.';
       return;
     }
-    const before = progress.run;
+    const before = activeRun();
     const after = applyChapterAnswer(before, question, value);
-    write({ ...progress, run: after });
+    writeRun(after);
     if (after.attempt.solved) completed(after.outcomes[index]);
     else if (before.attempt.step !== after.attempt.step) {
       stopSpeech();
@@ -454,26 +500,31 @@ function mathScene(index) {
   });
 
   const left = el('section', { className: 'chapter-story-panel' }, backdrop,
-    el('p', { className: 'chapter-kicker' }, `Stop ${index + 1} of 5${question.prompts.length > 1 ? ` · Step ${attempt.step + 1} of 2` : ''}`),
+    el('p', { className: 'chapter-kicker' }, `${practiceRun ? 'Practice · ' : ''}Stop ${index + 1} of 5${question.prompts.length > 1 ? ` · Step ${attempt.step + 1} of 2` : ''}`),
     heading, context, tools, hint);
   const answer = el('section', { className: 'chapter-response-panel', 'aria-label': 'Answer and continue' }, form, result, actions);
   const layout = el('div', { className: 'chapter-learning' }, left, currentPanel, answer);
   select('math');
   presentHints();
-  if (attempt.solved) queueMicrotask(() => completed(progress.run.outcomes[index]));
+  if (attempt.solved) queueMicrotask(() => completed(activeRun().outcomes[index]));
   return layout;
 }
 
 function render() {
-  const scene = intro ? 'welcome' : progress.run?.scene ?? 'welcome';
+  const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
   const header = el('header', { className: 'chapter-header' },
     button('Math Quest', home, 'chapter-brand'), el('div', { className: 'chapter-actions' },
       ...(progress.badge ? [picture(reward('reward-egg'), 'chapter-header-badge', 'Golden Egg badge')] : []),
       el('button', { id: 'chapter-grownups', type: 'button', className: 'chapter-secondary' }, 'Grown-ups')));
   header.querySelector('#chapter-grownups').addEventListener('click', growUps);
-  if (progress.run && !intro && !['mission', 'map', 'replay'].includes(scene)) {
-    const map = button('Trail map', () => dialog('Island trail', trailMap(true), map), 'chapter-secondary');
-    header.querySelector('.chapter-actions').prepend(map);
+  const headerActions = header.querySelector('.chapter-actions');
+  if (practiceRun) {
+    headerActions.prepend(button('Leave practice', returnToAdventure, 'chapter-secondary'));
+  } else if (progress.run && !intro && !['mission', 'map'].includes(scene)) {
+    const map = button('Trail map', () => {
+      const modal = dialog('Island trail', trailMap(() => modal.close()), map);
+    }, 'chapter-secondary');
+    headerActions.prepend(map);
   }
   const index = qIndex();
   let content;
