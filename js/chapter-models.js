@@ -173,6 +173,7 @@ function grow(container, question, demonstrated) {
   const labels = gemsQuestion ? ['Green Dino', 'Blue Dino'] : ['T-Rex', 'Friend'];
   const more = group(labels[0]), fewer = group(labels[1]);
   const spare = group(gemsQuestion ? 'Spare gems' : 'Berries to share');
+  if (!gemsQuestion) fewer.node.classList.add('chapter-share-recipient');
   const { large, small } = question.params;
   const fixedAsset = gemsQuestion ? gems('green') : berry('red');
   const addedAsset = gemsQuestion ? gems('blue') : berry('blue');
@@ -186,14 +187,18 @@ function grow(container, question, demonstrated) {
   const update = () => {
     const count = fewer.items.childElementCount;
     if (count === large) {
-      status.textContent = gemsQuestion ? 'They tie. Add just one more.' : 'They match! Count what you moved.';
+      status.textContent = gemsQuestion ? 'They tie. Add just one more.' : 'They match! Count the berries with rings.';
     } else if (count > large) {
       status.textContent = gemsQuestion && count === large + 1 ? 'Blue Dino is just ahead. Count what you moved.' : 'Move an extra one back.';
     } else {
       status.textContent = `Move a spare ${noun} to ${labels[1]}’s group.`;
     }
   };
-  for (let i = 0; i < Math.min(large - small + 2, 20 - small); i++) movable(addedAsset, `Spare ${noun} ${i + 1}`, spare, fewer, update, demonstrated && i < question.answers[0]);
+  const available = Math.min(large - small + 2, 20 - small);
+  for (let i = 0; i < available; i++) {
+    const piece = movable(addedAsset, `Spare ${noun} ${i + 1}`, spare, fewer, update, demonstrated && i < question.answers[0]);
+    if (!gemsQuestion) piece.classList.add('chapter-added-berry');
+  }
   update();
 }
 

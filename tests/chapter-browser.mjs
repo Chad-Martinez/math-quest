@@ -214,9 +214,22 @@ try {
 
   await heading(page, 'Share the food');
   await teachingTips(page, 2, true);
+  const friend = page.getByRole('region', { name: 'Friend' });
+  const sharingBerries = page.getByRole('region', { name: 'Berries to share' });
+  const ring = piece => piece.evaluate(node => getComputedStyle(node).borderTopStyle);
+  const berryToMove = page.getByRole('button', { name: /^Spare berry 1,/ });
+  assert.equal(await ring(berryToMove), 'solid');
+  await berryToMove.tap();
+  assert.equal(await ring(berryToMove), 'dashed');
+  await berryToMove.tap();
+  assert.equal(await ring(berryToMove), 'solid');
+  assert.equal(await friend.getByRole('button').count(), 0);
+  for (let i = 0; i < qs[2].answers[0]; i++) await sharingBerries.getByRole('button').first().tap();
+  assert.equal(await friend.getByRole('button').count(), qs[2].answers[0]);
+  for (const berry of await friend.getByRole('button').all()) assert.equal(await ring(berry), 'dashed');
+  for (const berry of await friend.getByRole('img').all()) assert.equal(await ring(berry), 'solid');
+  assert.match(await page.locator('.chapter-model-status').textContent(), /Count the berries with rings/);
   await screen(page, '06-share-the-food');
-  for (let i = 0; i < qs[2].answers[0]; i++) await page.locator('.chapter-group').nth(2).getByRole('button').first().click();
-  assert.match(await page.locator('.chapter-model-status').textContent(), /match/);
   await check(page, qs[2].answers[0]);
   assert.equal((await stored(page)).run.outcomes[2], 'assisted');
   await press(page, 'Continue the search');

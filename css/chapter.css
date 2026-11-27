@@ -229,7 +229,7 @@ body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
   border-bottom: 4px solid #ad7846;
   padding: 10px 12px;
 }
-#chapter .chapter-supply-basket .chapter-added-berry {
+#chapter :is(.chapter-supply-basket, .chapter-share-recipient) .chapter-token.chapter-added-berry {
   background-color: #ffdfa0;
   border-color: #a4642f;
   border-style: dashed;
