@@ -267,6 +267,7 @@ try {
     contentType: 'text/javascript', body: 'export const release = { legacyAdventures: true };',
   }));
   await legacyPage.goto(base);
+  await legacyPage.locator('.worlds button').last().waitFor();
   await button(legacyPage, 'Learn a skill').waitFor();
   assert.equal(await legacyPage.locator('.worlds button').count(), 7);
   assert.equal(await legacyPage.locator('#chapter').isVisible(), false);

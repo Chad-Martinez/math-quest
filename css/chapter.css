@@ -1,5 +1,5 @@
 #chapter:empty,
-body.chapter-release > :is(header, main, dialog) { display: none; }
+body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
 
 .chapter-release {
   --ink: #173e32;
