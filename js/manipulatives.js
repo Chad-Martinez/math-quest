@@ -158,8 +158,8 @@ function remove(container, { start, change, icon }) {
   update();
 }
 
-function numberLine(container, { start, target, showJumps = false, atTarget = false }) {
-  let position = atTarget ? target : start;
+function numberLine(container, { start, target, showJumps = false }) {
+  let position = start;
   const track = node('div', '', 'number-line');
   const ticks = Array.from({ length: target - start + 1 }, (_, index) => {
     const value = start + index;

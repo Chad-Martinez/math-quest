@@ -222,3 +222,43 @@ body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
 #chapter :is(h1, h2, h3)[tabindex="-1"]:focus { outline: 0; }
 
 .chapter-release .drag-ghost img { width: 32px; height: 32px; object-fit: contain; }
+
+.chapter-supply-basket {
+  background: #fff0ce;
+  border-color: #ad7846;
+  border-bottom: 4px solid #ad7846;
+  padding: 10px 12px;
+}
+#chapter :is(.chapter-supply-basket, .chapter-share-recipient) .chapter-token.chapter-added-berry {
+  background-color: #ffdfa0;
+  border-color: #a4642f;
+  border-style: dashed;
+  border-radius: 50%;
+}
+.chapter-supply-basket + .chapter-group { margin-top: 10px; }
+.chapter-packed-supplies {
+  overflow: hidden;
+  border-radius: 15px;
+  background: #fff0ce;
+}
+.chapter-packed-art {
+  display: grid;
+  place-items: end center;
+  min-height: clamp(134px, 26vh, 214px);
+  background: #d9ead1 url('../assets/environments/jungle.webp') center 43% / cover no-repeat;
+}
+.chapter-packed-trex {
+  width: min(66%, 210px);
+  height: clamp(134px, 26vh, 214px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 4px 5px #19392c75);
+}
+.chapter-packed-content { padding: clamp(12px, 2.2vw, 22px); }
+.chapter-packed-content h2 { margin: 0; font-size: clamp(1.55rem, 3.3vw, 2.5rem); }
+.chapter-packed-content p { margin: 8px 0 12px; }
+.chapter-packed-content .chapter-supply-basket { background: #fff9e9; }
+.chapter-packed-content .chapter-worked-equation { margin-bottom: 0; font-size: 1.2rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .chapter-packed-trex { animation: chapter-arrive .38s ease-out both; }
+}

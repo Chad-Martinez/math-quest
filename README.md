@@ -10,7 +10,7 @@ Run `npm test` with Node.js 20 or newer. The game and its unit tests have no pac
 
 ## Play on iPad
 
-Open the hosted build in Safari. Tap **Start adventure** and follow the trail. **Listen** reads the story and current question where speech is available. **Hint** offers step-by-step help. **Math tools** and **Draw** switch the workspace. **Grown-ups → Teaching tips for this problem** opens instructions for the current challenge. The grown-ups panel also controls the optional offer of a wiggle break after the third challenge.
+Open the hosted build in Safari. Tap **Start adventure** and follow the trail. **Listen** reads the story and current question where speech is available. **Hint** offers step-by-step help. **Previous stop** opens the last challenge for practice. Use **Leave practice** to return to your checkpoint. **Grown-ups → Teaching tips for this problem** opens instructions for the current challenge. The grown-ups panel also controls the optional offer of a wiggle break after the third challenge.
 
 The browser saves chapter checkpoints, badges and break preferences on that device. Chapter data and earlier Math Quest progress use separate local records. Clearing site data, private browsing, or changing browsers or devices can affect access to saved progress. Load the game over a connection for this release.
 

@@ -38,6 +38,7 @@ async function screen(page, name) {
 function button(page, name) { return page.getByRole('button', { name, exact: true }); }
 async function press(page, name) { await button(page, name).click(); }
 async function check(page, value) {
+  assert.equal(await button(page, 'Draw').count(), 0);
   await page.getByLabel('Your answer').fill(String(value));
   await press(page, 'Check answer');
 }
@@ -109,6 +110,7 @@ try {
   await press(page, 'Back to adventure');
   await button(page, '1. Gather supplies').tap();
   await heading(page, 'Gather supplies');
+  assert.equal(await button(page, 'Previous stop').count(), 0);
   assert.equal(await page.locator('.chapter-group').nth(0).locator('.chapter-token').count(), qs[0].params.a);
   assert.equal(await page.locator('.chapter-group').nth(1).locator('.chapter-token').count(), qs[0].params.b);
   await screen(page, '03-gather-supplies');
@@ -126,16 +128,8 @@ try {
   assert.equal(await basket.getByRole('button').count(), 2);
   await press(page, '◖ Listen');
   assert.ok(await page.getByText('Read aloud is unavailable in this browser.').isVisible());
-  await press(page, 'Draw');
-  assert.ok(await page.getByLabel('Scratch drawing').isVisible());
-  assert.equal(await basket.isVisible(), false);
-  const canvas = await page.getByLabel('Scratch drawing').boundingBox();
-  await page.mouse.move(canvas.x + 30, canvas.y + 30);
-  await page.mouse.down();
-  await page.mouse.move(canvas.x + 100, canvas.y + 60);
-  await page.mouse.up();
-  assert.ok(await page.locator('.chapter-sketch canvas').evaluate(c => c.getContext('2d').getImageData(0,0,c.width,c.height).data.some(Boolean)));
-  await press(page, 'Math tools');
+  assert.equal(await button(page, 'Draw').count(), 0);
+  assert.equal(await page.locator('#chapter canvas').count(), 0);
   await teachingTips(page, 0);
   assert.equal(await page.getByLabel('Your answer').inputValue(), '8');
   assert.equal(await basket.getByRole('button').count(), 2);
@@ -154,18 +148,49 @@ try {
   assert.equal(await page.getByRole('region', { name: 'Red berries' }).getByRole('button').count(), qs[0].params.a);
   assert.equal((await stored(page)).run.seed, seed);
   await check(page, qs[0].answers[0]);
+  const packing = page.getByRole('region', { name: 'Travel basket' });
+  const spare = page.getByRole('region', { name: 'Spare berries' });
+  assert.equal(await packing.getByRole('img').count(), qs[0].params.have);
+  const firstSpare = spare.getByRole('button').first();
+  await firstSpare.tap();
+  assert.equal(await packing.getByRole('button').count(), 1);
+  await press(page, 'Number line');
+  assert.equal(await packing.isVisible(), false);
   await button(page, String(qs[0].params.have + 1)).tap();
   assert.equal(await page.locator('.number-line-jumps .jumped').count(), 1);
-  await screen(page, '04-count-on');
+  await press(page, 'Basket');
+  assert.equal(await packing.getByRole('button').count(), 1);
+  await packing.getByRole('button').first().tap();
+  assert.equal(await packing.getByRole('button').count(), 0);
+  await screen(page, '04-pack-the-basket');
+  await press(page, 'Number line');
   await check(page, qs[0].answers[1]);
+  await heading(page, 'Supplies packed!');
+  const packed = page.getByRole('region', { name: 'Supplies packed!' });
+  assert.equal(await packing.getByRole('img').count(), qs[0].params.need);
+  assert.equal(await packing.getByRole('img', { name: 'Added berry' }).count(), qs[0].answers[1]);
+  assert.ok(await packed.getByText(qs[0].equations[1], { exact: true }).isVisible());
+  assert.equal(await page.locator('.number-line-jumps').count(), 0);
+  assert.equal(await page.locator('#chapter-question').isVisible(), false);
   assert.equal((await stored(page)).run.outcomes[0], 'independent');
+  await screen(page, '04b-supplies-packed');
+  await page.reload();
+  await press(page, 'Continue adventure');
+  await heading(page, 'Supplies packed!');
+  assert.equal(await packing.getByRole('img').count(), qs[0].params.need);
   await press(page, 'Continue the search');
 
   await heading(page, 'Follow footprints');
   await page.getByLabel('Your answer').fill('2');
+  const footprintsCheckpoint = await stored(page);
+  await button(page, 'Previous stop').tap();
+  await heading(page, 'Gather supplies');
+  assert.equal(await button(page, 'Previous stop').count(), 0);
+  await press(page, 'Leave practice');
+  assert.equal(await page.getByLabel('Your answer').inputValue(), '2');
+  assert.deepEqual(await stored(page), footprintsCheckpoint);
   await press(page, 'Trail map');
   assert.equal(await page.locator('.chapter-map-node[data-complete]').count(), 1);
-  const footprintsCheckpoint = await stored(page);
   await button(page, '1. Gather supplies, done').tap();
   await heading(page, qs[0].prompts[0]);
   assert.equal(await page.getByRole('region', { name: 'Blue berries' }).getByRole('button').count(), qs[0].params.b);
@@ -189,12 +214,29 @@ try {
 
   await heading(page, 'Share the food');
   await teachingTips(page, 2, true);
+  const friend = page.getByRole('region', { name: 'Friend' });
+  const sharingBerries = page.getByRole('region', { name: 'Berries to share' });
+  const ring = piece => piece.evaluate(node => getComputedStyle(node).borderTopStyle);
+  const berryToMove = page.getByRole('button', { name: /^Spare berry 1,/ });
+  assert.equal(await ring(berryToMove), 'solid');
+  await berryToMove.tap();
+  assert.equal(await ring(berryToMove), 'dashed');
+  await berryToMove.tap();
+  assert.equal(await ring(berryToMove), 'solid');
+  assert.equal(await friend.getByRole('button').count(), 0);
+  for (let i = 0; i < qs[2].answers[0]; i++) await sharingBerries.getByRole('button').first().tap();
+  assert.equal(await friend.getByRole('button').count(), qs[2].answers[0]);
+  for (const berry of await friend.getByRole('button').all()) assert.equal(await ring(berry), 'dashed');
+  for (const berry of await friend.getByRole('img').all()) assert.equal(await ring(berry), 'solid');
+  assert.match(await page.locator('.chapter-model-status').textContent(), /Count the berries with rings/);
   await screen(page, '06-share-the-food');
-  for (let i = 0; i < qs[2].answers[0]; i++) await page.locator('.chapter-group').nth(2).getByRole('button').first().click();
-  assert.match(await page.locator('.chapter-model-status').textContent(), /match/);
   await check(page, qs[2].answers[0]);
   assert.equal((await stored(page)).run.outcomes[2], 'assisted');
   await press(page, 'Continue the search');
+  await heading(page, 'Dino Wiggle Break');
+  await button(page, 'Previous stop').tap();
+  await heading(page, 'Share the food');
+  await press(page, 'Leave practice');
   await heading(page, 'Dino Wiggle Break');
   await screen(page, '07-wiggle-break');
   await page.reload();
@@ -277,6 +319,8 @@ try {
   await page.getByText('I need the answer to my problem').click();
   await press(page, 'Show my answer');
   assert.equal((await stored(page)).run.outcomes[0], 'worked-example');
+  await heading(page, 'Supplies packed!');
+  assert.ok(await page.getByText('You followed the worked example.').isVisible());
   await press(page, 'Continue the search');
   const replay = chapterQuestions((await stored(page)).run.seed);
   await check(page, replay[1].answers[0]);
