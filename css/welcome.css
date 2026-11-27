@@ -265,17 +265,20 @@
 @media (prefers-reduced-motion: no-preference) {
   .welcome-background { animation: welcome-fade .4s both; }
   .welcome-character { animation: welcome-walk-in 1.1s .4s linear both; }
-  .welcome-character .welcome-greeting-pose { animation: welcome-settle .3s 1.5s both; }
+  .welcome-character .welcome-greeting-pose {
+    opacity: 0;
+    animation: welcome-settle .3s 1.5s forwards;
+  }
   .welcome-character .welcome-walk-frame {
     inset: auto 6% 0;
     width: 88%;
     height: 90%;
-    animation: welcome-steps .44s step-end 2 both;
+    animation: .44s .4s step-end 2.5;
   }
-  .welcome-character .welcome-walk-frame:nth-of-type(3) { animation-delay: .40s; animation-iteration-count: 3; }
-  .welcome-character .welcome-walk-frame:nth-of-type(4) { animation-delay: .51s; animation-iteration-count: 3; }
-  .welcome-character .welcome-walk-frame:nth-of-type(5) { animation-delay: .62s; }
-  .welcome-character .welcome-walk-frame:nth-of-type(6) { animation-delay: .73s; }
+  .welcome-walk-frame:nth-of-type(3) { animation-name: welcome-step-one; }
+  .welcome-walk-frame:nth-of-type(4) { animation-name: welcome-step-two; }
+  .welcome-walk-frame:nth-of-type(5) { animation-name: welcome-step-three; }
+  .welcome-walk-frame:nth-of-type(6) { animation-name: welcome-step-four; }
   .welcome-titles { animation: welcome-title-in .8s .7s both; }
   .welcome-greeting { animation: welcome-fade .3s 1.8s both; }
   .welcome-celebrating :is(.welcome-background, .welcome-character, .welcome-titles, .welcome-greeting) {
@@ -293,7 +296,23 @@
   }
   @keyframes welcome-fade { from { opacity: 0; } to { opacity: 1; } }
   @keyframes welcome-walk-in { from { transform: translateX(-112%); } to { transform: translateX(0); } }
-  @keyframes welcome-steps { 0%, 25% { opacity: 1; } 25.001%, 100% { opacity: 0; } }
+  /* All four poses run on the same cycle, with exactly one visible in each quarter. */
+  @keyframes welcome-step-one {
+    from { opacity: 1; }
+    25%, to { opacity: 0; }
+  }
+  @keyframes welcome-step-two {
+    from, 50%, to { opacity: 0; }
+    25% { opacity: 1; }
+  }
+  @keyframes welcome-step-three {
+    from, 75%, to { opacity: 0; }
+    50% { opacity: 1; }
+  }
+  @keyframes welcome-step-four {
+    from { opacity: 0; }
+    75%, to { opacity: 1; }
+  }
   @keyframes welcome-title-in { from { opacity: 0; transform: translateY(.55rem); } to { opacity: 1; } }
   @keyframes welcome-settle {
     from { opacity: .35; }

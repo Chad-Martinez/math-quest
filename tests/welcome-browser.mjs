@@ -65,6 +65,17 @@ async function capture(page, name) {
   if (pictures) await page.screenshot({ path: join(pictures, name + '.png'), fullPage: true });
 }
 
+async function visiblePoses(page, time) {
+  return page.locator('.welcome-stage').evaluate((stage, time) => {
+    if (time !== undefined) {
+      for (const animation of stage.welcomeTestAnimations) animation.currentTime = time;
+    }
+    return [...stage.querySelectorAll('.welcome-character img')]
+      .filter(image => Number(getComputedStyle(image).opacity) > 0)
+      .map(image => image.src.split('/').at(-1));
+  }, time);
+}
+
 async function entranceEnds(page) {
   await page.locator('.welcome-stage').evaluate(stage => Promise.all(stage.getAnimations({ subtree: true }).map(a => a.finished)));
 }
@@ -84,22 +95,29 @@ async function buttonsFit(page) {
 
 try {
   const reference = await open({ width: 1672, height: 941 });
-  await reference.locator('.welcome-stage').evaluate(stage => stage.getAnimations({ subtree: true }).forEach(animation => {
-    animation.pause();
-    animation.currentTime = 0;
-  }));
+  await reference.locator('.welcome-stage').evaluate(stage => {
+    stage.welcomeTestAnimations = stage.getAnimations({ subtree: true });
+    for (const animation of stage.welcomeTestAnimations) {
+      animation.pause();
+      animation.currentTime = 0;
+    }
+  });
   assert.ok(await button(reference, 'Start Adventure').isEnabled());
   assert.equal(await button(reference, 'Continue Adventure').count(), 0);
   const animated = reference.locator('.welcome-stage');
+  for (const time of [0, 399, 401, 509, 511, 619, 621, 729, 731, 839, 841, 1205, 1499, 1501, 1680, 2100]) {
+    let expected = [];
+    if (time >= 1500) expected = ['trex-greeting.png'];
+    else if (time >= 400) expected = [`trex-walk-${Math.floor((time - 400) / 110) % 4 + 1}.png`];
+    assert.deepEqual(await visiblePoses(reference, time), expected, `Visible poses at ${time} ms`);
+  }
   if (pictures) {
     for (const [time, filename] of [[0, '01-initial'], [980, '02-walking'], [1680, '03-settling'], [2100, '04-greeting']]) {
-      await animated.evaluate((stage, time) => stage.getAnimations({ subtree: true }).forEach(animation => {
-        animation.currentTime = time;
-      }), time);
+      await visiblePoses(reference, time);
       await capture(reference, filename);
     }
   }
-  await animated.evaluate(stage => stage.getAnimations({ subtree: true }).forEach(animation => animation.finish()));
+  await animated.evaluate(stage => stage.welcomeTestAnimations.forEach(animation => animation.finish()));
   assert.equal(await reference.getByText(greeting, { exact: true }).count(), 1);
   await capture(reference, '05-desktop');
   assert.ok(await reference.evaluate(() => document.querySelector('.welcome-stage').getBoundingClientRect().height <= innerHeight));
@@ -175,6 +193,7 @@ try {
 
   const reduced = await open({ width: 1024, height: 768 }, { reducedMotion: 'reduce' });
   assert.equal(await reduced.locator('.welcome-stage').evaluate(stage => stage.getAnimations({ subtree: true }).length), 0);
+  assert.deepEqual(await visiblePoses(reduced), ['trex-greeting.png']);
   await capture(reduced, '11-reduced-motion');
   await reduced.keyboard.press('Tab');
   assert.equal(await reduced.evaluate(() => document.activeElement.textContent), 'Listen');
@@ -188,6 +207,7 @@ try {
   const immediate = await open({ width: 1024, height: 768 });
   await button(immediate, 'Start Adventure').evaluate(control => { control.click(); control.click(); });
   await immediate.locator('.welcome-celebrating').waitFor();
+  assert.deepEqual(await visiblePoses(immediate), ['trex-celebrate.png']);
   assert.equal(await stored(immediate), null);
   await heading(immediate, 'An egg is missing!').waitFor();
   await immediate.locator('.welcome-leaving').waitFor({ state: 'detached' });
