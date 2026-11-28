@@ -215,20 +215,21 @@ try {
   await capture(travel, 'travel-01-before');
   const initial = await traveler.getAttribute('style');
   await press(travel, 'Listen');
+  const now = new Date();
+  await travel.clock.install({ time: now });
+  await travel.clock.pauseAt(new Date(now.getTime() + 1500));
   await button(travel, 'Visit Crystal Lagoon').evaluate(control => { control.click(); control.click(); });
   await button(travel, 'Skip travel').waitFor();
   assert.equal((await speech(travel)).canceled, 1);
-  await travel.waitForFunction(before => {
-    const moving = document.querySelector('.map-traveler');
-    return moving.getAttribute('style') !== before &&
-      moving.querySelector('.map-walk-frame.map-walk-visible');
-  }, initial);
-  await capture(travel, 'travel-02-departure', 'allow');
+  await travel.clock.runFor(150);
+  assert.notEqual(await traveler.getAttribute('style'), initial);
   assert.equal(await traveler.locator('.map-walk-visible').count(), 1);
-  await travel.waitForTimeout(390);
+  await capture(travel, 'travel-02-departure', 'allow');
+  await travel.clock.runFor(450);
   assert.match(await traveler.getAttribute('style'), /--map-facing: -1/);
   await capture(travel, 'travel-03-on-the-trail', 'allow');
-  await press(travel, 'Skip travel');
+  await button(travel, 'Skip travel').evaluate(control => control.click());
+  await travel.clock.resume();
   await heading(travel, 'Collect gems');
   assert.equal((await saved(travel)).run.mapFrom, undefined);
   assert.equal((await saved(travel)).runs, 0);
@@ -236,8 +237,10 @@ try {
 
   const natural = await setup(ipad, 'map', 0, undefined, { motion: 'no-preference' });
   await press(natural.page, "Let's Go!");
-  await press(natural.page, 'Visit Berry Grove');
-  await press(natural.page, 'Math Quest home');
+  await button(natural.page, 'Visit Berry Grove').evaluate(control => {
+    control.click();
+    document.querySelector('.map-brand').click();
+  });
   await heading(natural.page, 'The Lost Egg');
   await natural.page.waitForTimeout(1650);
   assert.equal((await saved(natural.page)).run.scene, 'map');
