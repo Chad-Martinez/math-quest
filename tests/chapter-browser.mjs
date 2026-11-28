@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterKey, chapterQuestions, freshQuestion } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterKey, chapterQuestions, freshQuestion } from '../js/chapter.js';
+import { berryGuide } from '../js/berry-grove-content.js';
 import { readProgress } from '../js/storage.js';
 
 const require = createRequire(import.meta.url);
@@ -14,7 +15,7 @@ const executablePath = process.env.CHAPTER_BROWSER_PATH ||
   (engine === chromium && !existsSync(engine.executablePath()) && existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
 const browser = await engine.launch({ executablePath });
 const seed = 2026;
-const qs = chapterQuestions(seed);
+const qs = chapterQuestions(seed, 0);
 const errors = [];
 const legacy = readProgress({ getItem: () => null });
 legacy.legacy.stars = 12;
@@ -49,7 +50,15 @@ async function finishIntroduction(page) {
 }
 async function check(page, value) {
   await page.getByLabel('Your answer').fill(String(value));
-  await press(page, 'Check answer');
+  await press(page, await page.locator('.grove-stage').count() ? 'Check Answer' : 'Check answer');
+}
+async function enterGrove(page) {
+  await heading(page, 'Brachiosaurus Berry Grove');
+  for (const label of ['Continue', 'Let’s Collect Berries!', 'Continue', 'Continue']) await press(page, label);
+}
+async function leaveGrove(page) {
+  for (let i = 0; i < 4; i++) await press(page, 'Continue');
+  await press(page, 'Follow the Trail');
 }
 async function heading(page, label) { await page.getByRole('heading', { name: label, exact: true }).waitFor(); }
 async function stored(page) { return page.evaluate(key => JSON.parse(localStorage.getItem(key)), chapterKey); }
@@ -66,7 +75,7 @@ async function teachingTips(page, index, reveal = false) {
   await press(page, 'Teaching tips for this problem');
   await heading(page, 'Teaching tips');
   const modal = page.getByRole('dialog', { name: 'Teaching tips' });
-  assert.ok(await modal.getByText(qs[index].objective, { exact: true }).isVisible());
+  assert.ok(await modal.getByText(index === 0 ? berryGuide.objective : qs[index].objective, { exact: true }).isVisible());
   assert.equal(await modal.getByText(qs[index].equations.at(-1), { exact: true }).count(), 0);
   if (reveal) {
     await press(page, 'I helped with this problem');
@@ -75,7 +84,7 @@ async function teachingTips(page, index, reveal = false) {
     assert.ok(await modal.getByText(qs[index].equations.at(-1), { exact: true }).isVisible());
   }
   await modal.locator('summary').click();
-  await modal.getByLabel('Transfer answer').fill(String(freshQuestion(seed, index).answers.at(-1)));
+  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
   await modal.getByRole('button', { name: 'Check', exact: true }).click();
   assert.match(await modal.locator('form + p').textContent(), /That works/);
   await press(page, 'Close');
@@ -116,15 +125,17 @@ try {
   assert.equal(mapCheckpoint.run.scene, 'map');
   await press(page, "Let's Go!");
   await press(page, 'Visit Berry Grove');
-  await heading(page, 'Gather supplies');
-  assert.equal(await page.locator('.chapter-group').nth(0).locator('.chapter-token').count(), qs[0].params.a);
-  assert.equal(await page.locator('.chapter-group').nth(1).locator('.chapter-token').count(), qs[0].params.b);
+  await enterGrove(page);
+  await press(page, 'Math tools');
+  const redGroup = page.getByRole('region', { name: 'Red berries' });
+  assert.equal(await redGroup.getByRole('button').count(), qs[0].params.a);
+  assert.equal(await page.getByRole('region', { name: 'Blue berries' }).getByRole('button').count(), qs[0].params.b);
   await screen(page, '03-gather-supplies');
   await page.getByLabel('Your answer').fill('8');
-  await page.locator('.chapter-group').nth(0).getByRole('button').first().tap();
-  const basket = page.locator('.chapter-group').nth(2);
+  await redGroup.getByRole('button').first().tap();
+  const basket = page.getByRole('region', { name: 'Together in the basket' });
   assert.equal(await basket.getByRole('button').count(), 1);
-  await drag(page, page.locator('.chapter-group').nth(0).getByRole('button').first(), basket);
+  await drag(page, redGroup.getByRole('button').first(), basket);
   assert.equal(await basket.getByRole('button').count(), 2);
   await press(page, 'Take a break');
   await heading(page, 'Dino Wiggle Break');
@@ -132,7 +143,7 @@ try {
   await press(page, 'I’m ready!');
   assert.equal(await page.getByLabel('Your answer').inputValue(), '8');
   assert.equal(await basket.getByRole('button').count(), 2);
-  await press(page, '◖ Listen');
+  await press(page, 'Listen');
   assert.ok(await page.getByText('Read aloud is unavailable in this browser.').isVisible());
   await press(page, 'Draw');
   assert.ok(await page.getByLabel('Scratch drawing').isVisible());
@@ -148,8 +159,9 @@ try {
   assert.equal(await page.getByLabel('Your answer').inputValue(), '8');
   assert.equal(await basket.getByRole('button').count(), 2);
   await check(page, 0);
-  assert.match(await page.locator('#chapter-feedback').textContent(), /Try again/);
+  assert.match(await page.locator('#chapter-feedback').textContent(), /count both groups/);
   await check(page, qs[0].answers[0]);
+  await press(page, 'Continue');
   await heading(page, qs[0].prompts[1]);
   assert.equal(await page.evaluate(() => document.activeElement.id), 'chapter-question');
   await page.reload();
@@ -159,15 +171,18 @@ try {
   await press(page, 'Restart stop');
   await heading(page, qs[0].prompts[0]);
   assert.equal(await page.getByLabel('Your answer').inputValue(), '');
-  assert.equal(await page.getByRole('region', { name: 'Red berries' }).getByRole('button').count(), qs[0].params.a);
+  await press(page, 'Math tools');
+  assert.equal(await redGroup.getByRole('button').count(), qs[0].params.a);
   assert.equal((await stored(page)).run.seed, seed);
   await check(page, qs[0].answers[0]);
+  await press(page, 'Continue');
+  await press(page, 'Number line');
   await button(page, String(qs[0].params.have + 1)).tap();
   assert.equal(await page.locator('.number-line-jumps .jumped').count(), 1);
   await screen(page, '04-count-on');
   await check(page, qs[0].answers[1]);
-  assert.equal((await stored(page)).run.outcomes[0], 'independent');
-  await press(page, 'Continue the search');
+  assert.equal((await stored(page)).run.outcomes[0], 'assisted');
+  await leaveGrove(page);
 
   await press(page, 'Visit Raptor Trail');
   await heading(page, 'Follow footprints');
@@ -177,6 +192,7 @@ try {
   const footprintsCheckpoint = await stored(page);
   await button(page, 'Stop 1: Berry Grove, completed, practice').tap();
   await heading(page, qs[0].prompts[0]);
+  await press(page, 'Math tools');
   assert.equal(await page.getByRole('region', { name: 'Blue berries' }).getByRole('button').count(), qs[0].params.b);
   await press(page, 'Leave practice');
   await heading(page, 'Follow footprints');
@@ -279,20 +295,27 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await screen(page, '14-phone');
 
-  // Exercise the opt-out through the UI and confirm the worked path is recorded separately.
+  // Exercise the opt-out and distinguish Berry Grove's worked-example support from a solved answer.
+  await enterGrove(page);
   await press(page, 'Grown-ups');
   await page.getByLabel('Offer a wiggle break after challenge three').uncheck();
   await press(page, 'Close');
   await press(page, 'Hint');
   await press(page, 'Another hint');
-  await press(page, 'See an example');
+  await press(page, 'Another hint');
+  await press(page, 'See a worked example');
   await press(page, 'Show how');
   await press(page, 'See the next step');
   await press(page, 'Show how');
-  await page.getByText('I need the answer to my problem').click();
-  await press(page, 'Show my answer');
-  assert.equal((await stored(page)).run.outcomes[0], 'worked-example');
-  await press(page, 'Continue the search');
+  await press(page, 'Close');
+  assert.equal((await stored(page)).run.outcomes[0], null);
+  const replayGrove = chapterBerryQuestion((await stored(page)).run);
+  await check(page, replayGrove.answers[0]);
+  await press(page, 'Continue');
+  await check(page, replayGrove.answers[1]);
+  assert.equal((await stored(page)).run.outcomes[0], 'assisted');
+  assert.deepEqual((await stored(page)).run.berryHelp, ['hints', 'worked-example']);
+  await leaveGrove(page);
   const replay = chapterQuestions((await stored(page)).run.seed);
   await press(page, 'Visit Raptor Trail');
   await check(page, replay[1].answers[0]);
