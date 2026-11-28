@@ -121,7 +121,7 @@
     --lagoon-mosa-x: var(--portrait-mosa-x);
     --lagoon-mosa-y: var(--portrait-mosa-y);
   }
-  .lagoon-stage[data-beat=reveal][data-line="0"] { --lagoon-mosa-y: 65%; }
+  .lagoon-stage[data-beat=reveal][data-line="0"] { --lagoon-mosa-y: 72%; }
   .lagoon-trex { width: min(34%, 27svh); }
   .lagoon-waterline { width: min(54%, 41svh); height: 29svh; }
   .lagoon-ripple { width: min(63%, 44svh); }
