@@ -133,7 +133,7 @@ export function createWiggleMeadow({ state, save, exit, onDemand = false, home, 
     const { signal } = beatScope;
     const { beat: id, line } = current;
     const beat = meadowBeats.find(beat => beat.id === id);
-    const sequence = line === 0 ? meadowAnimations[id] : undefined;
+    const sequence = meadowAnimations[id];
     const [speaker, text] = Array.isArray(beat.dialogue) ? beat.dialogue[line] : [beat.speaker, beat.dialogue];
     const cast = el('div', { className: 'meadow-cast' });
     let figure;
@@ -153,7 +153,8 @@ export function createWiggleMeadow({ state, save, exit, onDemand = false, home, 
     }
     const panel = el('div', { className: 'meadow-panel' });
     if (activities[id]) panel.append(el('h2', { className: 'meadow-activity' }, activities[id]));
-    const spoken = chapterSceneDialogue({ el, listen, speaker, text, focus: true });
+    const narration = beat.instruction ? (dialogue, options) => listen(`${dialogue} ${beat.instruction}`, options) : listen;
+    const spoken = chapterSceneDialogue({ el, listen: narration, speaker, text, focus: true });
     panel.append(spoken);
     if (beat.instruction) {
       panel.append(el('p', { className: 'meadow-instruction' }, beat.instruction),
@@ -195,7 +196,7 @@ export function createWiggleMeadow({ state, save, exit, onDemand = false, home, 
     stage.dataset.line = line;
     view.replaceChildren(cast, panel);
     if (focus) spoken.querySelector('.grove-line').focus({ preventScroll: true });
-    if (sequence && !motion.matches) void play();
+    if (sequence && line === 0 && !motion.matches) void play();
   }
 
   render();

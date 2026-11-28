@@ -196,6 +196,9 @@ try {
     await capture(live.page, 'motion-' + id + '-midpoint', 'allow');
     await press(live.page, 'Listen');
     const previous = await speech(live.page);
+    const authored = meadowDialogue.find(beat => beat.id === id);
+    assert.equal(previous.spoken.at(-1), authored.instruction ? `${authored.dialogue} ${authored.instruction}`
+      : authored.dialogue[0][1]);
     await press(live.page, 'Show again');
     assert.equal((await speech(live.page)).canceled, previous.canceled + 1);
     assert.ok(await live.page.evaluate(() => window.activeDemo.every(animation => animation.playState === 'idle')));
@@ -209,9 +212,14 @@ try {
       await press(live.page, 'Show again');
       await demo(live.page, id, .2);
     }
-    await press(live.page, id === 'cooldown' ? 'Skip this activity' : 'I Did It!');
+    await press(live.page, id === 'cooldown' ? 'Continue' : 'I Did It!');
     assert.ok(await live.page.evaluate(() => window.activeDemo.every(animation => animation.playState === 'idle')));
   }
+  await at(live.page, 'cooldown', 1);
+  assert.equal(await stage(live.page).locator('.meadow-view').evaluate(view => view.getAnimations({ subtree: true }).length), 0);
+  await press(live.page, 'Show again');
+  await demo(live.page, 'cooldown', .4);
+  await press(live.page, "I'm Ready!");
   await at(live.page, 'departure');
   await live.context.close();
 
