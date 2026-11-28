@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterLagoonQuestion, chapterQuestions, chapterTrailQuestion, emptyAttempt } from '../js/chapter.js';
 import { mapSpec } from '../js/adventure-map-data.js';
 
 const require = createRequire(import.meta.url);
@@ -83,7 +83,7 @@ async function dialogue(page, id) {
 }
 async function answer(page, index) {
   const q = index === 0 ? chapterBerryQuestion((await saved(page)).run)
-    : index === 1 ? chapterTrailQuestion((await saved(page)).run) : index === 2 ? chapterBridgeQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
+    : index === 1 ? chapterTrailQuestion((await saved(page)).run) : index === 2 ? chapterBridgeQuestion((await saved(page)).run) : index === 3 ? chapterLagoonQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
   for (const [step, value] of q.answers.entries()) {
     await page.getByLabel('Your answer').fill(String(value));
     await press(page, index <= 2 ? 'Check Answer' : 'Check answer');
@@ -172,9 +172,13 @@ try {
   assert.equal(await button(page, 'Take a Wiggle Break').count(), 0);
   await capture(page, '04-ipad-landscape-crystal-lagoon');
   await press(page, 'Visit Crystal Lagoon');
-  await heading(page, 'Collect gems');
+  await heading(page, 'Mosasaurus Crystal Lagoon');
+  for (const label of ['Continue', 'Explore the Lagoon!', 'Continue', 'Continue', 'Continue']) await press(page, label);
   await answer(page, 3);
-  await press(page, 'Continue the search');
+  for (let i = 0; i < 3; i++) await press(page, 'Continue');
+  await press(page, 'Skip cinematic');
+  await press(page, 'Continue');
+  await press(page, 'Explore the Crystal Cave');
   await dialogue(page, '4');
   await press(page, 'Visit Crystal Cave');
   await heading(page, 'Open the cave');
@@ -213,7 +217,7 @@ try {
   await dialogue(disabled.page, 'break');
   assert.equal(await button(disabled.page, 'Take a Wiggle Break').count(), 0);
   await press(disabled.page, 'Visit Crystal Lagoon');
-  await heading(disabled.page, 'Collect gems');
+  await heading(disabled.page, 'Mosasaurus Crystal Lagoon');
   await disabled.context.close();
 
   const optOut = await setup(ipad, 'wiggle', 3, '3');
@@ -253,7 +257,7 @@ try {
   await capture(travel, 'travel-03-on-the-trail', 'allow');
   await button(travel, 'Skip travel').evaluate(control => control.click());
   await travel.clock.resume();
-  await heading(travel, 'Collect gems');
+  await heading(travel, 'Mosasaurus Crystal Lagoon');
   assert.equal((await saved(travel)).run.mapFrom, undefined);
   assert.equal((await saved(travel)).runs, 0);
   await animated.context.close();

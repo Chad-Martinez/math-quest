@@ -4,10 +4,12 @@ import { berryHelp, berryQuestion, berryVariants, chooseBerryVariant, newBerryBe
 import { chooseTrailVariant, newTrailBeat, restoreTrailBeat, trailHelp, trailQuestion, trailVariants } from './velociraptor-state.js';
 import { bridgeHelp, bridgeQuestion, bridgeVariants, chooseBridgeVariant, newBridgeBeat, restoreBridgeBeat } from './triceratops-state.js';
 
+import { chooseLagoonVariant, lagoonHelp, lagoonQuestion, lagoonVariants, newLagoonBeat, restoreLagoonBeat } from './crystal-lagoon-state.js';
+
 export const scenes = ['welcome', 'mission', 'map', 'supplies', 'footprints', 'share', 'wiggle', 'gems',
   'cave', 'mosasaurus', 'discovery', 'complete', 'replay'];
 export const stops = ['supplies', 'footprints', 'share', 'gems', 'cave'];
-export const stopNames = ['Gather supplies', 'Follow footprints', 'Triceratops Bridge', 'Collect gems', 'Open the cave'];
+export const stopNames = ['Gather supplies', 'Follow footprints', 'Triceratops Bridge', 'Mosasaurus Crystal Lagoon', 'Open the cave'];
 // Presentation checkpoint in the existing run. The scene remains the saved destination.
 const mapOrigins = { footprints: ['1'], share: ['2'], wiggle: ['3'], gems: ['3', 'break'],
   cave: ['4'], mosasaurus: ['5'] };
@@ -101,7 +103,7 @@ export function readChapter(storage) {
       const attempt = emptyAttempt();
       if (index >= 0) {
         const q = index === 0 ? chapterBerryQuestion(run) : index === 1 ? chapterTrailQuestion(run) :
-          index === 2 ? chapterBridgeQuestion(run) : chapterQuestions(run.seed)[index];
+          index === 2 ? chapterBridgeQuestion(run) : index === 3 ? chapterLagoonQuestion(run) : chapterQuestions(run.seed)[index];
         attempt.step = run.attempt?.step === 1 && q.answers.length === 2 ? 1 : 0;
         attempt.draft = typeof run.attempt?.draft === 'string' && /^\d{0,2}$/.test(run.attempt.draft) ? run.attempt.draft : '';
         attempt.hints = Number.isInteger(run.attempt?.hints) ? Math.max(0, Math.min(run.attempt.hints, q.hints[attempt.step].length)) : 0;
@@ -113,7 +115,8 @@ export function readChapter(storage) {
         }
         if (index === 1) attempt.trail = restoreTrailBeat(attempt, run.attempt, q);
         if (index === 2) attempt.bridge = restoreBridgeBeat(attempt, run.attempt, q);
-        const detail = attempt.berry ?? attempt.trail ?? attempt.bridge;
+        if (index === 3) attempt.lagoon = restoreLagoonBeat(attempt, run.attempt, q);
+        const detail = attempt.berry ?? attempt.trail ?? attempt.bridge ?? attempt.lagoon;
         if (detail) {
           attempt.assisted ||= detail.help.length > 0;
           const feedback = Object.values(q.mistakes[attempt.step]).concat(q.defaultFeedback[attempt.step]);
@@ -127,6 +130,8 @@ export function readChapter(storage) {
       if (outcomesByStop[1] && Array.isArray(run.trailHelp)) valid.trailHelp = trailHelp(run.trailHelp);
       if (Number.isInteger(run.bridgeVariant) && bridgeVariants[run.bridgeVariant]) valid.bridgeVariant = run.bridgeVariant;
       if (outcomesByStop[2] && Array.isArray(run.bridgeHelp)) valid.bridgeHelp = bridgeHelp(run.bridgeHelp);
+      if (Number.isInteger(run.lagoonVariant) && lagoonVariants[run.lagoonVariant]) valid.lagoonVariant = run.lagoonVariant;
+      if (outcomesByStop[3] && Array.isArray(run.lagoonHelp)) valid.lagoonHelp = lagoonHelp(run.lagoonHelp);
       if (run.scene === 'wiggle' && !run.mapFrom) valid.meadow = readMeadowBeat(run.meadow);
       if (mapOrigins[run.scene]?.includes(run.mapFrom)) valid.mapFrom = run.mapFrom;
     }
@@ -154,10 +159,17 @@ export function chapterBridgeQuestion(run) {
   return variant ? bridgeQuestion(variant) : chapterQuestions(run.seed)[2];
 }
 
+export function chapterLagoonQuestion(run) {
+  const variant = Number.isInteger(run.lagoonVariant) ? lagoonVariants[run.lagoonVariant] : undefined;
+  if (variant) return lagoonQuestion(variant);
+  const { params: { small, large } } = chapterQuestions(run.seed)[3];
+  return lagoonQuestion({ green: large, blue: small });
+}
+
 export function startChapter(progress, seed) {
   return { ...progress, run: { seed, scene: 'mission', outcomes: Array(5).fill(null), attempt: emptyAttempt(),
     berryVariant: chooseBerryVariant(progress, seed), trailVariant: chooseTrailVariant(progress, seed),
-    bridgeVariant: chooseBridgeVariant(progress, seed) } };
+    bridgeVariant: chooseBridgeVariant(progress, seed), lagoonVariant: chooseLagoonVariant(progress, seed) } };
 }
 
 export function advanceChapter(progress) {
@@ -180,6 +192,10 @@ export function advanceChapter(progress) {
     attempt.bridge = newBridgeBeat();
     variant.bridgeVariant = run.bridgeVariant ?? 0;
   }
+  if (scene === 'gems') {
+    attempt.lagoon = newLagoonBeat();
+    variant.lagoonVariant = run.lagoonVariant ?? 0;
+  }
   const { meadow, ...checkpoint } = run;
   return { ...progress, badge: progress.badge || finishing, runs: progress.runs + Number(finishing),
     run: { ...checkpoint, ...variant, scene, attempt } };
@@ -187,7 +203,7 @@ export function advanceChapter(progress) {
 
 export function applyChapterAnswer(run, question, value) {
   const current = run.attempt;
-  if (current.solved || question.id !== run.scene || !/^\d{1,2}$/.test(value) || (!['footprints', 'share'].includes(question.id) && Number(value) > 20)) return run;
+  if (current.solved || question.id !== run.scene || !/^\d{1,2}$/.test(value) || (!['footprints', 'share', 'gems'].includes(question.id) && Number(value) > 20)) return run;
   const step = current.step;
   if (!validateAnswer({ answerType: 'number', answer: question.answers[step] }, value)) {
     return { ...run, attempt: { ...current, draft: value,
@@ -197,6 +213,11 @@ export function applyChapterAnswer(run, question, value) {
     return { ...run, attempt: { ...emptyAttempt(), step: step + 1, assisted: current.assisted, teach: current.teach } };
   }
   const finished = finishChallenge(run, current.assisted ? 'assisted' : 'independent');
+  if (question.id === 'gems' && question.values) {
+    const lagoon = current.lagoon ?? newLagoonBeat('compare');
+    return { ...finished, lagoonHelp: lagoon.help.slice(), attempt: { ...finished.attempt,
+      lagoon: { ...lagoon, phase: 'activate', line: 0, added: question.values.answer } } };
+  }
   if (question.id !== 'share') return finished;
   const bridge = current.bridge ?? newBridgeBeat('construction');
   return { ...finished, bridgeHelp: bridge.help.slice(), attempt: { ...finished.attempt,

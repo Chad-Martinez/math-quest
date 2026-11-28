@@ -132,7 +132,7 @@ async function walkthrough(viewport, suffix) {
   await toLagoon(page);
   await capture(page, '08-lagoon-map-' + suffix);
   await press(page, 'Visit Crystal Lagoon');
-  await page.getByRole('heading', { name: 'Collect gems', exact: true }).waitFor();
+  await page.getByRole('heading', { name: 'Mosasaurus Crystal Lagoon', exact: true }).waitFor();
   await context.close();
 }
 
@@ -275,9 +275,9 @@ try {
   await off.context.close();
 
   const later = await setup({ scene: 'gems' });
-  await later.page.getByRole('button', { name: /Spare gem 2, move/ }).click();
-  const groups = () => later.page.locator('.chapter-units').evaluateAll(nodes =>
-    nodes.map(node => [...node.querySelectorAll('[data-chapter-piece]')].map(piece => piece.dataset.chapterPiece)));
+  await press(later.page, 'Math tools');
+  await later.page.getByRole('button', { name: /Spare crystal 2, add to blue holder/ }).click();
+  const groups = () => later.page.locator('.lagoon-model .bridge-row-label').allTextContents();
   const pieces = await groups();
   await press(later.page, 'Take a break');
   await enter(later.page);

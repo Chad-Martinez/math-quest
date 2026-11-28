@@ -1,0 +1,178 @@
+{
+  "version": "1.0",
+  "assets": {
+    "assets/shore-landscape.webp": {
+      "source": "a_vibrant_colorful_cartoon_storybook_style_backg.png",
+      "role": "standalone environment; passage assets success-only",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "runtimePath": "assets/scene-08/shore-landscape.webp"
+    },
+    "assets/shore-portrait.webp": {
+      "source": "a_vibrant_cartoon_style_high_detail_children_s_ga.png",
+      "role": "standalone environment; passage assets success-only",
+      "width": 1086,
+      "height": 1448,
+      "mode": "RGB",
+      "runtimePath": "assets/scene-08/shore-portrait.webp"
+    },
+    "assets/underwater-landscape.webp": {
+      "source": "a_vibrant_cartoon_style_underwater_seascape_backg.png",
+      "role": "standalone environment; passage assets success-only",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "runtimePath": "assets/scene-08/underwater-landscape.webp"
+    },
+    "assets/underwater-portrait.webp": {
+      "source": "underwater_scene_a_vibrant_underwater_lagoon_bac.png",
+      "role": "standalone environment; passage assets success-only",
+      "width": 1086,
+      "height": 1448,
+      "mode": "RGB",
+      "runtimePath": "assets/scene-08/underwater-portrait.webp"
+    },
+    "assets/passage-landscape.webp": {
+      "source": "a_detailed_vibrant_cartoon_style_underwater_cave.png",
+      "role": "standalone environment; passage assets success-only",
+      "width": 1672,
+      "height": 941,
+      "mode": "RGB",
+      "runtimePath": "assets/scene-08/passage-landscape.webp"
+    },
+    "assets/passage-portrait.webp": {
+      "source": "a_vibrant_stylized_cartoon_game_illustration_of_a.png",
+      "role": "standalone environment; passage assets success-only",
+      "width": 1086,
+      "height": 1448,
+      "mode": "RGB",
+      "runtimePath": "assets/scene-08/passage-portrait.webp"
+    },
+    "assets/mosa-neutral.png": {
+      "source": "Math_Quest_Chapter_1_Codex_Kit.zip:Math_Quest_Chapter_1/assets/characters/mosa-neutral.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 327,
+      "height": 180,
+      "mode": "RGBA",
+      "runtimePath": "assets/characters/mosa-neutral.png"
+    },
+    "assets/mosa-swim.png": {
+      "source": "Math_Quest_Chapter_1_Codex_Kit.zip:Math_Quest_Chapter_1/assets/characters/mosa-swim.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 398,
+      "height": 164,
+      "mode": "RGBA",
+      "runtimePath": "assets/characters/mosa-swim.png"
+    },
+    "assets/mosa-leap.png": {
+      "source": "Math_Quest_Chapter_1_Codex_Kit.zip:Math_Quest_Chapter_1/assets/characters/mosa-leap.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 358,
+      "height": 249,
+      "mode": "RGBA",
+      "runtimePath": "assets/characters/mosa-leap.png"
+    },
+    "assets/green-gem.png": {
+      "source": "Math_Quest_Chapter_1_Codex_Kit.zip:Math_Quest_Chapter_1/assets/objects/green-gem.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 79,
+      "height": 96,
+      "mode": "RGBA",
+      "runtimePath": "assets/objects/green-gem.png"
+    },
+    "assets/blue-gem.png": {
+      "source": "Math_Quest_Chapter_1_Codex_Kit.zip:Math_Quest_Chapter_1/assets/objects/blue-gem.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 91,
+      "height": 93,
+      "mode": "RGBA",
+      "runtimePath": "assets/objects/blue-gem.png"
+    },
+    "assets/trex-greeting.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-greeting.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 247,
+      "height": 252,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-01/trex-greeting.png"
+    },
+    "assets/trex-thinking.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-thinking.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 186,
+      "height": 251,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-04/trex-thinking.png"
+    },
+    "assets/trex-celebrate.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-celebrate.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 244,
+      "height": 261,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-01/trex-celebrate.png"
+    },
+    "assets/trex-walk-1.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-walk-1.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 171,
+      "height": 184,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-01/trex-walk-1.png"
+    },
+    "assets/trex-walk-2.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-walk-2.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 162,
+      "height": 188,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-01/trex-walk-2.png"
+    },
+    "assets/trex-walk-3.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-walk-3.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 163,
+      "height": 190,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-01/trex-walk-3.png"
+    },
+    "assets/trex-walk-4.png": {
+      "source": "Math_Quest_Scene_07_Codex_Kit.zip:Math_Quest_Scene_07/assets/trex-walk-4.png",
+      "role": "original reused unchanged; review alpha edges",
+      "width": 156,
+      "height": 195,
+      "mode": "RGBA",
+      "runtimePath": "assets/scene-01/trex-walk-4.png"
+    },
+    "assets/marker.svg": {
+      "source": "new simple vector fallback",
+      "role": "provisional runtime prop; approve visually",
+      "runtimePath": "assets/scene-08/marker.svg"
+    },
+    "assets/marker-glow.svg": {
+      "source": "new simple vector fallback",
+      "role": "provisional runtime prop; approve visually",
+      "runtimePath": "assets/scene-08/marker-glow.svg"
+    },
+    "assets/empty-holder.svg": {
+      "source": "new simple vector fallback",
+      "role": "provisional runtime prop; approve visually",
+      "runtimePath": "assets/scene-08/empty-holder.svg"
+    },
+    "assets/ripple.svg": {
+      "source": "new simple vector fallback",
+      "role": "provisional runtime prop; approve visually",
+      "runtimePath": "assets/scene-08/ripple.svg"
+    },
+    "assets/bubble.svg": {
+      "source": "new simple vector fallback",
+      "role": "provisional runtime prop; approve visually",
+      "runtimePath": "assets/scene-08/bubble.svg"
+    }
+  },
+  "notes": [
+    "All characters copied byte-for-byte from earlier kits. No new true swim/dive frame sequence supplied.",
+    "SVG marker, holder and effects are provisional; no countable objects baked in."
+  ]
+}

@@ -1,8 +1,9 @@
+import { lagoonGuide } from '../js/crystal-lagoon-content.js';
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, freshQuestion } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterLagoonQuestion, chapterQuestions, chapterTrailQuestion, freshQuestion } from '../js/chapter.js';
 import { bridgeGuide } from '../js/triceratops-content.js';
 import { trailGuide } from '../js/velociraptor-content.js';
 import { berryGuide } from '../js/berry-grove-content.js';
@@ -52,7 +53,7 @@ async function finishIntroduction(page) {
 }
 async function check(page, value) {
   await page.getByLabel('Your answer').fill(String(value));
-  await press(page, await page.locator('.grove-stage').count() ? 'Check Answer' : 'Check answer');
+  await press(page, await page.locator('.grove-stage:not(.lagoon-stage)').count() ? 'Check Answer' : 'Check answer');
 }
 async function enterGrove(page) {
   await heading(page, 'Brachiosaurus Berry Grove');
@@ -78,6 +79,16 @@ async function leaveBridge(page) {
   for (let i = 0; i < 3; i++) await press(page, 'Continue');
   await press(page, 'Continue the Adventure');
 }
+async function enterLagoon(page) {
+  await heading(page, 'Mosasaurus Crystal Lagoon');
+  for (const label of ['Continue', 'Explore the Lagoon!', 'Continue', 'Continue', 'Continue']) await press(page, label);
+}
+async function leaveLagoon(page) {
+  for (let i = 0; i < 3; i++) await press(page, 'Continue');
+  await press(page, 'Skip cinematic');
+  await press(page, 'Continue');
+  await press(page, 'Explore the Crystal Cave');
+}
 async function heading(page, label) { await page.getByRole('heading', { name: label, exact: true }).waitFor(); }
 async function stored(page) { return page.evaluate(key => JSON.parse(localStorage.getItem(key)), chapterKey); }
 async function drag(page, piece, target) {
@@ -93,8 +104,9 @@ async function teachingTips(page, index, reveal = false) {
   await press(page, 'Teaching tips for this problem');
   await heading(page, 'Teaching tips');
   const modal = page.getByRole('dialog', { name: 'Teaching tips' });
-  assert.ok(await modal.getByText(index === 0 ? berryGuide.objective : index === 1 ? trailGuide.objective : qs[index].objective, { exact: true }).isVisible());
-  const q = index === 2 ? chapterBridgeQuestion((await stored(page)).run) : qs[index];
+  assert.ok(await modal.getByText(index === 0 ? berryGuide.objective : index === 1 ? trailGuide.objective : index === 3 ? lagoonGuide.objective : qs[index].objective, { exact: true }).isVisible());
+  const q = index === 2 ? chapterBridgeQuestion((await stored(page)).run)
+    : index === 3 ? chapterLagoonQuestion((await stored(page)).run) : qs[index];
   assert.equal(await modal.getByText(q.equations.at(-1), { exact: true }).count(), 0);
   if (reveal) {
     await press(page, 'I helped with this problem');
@@ -103,7 +115,7 @@ async function teachingTips(page, index, reveal = false) {
     assert.ok(await modal.getByText(q.equations.at(-1), { exact: true }).isVisible());
   }
   await modal.locator('summary').click();
-  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : index === 1 ? trailGuide.transfer.answer : index === 2 ? bridgeGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
+  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : index === 1 ? trailGuide.transfer.answer : index === 2 ? bridgeGuide.transfer.answer : index === 3 ? lagoonGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
   await modal.getByRole('button', { name: 'Check', exact: true }).click();
   assert.match(await modal.locator('form + p').textContent(), /That works/);
   await press(page, 'Close');
@@ -255,23 +267,27 @@ try {
   await press(page, 'Skip for Now');
 
   await press(page, 'Visit Crystal Lagoon');
-  await heading(page, 'Collect gems');
-  for (let i = 0; i < qs[3].answers[0] - 1; i++) await page.locator('.chapter-group').nth(2).getByRole('button').first().click();
-  assert.match(await page.locator('.chapter-model-status').textContent(), /tie/);
-  await check(page, qs[3].answers[0] - 1);
-  assert.match(await page.locator('#chapter-feedback').textContent(), /tie/);
-  await screen(page, '08-collect-gems');
+  await enterLagoon(page);
+  const crystals = chapterLagoonQuestion((await stored(page)).run);
+  await press(page, 'Math tools');
+  for (let i = 0; i < crystals.values.difference; i++) await press(page, 'Add a Crystal');
+  assert.match(await page.locator('.bridge-model-status').textContent(), /same number/);
+  await check(page, crystals.values.difference);
+  assert.match(await page.locator('#chapter-feedback').textContent(), /equal/);
+  await screen(page, '08-crystal-lagoon');
   await teachingTips(page, 3);
   await press(page, 'Hint');
   await press(page, 'Another hint');
-  await press(page, 'See an example');
+  await press(page, 'Another hint');
+  await press(page, 'See a worked example');
   await heading(page, 'See a different example');
   await press(page, 'Show how');
+  await press(page, 'See the next step');
   await press(page, 'Back to my problem');
-  assert.equal(await page.getByLabel('Your answer').inputValue(), String(qs[3].answers[0] - 1));
-  await check(page, qs[3].answers[0]);
+  assert.equal(await page.getByLabel('Your answer').inputValue(), String(crystals.values.difference));
+  await check(page, crystals.values.answer);
   assert.equal((await stored(page)).run.outcomes[3], 'assisted');
-  await press(page, 'Continue the search');
+  await leaveLagoon(page);
 
   await press(page, 'Visit Crystal Cave');
   await heading(page, 'Open the cave');
@@ -350,7 +366,7 @@ try {
   await check(page, chapterBridgeQuestion((await stored(page)).run).answers[0]);
   await leaveBridge(page);
   await press(page, 'Visit Crystal Lagoon');
-  await heading(page, 'Collect gems');
+  await heading(page, 'Mosasaurus Crystal Lagoon');
   assert.equal((await stored(page)).autoBreak, false);
   const legacyPage = await context.newPage();
   observe(legacyPage);

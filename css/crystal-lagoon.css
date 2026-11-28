@@ -1,0 +1,142 @@
+.lagoon-stage {
+  --lagoon-trex-x: var(--landscape-trex-x);
+  --lagoon-trex-y: var(--landscape-trex-y);
+  --lagoon-mosa-x: calc(var(--landscape-mosa-x) - 16%);
+  --lagoon-mosa-y: calc(var(--landscape-mosa-y) + 8%);
+  background: #235758;
+}
+.lagoon-stage:has(.lagoon-learning) { background: #235758; }
+.lagoon-backdrop, .lagoon-reveal-from, .lagoon-dive, .lagoon-dive-shore, .lagoon-cast { position: absolute; inset: 0; }
+.lagoon-backdrop { z-index: -5; }
+.lagoon-reveal-from { z-index: -6; }
+.lagoon-landscape { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center bottom; }
+.lagoon-cast { z-index: -2; pointer-events: none; }
+.lagoon-stage > .grove-bar { position: relative; z-index: 2; }
+.lagoon-trex, .lagoon-waterline, .lagoon-ripple, .lagoon-marker { position: absolute; }
+.lagoon-trex {
+  left: var(--lagoon-trex-x);
+  top: var(--lagoon-trex-y);
+  width: min(21%, 34svh);
+  transform: translate(-50%, -96%);
+}
+.lagoon-trex img { display: block; width: 100%; height: auto; }
+.lagoon-trex .lagoon-walk-frame { position: absolute; bottom: 0; opacity: 0; }
+.lagoon-waterline {
+  left: var(--lagoon-mosa-x);
+  top: var(--lagoon-mosa-y);
+  width: min(32%, 57svh);
+  height: min(22vw, 32svh);
+  transform: translate(-50%, -100%);
+  overflow: hidden;
+}
+.lagoon-waterline img { position: absolute; left: 0; bottom: -15%; width: 100%; height: auto; }
+.lagoon-waterline[data-pose=mosa-leap] img { bottom: -4%; }
+.lagoon-ripple {
+  left: var(--lagoon-mosa-x);
+  top: var(--lagoon-mosa-y);
+  width: min(33%, 57svh);
+  transform: translate(-50%, -50%);
+  opacity: .65;
+}
+.lagoon-marker {
+  left: 43%;
+  top: 91%;
+  width: min(20%, 31svh);
+  transform: translate(-50%, -100%);
+  filter: drop-shadow(0 4px 3px #16322a61);
+}
+.lagoon-marker img { display: block; width: 100%; }
+.lagoon-marker .lagoon-glow { position: absolute; inset: 0; filter: drop-shadow(0 0 10px #67f6ff); }
+.lagoon-card {
+  padding: clamp(.65rem, 1.5vw, 1rem);
+  min-width: 0;
+  border: 2px solid #69543b;
+  border-radius: 1rem;
+  background: #fff8df;
+  box-shadow: 0 5px 16px #152b37a0;
+}
+.lagoon-story { min-height: calc(100svh - 8rem); padding: .6rem var(--gutter); display: grid; justify-items: end; align-items: start; }
+.lagoon-story .lagoon-dialogue { width: clamp(17rem, 34%, 33rem); }
+#chapter .lagoon-card .grove-bubble-zone { position: static; width: 100%; }
+#chapter .lagoon-card .grove-bubble::after { display: none; }
+.lagoon-actions { display: flex; gap: .45rem; flex-wrap: wrap; margin-top: .45rem; }
+.lagoon-actions .grove-primary { flex: 1 1 auto; }
+.lagoon-success {
+  margin-inline: auto;
+  width: min(100% - var(--gutter) * 2, 80rem);
+  display: grid;
+  grid-template-columns: minmax(12rem, .64fr) minmax(0, 1fr);
+  gap: .6rem;
+  align-items: start;
+  padding-bottom: .85rem;
+}
+.lagoon-result-heading { display: flex; justify-content: space-between; align-items: center; gap: .45rem; }
+.lagoon-result .grove-equation { white-space: normal; }
+.lagoon-result .lagoon-marker {
+  position: relative;
+  width: clamp(60px, 10vw, 96px);
+  flex-shrink: 0;
+  inset: auto;
+  transform: none;
+}
+.lagoon-stage[data-beat=activate][data-line="0"] { --lagoon-mosa-y: 74%; }
+.lagoon-stage .lagoon-learning { min-height: auto; margin-bottom: var(--gutter); }
+.lagoon-learning-scenery { opacity: .8; }
+.lagoon-model .bridge-row-labels .bridge-row-label::before {
+  content: '';
+  display: inline-block;
+  width: 1.35rem;
+  height: 1rem;
+  margin-inline-end: .25rem;
+  vertical-align: middle;
+  background: url('../assets/scene-08/empty-holder.svg') center / contain no-repeat;
+}
+.lagoon-model .bridge-row-label:first-child { color: #244e2e; }
+.lagoon-model .bridge-row-label:last-child { color: #194e73; }
+.lagoon-model .bridge-fixed { border-bottom: 1px solid #749657; }
+.lagoon-model .bridge-column { border-bottom-color: #82a8ba; }
+.lagoon-model .bridge-plank { width: 31px; height: 31px; object-fit: contain; }
+#chapter .lagoon-model .bridge-piece.bridge-added { border-color: #276080; background: #d9edf3; }
+.lagoon-model .bridge-crate { width: 53px; }
+.lagoon-model .bridge-supply { background: #f1e6c8; }
+.lagoon-discovery { display: block; height: min(9rem, 18svh); margin-top: .55rem; }
+.lagoon-discovery img { border-radius: .55rem; object-position: center 48%; }
+.lagoon-dive { z-index: -1; opacity: 0; visibility: hidden; }
+.lagoon-dive-shore { z-index: -4; }
+.lagoon-swimmer, .lagoon-bubbles { position: absolute; width: min(40%, 57svh); left: 52%; top: 40%; }
+.lagoon-bubbles { width: min(14%, 16svh); left: 48%; top: 46%; opacity: .32; }
+.lagoon-stage[data-beat=reveal] .lagoon-swimmer { left: 29%; top: 42%; width: min(30%, 45svh); }
+.lagoon-cinema-controls {
+  position: absolute;
+  left: max(var(--gutter), env(safe-area-inset-left));
+  bottom: max(var(--gutter), env(safe-area-inset-bottom));
+  max-width: calc(100% - var(--gutter) * 2);
+}
+.lagoon-cinema-controls h2 { margin: 0; font-size: clamp(1.2rem, 2.4vw, 1.8rem); }
+
+@media (orientation: portrait) {
+  .lagoon-stage {
+    --lagoon-trex-x: var(--portrait-trex-x);
+    --lagoon-trex-y: var(--portrait-trex-y);
+    --lagoon-mosa-x: var(--portrait-mosa-x);
+    --lagoon-mosa-y: var(--portrait-mosa-y);
+  }
+  .lagoon-stage[data-beat=reveal][data-line="0"] { --lagoon-mosa-y: 72%; }
+  .lagoon-trex { width: min(34%, 27svh); }
+  .lagoon-waterline { width: min(54%, 41svh); height: 29svh; }
+  .lagoon-ripple { width: min(63%, 44svh); }
+  .lagoon-marker { left: 57%; top: 89%; width: min(32%, 23svh); }
+  .lagoon-story { justify-items: center; }
+  .lagoon-story .lagoon-dialogue { width: min(100%, 34rem); }
+  .lagoon-success { grid-template-columns: minmax(0, 1fr); }
+  .lagoon-success .bridge-model-status { min-height: 0; }
+  .lagoon-swimmer { width: min(58%, 50svh); left: 35%; top: 43%; }
+  .lagoon-bubbles { left: 25%; }
+  .lagoon-stage[data-beat=reveal] .lagoon-swimmer { left: 12%; width: min(50%, 40svh); top: 45%; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .lagoon-stage { --lagoon-mosa-x: calc(var(--landscape-mosa-x) - 20%); }
+  .lagoon-story { min-height: calc(100svh - 4.5rem); }
+  .lagoon-story .lagoon-dialogue { width: 43%; }
+}
