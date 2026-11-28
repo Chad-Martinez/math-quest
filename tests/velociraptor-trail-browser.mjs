@@ -100,10 +100,10 @@ async function completeTrail(page, suffix) {
     if (i === 0) await capture(page, '06-shell-clue-' + suffix);
     if (i < 3) await press(page, 'Continue');
   }
-  await button(page, 'Visit Triceratops').evaluate(control => { control.click(); control.click(); });
+  await button(page, 'Visit Triceratops Bridge').evaluate(control => { control.click(); control.click(); });
   await page.getByRole('heading', { name: 'Dinosaur Island Adventure', exact: true }).waitFor();
   assert.equal(await page.locator('.map-numbered[data-status=completed]').count(), 2);
-  assert.ok(await button(page, 'Visit Picnic Clearing').isEnabled());
+  assert.ok(await button(page, 'Visit Triceratops Bridge').isEnabled());
   assert.equal((await saved(page)).runs, 0);
   assert.equal((await saved(page)).run.scene, 'share');
 }

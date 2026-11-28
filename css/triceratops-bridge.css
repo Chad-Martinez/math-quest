@@ -1,0 +1,178 @@
+.bridge-stage {
+  background: radial-gradient(ellipse at 50% 16%, #4b6740, #213b2c 72%);
+}
+.bridge-stage:has(.bridge-learning), .bridge-stage[data-beat=equality] {
+  background: #304d35 url('../assets/scene-06/river-landscape.webp') center 36% / cover no-repeat;
+}
+.bridge-story, .bridge-equality {
+  display: grid;
+  grid-template: 'copy art' 1fr 'actions actions' auto / minmax(14rem, .54fr) minmax(0, 1fr);
+  align-items: center;
+  gap: .55rem clamp(.65rem, 2vw, 1.5rem);
+  width: min(100% - var(--gutter) * 2, 81rem);
+  margin: auto;
+  padding-bottom: max(.55rem, env(safe-area-inset-bottom));
+}
+.bridge-stage .bridge-story .grove-bubble-zone, .bridge-stage .bridge-equality .grove-bubble-zone {
+  position: static;
+  width: 100%;
+}
+.bridge-story > .grove-bubble-zone, .bridge-success-copy { grid-area: copy; }
+.bridge-story-actions {
+  grid-area: actions;
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+.bridge-frame {
+  --frame-ratio: var(--landscape-ratio);
+  --frame-height: clamp(135px, calc(100svh - 9.5rem), 44rem);
+  grid-area: art;
+  justify-self: center;
+  position: relative;
+  width: min(100%, calc(var(--frame-height) * var(--frame-ratio)));
+  aspect-ratio: var(--frame-ratio);
+  border-radius: 1rem;
+  box-shadow: 0 5px 18px #101e13a8, 0 0 0 2px #b99560;
+  overflow: hidden;
+}
+.bridge-frame picture, .bridge-landscape { display: block; width: 100%; height: 100%; }
+.bridge-actor {
+  position: absolute;
+  width: var(--sprite-width);
+  transform: translate(-50%, var(--feet, -100%));
+  pointer-events: none;
+}
+.bridge-actor img { display: block; width: 100%; height: auto; }
+.bridge-actor .bridge-walk-frame { position: absolute; bottom: 0; opacity: 0; }
+.bridge-trex { --sprite-width: 18%; --feet: -96%; z-index: 2; }
+.bridge-trike { --sprite-width: 21%; --feet: -89%; }
+.bridge-trike[data-pose=triceratops-celebrate] > img:first-child { transform: translateY(-7%); }
+.bridge-stage:is([data-beat=crossing], [data-beat=clue]) .bridge-trex { --sprite-width: 16%; }
+.bridge-stage:is([data-beat=crossing], [data-beat=clue]) .bridge-trike { --sprite-width: 19%; }
+
+.bridge-stage .bridge-learning { min-height: auto; margin-bottom: var(--gutter); }
+.bridge-learning .grove-tools:has(+ .bridge-model:not([hidden])) { margin-bottom: .55rem; }
+.bridge-model {
+  container-type: inline-size;
+  color: #392a19;
+  background: #fff3d1;
+  border: 1px solid #a97d47;
+  border-radius: .75rem;
+  padding: .55rem;
+}
+.bridge-row-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .2rem .85rem;
+  align-items: center;
+}
+.bridge-row-label { margin: 0; font-size: .98rem; font-weight: 850; }
+.bridge-row-labels .bridge-row-label:first-child { color: #5e391f; }
+.bridge-row-labels .bridge-row-label:last-child { color: #24492f; }
+.bridge-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: .45rem .15rem;
+  margin-block: .45rem;
+  border-radius: .3rem;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+@container (min-width: 330px) {
+  .bridge-columns { grid-template-columns: repeat(7, minmax(44px, 1fr)); }
+}
+@container (min-width: 455px) {
+  .bridge-columns { grid-template-columns: repeat(8, minmax(44px, 1fr)); }
+}
+.bridge-column {
+  display: grid;
+  grid-template-rows: 44px 44px;
+  justify-items: center;
+  border-bottom: 1px solid #b49a6c;
+}
+.bridge-slot, #chapter .bridge-piece {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+#chapter .bridge-piece {
+  padding: 0;
+  min-height: 44px;
+  border: 1px solid #946236;
+  border-radius: .45rem;
+  background: #fff8e1;
+}
+#chapter .bridge-piece.bridge-added {
+  border: 2px solid #46704d;
+  background: #e9f0d5;
+}
+.bridge-empty, .bridge-staging { border: 1px dashed #507243; border-radius: .48rem; }
+.bridge-next { box-shadow: inset 0 -2px #97663b; }
+.bridge-next.drop-ready { outline: 2px solid #366843; }
+.bridge-plank { width: 38px; height: 24px; object-fit: contain; }
+.bridge-model[data-relation=equal] .bridge-columns { border-block: 1px solid #53805c; }
+.bridge-model-status { margin: .4rem 0; min-height: 2.6em; font-weight: 750; }
+.bridge-supply {
+  border: 1px solid #ac814e;
+  background: #f8e7bf;
+  border-radius: .6rem;
+  padding: .35rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: .3rem;
+}
+.bridge-crate { width: 42px; }
+.bridge-supply-grid { display: flex; flex-wrap: wrap; gap: .17rem; margin-top: .25rem; }
+.bridge-supply-grid .bridge-slot:empty { visibility: hidden; }
+.bridge-equality {
+  grid-template: 'copy art' 1fr 'actions actions' auto / minmax(14rem, .65fr) minmax(0, 1fr);
+  align-items: start;
+}
+.bridge-results {
+  grid-area: art;
+  background: #f3e3b8;
+  padding: .55rem;
+  border: 2px solid #8e5c34;
+  border-radius: .85rem;
+}
+.bridge-celebration {
+  margin-top: .5rem;
+  background: linear-gradient(transparent 76%, #68864b 77%, #aa9a60);
+  border-radius: .75rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.bridge-celebration img { width: 49%; max-height: 11rem; object-fit: contain; }
+.bridge-results .bridge-model-status { min-height: 0; }
+
+@media (orientation: portrait) {
+  .bridge-stage:has(.bridge-learning), .bridge-stage[data-beat=equality] {
+    background-image: url('../assets/scene-06/river-portrait.webp');
+  }
+  .bridge-story {
+    grid-template: 'copy' auto 'art' auto 'actions' auto / minmax(0, 1fr);
+    justify-items: center;
+  }
+  .bridge-story .grove-bubble-zone { max-width: 34rem; }
+  .bridge-frame { --frame-ratio: var(--portrait-ratio); --frame-height: clamp(200px, calc(100svh - 17rem), 49rem); }
+  .bridge-trex { --sprite-width: 23%; }
+  .bridge-trike { --sprite-width: 26%; }
+  .bridge-stage:is([data-beat=crossing], [data-beat=clue]) .bridge-trex { --sprite-width: 22%; }
+  .bridge-stage:is([data-beat=crossing], [data-beat=clue]) .bridge-trike { --sprite-width: 26%; }
+  .bridge-story-actions { justify-content: center; }
+  .bridge-equality { grid-template: 'copy' auto 'art' auto 'actions' auto / minmax(0, 1fr); }
+  .bridge-success-copy { display: flex; gap: .35rem; align-items: end; }
+  .bridge-success-copy .grove-bubble-zone { flex: 1; }
+  .bridge-celebration { width: min(23%, 8rem); flex-direction: column; }
+  .bridge-celebration img { width: 100%; max-height: 4.7rem; }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .bridge-frame { --frame-height: max(120px, calc(100svh - 8rem)); }
+  .bridge-story, .bridge-equality { gap: .4rem; }
+}

@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterBerryQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, freshQuestion } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, freshQuestion } from '../js/chapter.js';
+import { bridgeGuide } from '../js/triceratops-content.js';
 import { trailGuide } from '../js/velociraptor-content.js';
 import { berryGuide } from '../js/berry-grove-content.js';
 import { readProgress } from '../js/storage.js';
@@ -67,7 +68,15 @@ async function enterTrail(page) {
 }
 async function leaveTrail(page) {
   for (let i = 0; i < 4; i++) await press(page, 'Continue');
-  await press(page, 'Visit Triceratops');
+  await press(page, 'Visit Triceratops Bridge');
+}
+async function enterBridge(page) {
+  await heading(page, 'Triceratops Bridge');
+  for (const label of ['Continue', 'Let’s Fix It!', 'Continue', 'Continue']) await press(page, label);
+}
+async function leaveBridge(page) {
+  for (let i = 0; i < 3; i++) await press(page, 'Continue');
+  await press(page, 'Continue the Adventure');
 }
 async function heading(page, label) { await page.getByRole('heading', { name: label, exact: true }).waitFor(); }
 async function stored(page) { return page.evaluate(key => JSON.parse(localStorage.getItem(key)), chapterKey); }
@@ -85,15 +94,16 @@ async function teachingTips(page, index, reveal = false) {
   await heading(page, 'Teaching tips');
   const modal = page.getByRole('dialog', { name: 'Teaching tips' });
   assert.ok(await modal.getByText(index === 0 ? berryGuide.objective : index === 1 ? trailGuide.objective : qs[index].objective, { exact: true }).isVisible());
-  assert.equal(await modal.getByText(qs[index].equations.at(-1), { exact: true }).count(), 0);
+  const q = index === 2 ? chapterBridgeQuestion((await stored(page)).run) : qs[index];
+  assert.equal(await modal.getByText(q.equations.at(-1), { exact: true }).count(), 0);
   if (reveal) {
     await press(page, 'I helped with this problem');
     assert.equal(await button(page, 'I helped with this problem').getAttribute('aria-pressed'), 'true');
     await press(page, 'Reveal worked solution');
-    assert.ok(await modal.getByText(qs[index].equations.at(-1), { exact: true }).isVisible());
+    assert.ok(await modal.getByText(q.equations.at(-1), { exact: true }).isVisible());
   }
   await modal.locator('summary').click();
-  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : index === 1 ? trailGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
+  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : index === 1 ? trailGuide.transfer.answer : index === 2 ? bridgeGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
   await modal.getByRole('button', { name: 'Check', exact: true }).click();
   assert.match(await modal.locator('form + p').textContent(), /That works/);
   await press(page, 'Close');
@@ -224,15 +234,17 @@ try {
   await check(page, trail.answers[0]);
   await leaveTrail(page);
 
-  await press(page, 'Visit Picnic Clearing');
-  await heading(page, 'Share the food');
+  await press(page, 'Visit Triceratops Bridge');
+  await enterBridge(page);
+  const bridge = chapterBridgeQuestion((await stored(page)).run);
   await teachingTips(page, 2, true);
-  await screen(page, '06-share-the-food');
-  for (let i = 0; i < qs[2].answers[0]; i++) await page.locator('.chapter-group').nth(2).getByRole('button').first().click();
-  assert.match(await page.locator('.chapter-model-status').textContent(), /match/);
-  await check(page, qs[2].answers[0]);
+  await press(page, 'Math tools');
+  for (let i = 0; i < bridge.answers[0]; i++) await press(page, 'Add a Plank');
+  await screen(page, '06-triceratops-bridge');
+  assert.match(await page.locator('.bridge-model-status').textContent(), /match/);
+  await check(page, bridge.answers[0]);
   assert.equal((await stored(page)).run.outcomes[2], 'assisted');
-  await press(page, 'Continue the search');
+  await leaveBridge(page);
   await press(page, 'Take a Wiggle Break');
   await heading(page, 'Dino Wiggle Break');
   await screen(page, '07-wiggle-break');
@@ -328,14 +340,14 @@ try {
   assert.equal((await stored(page)).run.outcomes[0], 'assisted');
   assert.deepEqual((await stored(page)).run.berryHelp, ['hints', 'worked-example']);
   await leaveGrove(page);
-  const replay = chapterQuestions((await stored(page)).run.seed);
   await press(page, 'Visit Raptor Trail');
   await enterTrail(page);
   await check(page, chapterTrailQuestion((await stored(page)).run).answers[0]);
   await leaveTrail(page);
-  await press(page, 'Visit Picnic Clearing');
-  await check(page, replay[2].answers[0]);
-  await press(page, 'Continue the search');
+  await press(page, 'Visit Triceratops Bridge');
+  await enterBridge(page);
+  await check(page, chapterBridgeQuestion((await stored(page)).run).answers[0]);
+  await leaveBridge(page);
   await press(page, 'Visit Crystal Lagoon');
   await heading(page, 'Collect gems');
   assert.equal((await stored(page)).autoBreak, false);

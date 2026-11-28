@@ -4,7 +4,7 @@ export const mapSpec = {
     {"id": "start", "label": "Empty Nest", "x": 230, "y": 758, "characterAsset": null},
     {"id": "1", "label": "Berry Grove", "x": 444, "y": 641, "characterAsset": "brachiosaurus.png"},
     {"id": "2", "label": "Raptor Trail", "x": 660, "y": 789, "characterAsset": "velociraptor.png"},
-    {"id": "3", "label": "Picnic Clearing", "x": 1000, "y": 625, "characterAsset": "triceratops.png"},
+    {"id": "3", "label": "Triceratops Bridge", "x": 1000, "y": 625, "characterAsset": "triceratops.png"},
     {"id": "break", "label": "Wiggle Meadow", "x": 1200, "y": 465, "characterAsset": "stegosaurus.png"},
     {"id": "4", "label": "Crystal Lagoon", "x": 868, "y": 329, "characterAsset": "mosasaurus-map.png"},
     {"id": "5", "label": "Crystal Cave", "x": 1330, "y": 291, "characterAsset": "ankylosaurus.png"},

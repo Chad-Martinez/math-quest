@@ -1,11 +1,12 @@
 import { seededRandom, validateAnswer } from './engine.js';
 import { berryHelp, berryQuestion, berryVariants, chooseBerryVariant, newBerryBeat, readBerryBeat } from './berry-grove-state.js';
 import { chooseTrailVariant, newTrailBeat, restoreTrailBeat, trailHelp, trailQuestion, trailVariants } from './velociraptor-state.js';
+import { bridgeHelp, bridgeQuestion, bridgeVariants, chooseBridgeVariant, newBridgeBeat, restoreBridgeBeat } from './triceratops-state.js';
 
 export const scenes = ['welcome', 'mission', 'map', 'supplies', 'footprints', 'share', 'wiggle', 'gems',
   'cave', 'mosasaurus', 'discovery', 'complete', 'replay'];
 export const stops = ['supplies', 'footprints', 'share', 'gems', 'cave'];
-export const stopNames = ['Gather supplies', 'Follow footprints', 'Share the food', 'Collect gems', 'Open the cave'];
+export const stopNames = ['Gather supplies', 'Follow footprints', 'Triceratops Bridge', 'Collect gems', 'Open the cave'];
 // Presentation checkpoint in the existing run. The scene remains the saved destination.
 const mapOrigins = { footprints: ['1'], share: ['2'], wiggle: ['3'], gems: ['3', 'break'],
   cave: ['4'], mosasaurus: ['5'] };
@@ -45,17 +46,7 @@ export function chapterQuestions(seed, berryVariant) {
       activity: 'Line up two rows of toy cars. Pair a car from each row and count the extras.',
       success: 'You found the trail with more prints. Follow the first trail!',
     },
-    {
-      id: 'share', schema: 'compare-equalize', params: { small: food, large: food + extra },
-      story: `T-Rex has ${food + extra} berries. A hungry friend has ${food}. There are extra berries to share.`,
-      prompts: ['How many more berries does the friend need to have the same number as T-Rex?'],
-      answers: [extra], equations: [`${food} + ${extra} = ${food + extra}`],
-      hints: [['Look at the friend’s smaller group.', 'Add berries to the smaller group until both groups match. Count what you added.']],
-      mistakes: [{ [food + extra]: 'That is the number each dinosaur will have. Count only the berries you add.' }],
-      objective: 'Make a smaller group equal to a larger group.', ask: 'Which group needs more berries? When should we stop adding?',
-      activity: 'Use two rows of blocks. Add to the smaller row, one block at a time, until the rows match.',
-      success: 'Both dinosaurs have the same number of berries. Your friend points to the lagoon!',
-    },
+    bridgeQuestion({ target: food + extra, initial: food }),
     {
       id: 'gems', schema: 'compare-exceed', params: { small: blue, large: green },
       story: `Green Dino has ${green} gems. Blue Dino has ${blue}. Blue Dino needs the most gems to light the cave path.`,
@@ -108,7 +99,8 @@ export function readChapter(storage) {
       const outcomesByStop = Array.from({ length: 5 }, (_, i) => outcomes.includes(run.outcomes?.[i]) ? run.outcomes[i] : null);
       const attempt = emptyAttempt();
       if (index >= 0) {
-        const q = index === 0 ? chapterBerryQuestion(run) : index === 1 ? chapterTrailQuestion(run) : chapterQuestions(run.seed)[index];
+        const q = index === 0 ? chapterBerryQuestion(run) : index === 1 ? chapterTrailQuestion(run) :
+          index === 2 ? chapterBridgeQuestion(run) : chapterQuestions(run.seed)[index];
         attempt.step = run.attempt?.step === 1 && q.answers.length === 2 ? 1 : 0;
         attempt.draft = typeof run.attempt?.draft === 'string' && /^\d{0,2}$/.test(run.attempt.draft) ? run.attempt.draft : '';
         attempt.hints = Number.isInteger(run.attempt?.hints) ? Math.max(0, Math.min(run.attempt.hints, q.hints[attempt.step].length)) : 0;
@@ -119,7 +111,8 @@ export function readChapter(storage) {
           attempt.berry = readBerryBeat(attempt, run.attempt, q);
         }
         if (index === 1) attempt.trail = restoreTrailBeat(attempt, run.attempt, q);
-        const detail = attempt.berry ?? attempt.trail;
+        if (index === 2) attempt.bridge = restoreBridgeBeat(attempt, run.attempt, q);
+        const detail = attempt.berry ?? attempt.trail ?? attempt.bridge;
         if (detail) {
           attempt.assisted ||= detail.help.length > 0;
           const feedback = Object.values(q.mistakes[attempt.step]).concat(q.defaultFeedback[attempt.step]);
@@ -131,6 +124,8 @@ export function readChapter(storage) {
       if (outcomesByStop[0] && Array.isArray(run.berryHelp)) valid.berryHelp = berryHelp(run.berryHelp);
       if (Number.isInteger(run.trailVariant) && trailVariants[run.trailVariant]) valid.trailVariant = run.trailVariant;
       if (outcomesByStop[1] && Array.isArray(run.trailHelp)) valid.trailHelp = trailHelp(run.trailHelp);
+      if (Number.isInteger(run.bridgeVariant) && bridgeVariants[run.bridgeVariant]) valid.bridgeVariant = run.bridgeVariant;
+      if (outcomesByStop[2] && Array.isArray(run.bridgeHelp)) valid.bridgeHelp = bridgeHelp(run.bridgeHelp);
       if (mapOrigins[run.scene]?.includes(run.mapFrom)) valid.mapFrom = run.mapFrom;
     }
     return { version: 1, autoBreak: saved.autoBreak !== false, badge: saved.badge === true,
@@ -152,9 +147,15 @@ export function chapterTrailQuestion(run) {
   return trailQuestion({ first: large, second: small, question: trailVariants[0].question });
 }
 
+export function chapterBridgeQuestion(run) {
+  const variant = Number.isInteger(run.bridgeVariant) ? bridgeVariants[run.bridgeVariant] : undefined;
+  return variant ? bridgeQuestion(variant) : chapterQuestions(run.seed)[2];
+}
+
 export function startChapter(progress, seed) {
   return { ...progress, run: { seed, scene: 'mission', outcomes: Array(5).fill(null), attempt: emptyAttempt(),
-    berryVariant: chooseBerryVariant(progress, seed), trailVariant: chooseTrailVariant(progress, seed) } };
+    berryVariant: chooseBerryVariant(progress, seed), trailVariant: chooseTrailVariant(progress, seed),
+    bridgeVariant: chooseBridgeVariant(progress, seed) } };
 }
 
 export function advanceChapter(progress) {
@@ -173,13 +174,17 @@ export function advanceChapter(progress) {
     attempt.trail = newTrailBeat();
     variant.trailVariant = run.trailVariant ?? 0;
   }
+  if (scene === 'share') {
+    attempt.bridge = newBridgeBeat();
+    variant.bridgeVariant = run.bridgeVariant ?? 0;
+  }
   return { ...progress, badge: progress.badge || finishing, runs: progress.runs + Number(finishing),
     run: { ...run, ...variant, scene, attempt } };
 }
 
 export function applyChapterAnswer(run, question, value) {
   const current = run.attempt;
-  if (current.solved || question.id !== run.scene || !/^\d{1,2}$/.test(value) || (question.id !== 'footprints' && Number(value) > 20)) return run;
+  if (current.solved || question.id !== run.scene || !/^\d{1,2}$/.test(value) || (!['footprints', 'share'].includes(question.id) && Number(value) > 20)) return run;
   const step = current.step;
   if (!validateAnswer({ answerType: 'number', answer: question.answers[step] }, value)) {
     return { ...run, attempt: { ...current, draft: value,
@@ -188,7 +193,11 @@ export function applyChapterAnswer(run, question, value) {
   if (step + 1 < question.answers.length) {
     return { ...run, attempt: { ...emptyAttempt(), step: step + 1, assisted: current.assisted, teach: current.teach } };
   }
-  return finishChallenge(run, current.assisted ? 'assisted' : 'independent');
+  const finished = finishChallenge(run, current.assisted ? 'assisted' : 'independent');
+  if (question.id !== 'share') return finished;
+  const bridge = current.bridge ?? newBridgeBeat('construction');
+  return { ...finished, bridgeHelp: bridge.help.slice(), attempt: { ...finished.attempt,
+    bridge: { ...bridge, phase: 'equality', line: 0, shared: question.values.missing } } };
 }
 
 export function finishChallenge(run, outcome) {

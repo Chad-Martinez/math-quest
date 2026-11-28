@@ -1,13 +1,13 @@
 # Chapter 1 playtest review
 
-The release plays the approved storyboard from welcome through replay. The five stops cover combining supplies and finding the missing amount, comparing two footprint trails, sharing enough berries to make equal groups, finding the least number of gems to take the lead, and balancing a missing-subtraction equation.
+The release plays the approved storyboard from welcome through replay. The five stops cover combining supplies and finding the missing amount, comparing two footprint trails, repairing Triceratops Bridge by making the plank rows equal, finding the least number of gems to take the lead, and balancing a missing-subtraction equation.
 
 | Requirement | What to verify |
 | --- | --- |
 | Generated mathematics | Each unit is drawn from the current problem. Solutions, hints and teaching tips use the same parameters. Follow the story order and count only the quantity requested. |
 | Concrete to visual to symbolic | Move the objects or use the number line. The equation appears after checking the answer or choosing a worked example. The original task stays available after a different example. |
 | Working memory and pacing | One current question stays on screen. For two-step problems, the first result stays visible when the second question appears. Drawing and math share one workspace. |
-| Direct input | Tap, drag, or activate an object by keyboard. Footprints line up across rows, which share a horizontally scrollable track on narrow screens. The scale tilts according to the two pan totals. |
+| Direct input | Tap, drag, or activate an object by keyboard. Footprints and bridge planks line up across paired columns that wrap on narrow screens. The scale tilts according to the two pan totals. |
 | Support and feedback | Two hints lead to a worked demonstration with different numbers. Wrong answers invite retry. Making the gem groups tie gets a specific response. Completion records distinguish independent work, instructional help and a worked answer. |
 | Parent assistance | Each problem has a question to ask, a real-object demonstration, hints, possible misconceptions, a solution behind an explicit reveal, and a transfer question in a fresh context. |
 | Movement | Try any part of the optional break, skip it, or take a break during a problem. The chapter preserves the current response and workspace when an on-demand break closes. |

@@ -12,6 +12,10 @@ Layer approved environment, sprites, props and semantic controls. Use actual HTM
 
 Show one approved dialogue segment at a time. **Listen** speaks that segment on request and can stop or replay it. Keep the text usable when speech is unavailable. Cancel obsolete narration on advance, exit or reset. Maintain predictable focus and provide alternatives to drag. Follow the [educational requirements](educational-requirements.md) for interactive math and parent guidance.
 
+Give each mathematical challenge distinctive objects and interactions. Consecutive challenges may repeat a mechanic when the sequence serves an explicit instructional purpose.
+
+Make each solution advance the central mission by removing an obstacle, discovering a clue, or changing the game world. A celebration can accompany that consequence.
+
 ## Animation and state
 
 Record each sequence’s trigger, target, frames or start and end pose, anchors, delay, duration, easing, completion, cancellation and reduced-motion outcome. Use the kit’s timing. For example, Scene 03 uses four walk frames at roughly 8–10 fps and path travel at roughly 1.2–1.6 seconds. Those choices belong to that scene.
