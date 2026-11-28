@@ -42,7 +42,7 @@ body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
 .chapter-listen { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .chapter-speech-status { font-size: .85rem; }
 
-.chapter-hero, .chapter-map-card, .chapter-break {
+.chapter-hero, .chapter-break {
   background: #fffaf1;
   border: 1px solid #e1d7ba;
   border-radius: 26px;
@@ -56,7 +56,7 @@ body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
 .chapter-intro-line { max-width: 28ch; font-size: clamp(1.05rem, 2vw, 1.35rem); line-height: 1.45; margin: 14px 0 22px; }
 .chapter-star { width: 52px; height: 52px; object-fit: contain; margin-bottom: 16px; }
 .chapter-scene-art { position: relative; min-height: clamp(242px, 42vw, 475px); isolation: isolate; background: #b5d6a6; }
-.chapter-scenery, .chapter-map-background { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.chapter-scenery { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .chapter-character, .chapter-prize { position: absolute; object-fit: contain; filter: drop-shadow(0 8px 8px #142a3340); }
 .chapter-character { bottom: 7%; left: 12%; width: 68%; height: 76%; object-position: center bottom; }
 .chapter-prize { right: 9%; bottom: 9%; height: 24%; width: 24%; }
@@ -68,29 +68,8 @@ body:not(.legacy-release) > :is(header, main, dialog) { display: none; }
   @keyframes chapter-arrive { from { transform: translateY(12px) scale(.85); opacity: .35; } }
 }
 
-.chapter-map-card, .chapter-break { padding: clamp(18px, 3vw, 30px); }
-#chapter .chapter-map-card h1, #chapter .chapter-break h1 { margin-bottom: 14px; font-size: clamp(1.65rem, 3vw, 2.45rem); }
-.chapter-trail { height: clamp(210px, 44dvh, 425px); position: relative; overflow: hidden; border-radius: 18px; background: #c0d5a7; }
-.chapter-trail svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-.chapter-trail polyline { fill: none; stroke: #fff8d1; stroke-width: 6px; stroke-linecap: round; stroke-dasharray: 3px 10px; vector-effect: non-scaling-stroke; }
-.chapter-map-node {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: clamp(44px, 5.5vw, 54px);
-  min-height: 44px;
-  padding: 0;
-  aspect-ratio: 1;
-  background: #fff8e2;
-  color: #224632;
-  border: 2px solid #294c34;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 3px 6px #26342953;
-  font-weight: 850;
-}
-.chapter-map-node[aria-current=step] { background: #ffdc79; box-shadow: 0 0 0 3px #fff6db; }
-.chapter-map-node[data-complete] { background: #d3edbf; }
+.chapter-break { padding: clamp(18px, 3vw, 30px); }
+#chapter .chapter-break h1 { margin-bottom: 14px; font-size: clamp(1.65rem, 3vw, 2.45rem); }
 .chapter-movement { display: grid; gap: 14px; align-items: center; }
 .chapter-movement h3 { font-size: clamp(1.25rem, 3vw, 1.7rem); margin: 8px 0; }
 .chapter-movement-dino { width: 100%; height: clamp(125px, 28vh, 255px); object-fit: contain; }

@@ -4,8 +4,12 @@ import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
 import { createWelcome } from './welcome.js';
 import { createMissingEgg } from './missing-egg.js';
+import { createAdventureMap } from './adventure-map.js';
+import { advanceToMap, mapState } from './adventure-map-state.js';
 
 let disposeMission;
+let disposeMap;
+let suspendedAdventure;
 
 const root = document.getElementById('chapter');
 let storage;
@@ -137,12 +141,17 @@ function growUps() {
   const body = el('div', {}, el('label', { className: 'chapter-setting' }, toggle, 'Offer a wiggle break after challenge three'),
     el('h3', {}, 'Learning progress'), el('p', {}, `Chapter completions: ${progress.runs}`),
     el('p', {}, `Stars already earned in Math Quest: ${totals.stars}`));
-  if (!intro && qIndex() >= 0) body.append(button('Teaching tips for this problem', () => {
+  if (!intro && (practiceRun || !progress.run?.mapFrom) && qIndex() >= 0) body.append(button('Teaching tips for this problem', () => {
     modal.close();
     coach();
   }));
   if (!intro && activeRun()?.scene === 'mission') body.append(button('Back to welcome', home, 'chapter-secondary'));
   const modal = dialog('Grown-ups', body, document.getElementById('chapter-grownups'));
+  modal.addEventListener('close', () => {
+    if (!intro && !practiceRun && !progress.autoBreak && progress.run?.scene === 'wiggle' && progress.run.mapFrom) {
+      skipMapBreak();
+    }
+  });
 }
 
 function writeRun(run) {
@@ -153,7 +162,14 @@ function writeRun(run) {
 function returnToAdventure() {
   stopSpeech();
   practiceRun = undefined;
-  render();
+  if (suspendedAdventure) {
+    const { nodes, trigger, scroll } = suspendedAdventure;
+    suspendedAdventure = undefined;
+    root.replaceChildren(...nodes);
+    root.querySelector('main').append(persistWarning);
+    window.scrollTo(scroll.x, scroll.y);
+    trigger.focus({ preventScroll: true });
+  } else render();
 }
 
 function openStop(index) {
@@ -176,13 +192,29 @@ function restartStop() {
 
 function next({ leavingMission } = {}) {
   stopSpeech();
-  write(advanceChapter(progress));
-  render(undefined, leavingMission);
+  const finished = stops.indexOf(progress.run?.scene);
+  write(advanceToMap(progress));
+  render(undefined, leavingMission, finished < 0 ? undefined : String(finished + 1));
+}
+
+function arriveFromMap() {
+  if (progress.run.scene === 'map') write(advanceChapter(progress));
+  else {
+    const { mapFrom, ...run } = progress.run;
+    writeRun(run);
+  }
+  render();
+}
+
+function skipMapBreak() {
+  write(advanceToMap(progress, { skipBreak: true }));
+  render();
 }
 
 function home() {
   stopSpeech();
   practiceRun = undefined;
+  suspendedAdventure = undefined;
   intro = true;
   render();
 }
@@ -195,6 +227,9 @@ function begin(newRun = false, leavingWelcome) {
     questions = chapterQuestions(seed);
   }
   intro = false;
+  if (!progress.autoBreak && progress.run.scene === 'wiggle' && progress.run.mapFrom) {
+    write(advanceToMap(progress, { skipBreak: true }));
+  }
   render(leavingWelcome);
 }
 
@@ -227,41 +262,34 @@ function storyScene(scene) {
   return el('section', { className: 'chapter-hero chapter-' + scene }, heading, scenery(data));
 }
 
-function trailMap(close) {
-  const trail = el('div', { className: 'chapter-trail' });
-  trail.append(picture(assets + 'maps/trail-background.webp', 'chapter-map-background'));
-  const positions = [[11, 69], [28, 51], [47, 65], [66, 42], [85, 33]];
-  const points = positions.map(([x,y]) => `${x},${y}`).join(' ');
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 100 100');
-  svg.setAttribute('preserveAspectRatio', 'none');
-  svg.setAttribute('aria-hidden', 'true');
-  const line = document.createElementNS(svg.namespaceURI, 'polyline');
-  line.setAttribute('points', points);
-  svg.append(line);
-  trail.append(svg);
-  const current = progress.run.scene === 'map' ? 0 : stops.indexOf(progress.run.scene);
-  for (const [i, [x,y]] of positions.entries()) {
-    const complete = Boolean(progress.run.outcomes[i]);
-    const mark = button(String(i + 1), () => {
-      if (i === current && !complete) {
-        if (close) close();
-        else next();
-      } else {
-        close?.();
-        openStop(i);
-      }
-    }, 'chapter-map-node');
-    mark.style.left = `${x}%`;
-    mark.style.top = `${y}%`;
-    mark.setAttribute('aria-label', `${i + 1}. ${stopNames[i]}${complete ? ', done' : ''}`);
-    if (complete) mark.dataset.complete = '';
-    if (i === current) mark.setAttribute('aria-current', 'step');
-    trail.append(mark);
-  }
-  if (close) return el('div', {}, trail, el('p', {}, 'Tap a number to open that stop.'));
-  return el('section', { className: 'chapter-map-card' }, el('h1', { tabindex: '-1' }, 'Follow the island trail'),
-    trail, el('p', {}, 'Tap a number to visit a stop.'), button('Go to the first stop', next));
+function adventureMap(options) {
+  return createAdventureMap({ ...options, state: mapState(progress.run, options.revisit),
+    grownUps: growUps, home, listen, stopSpeech, el, button, picture });
+}
+
+function revisitMap(trigger) {
+  stopSpeech();
+  const modal = el('dialog', { className: 'adventure-map-dialog', 'aria-labelledby': 'adventure-map-title' });
+  const { view, dispose } = adventureMap({
+    revisit: true,
+    onAdvance: () => modal.close(),
+    onReview: index => {
+      suspendedAdventure = { nodes: [...root.children].filter(child => child !== modal), trigger,
+        scroll: { x: window.scrollX, y: window.scrollY } };
+      modal.close();
+      openStop(index);
+    },
+  });
+  modal.addEventListener('close', () => {
+    dispose();
+    stopSpeech();
+    modal.remove();
+    if (trigger.isConnected) trigger.focus({ preventScroll: true });
+  });
+  modal.append(view);
+  root.append(modal);
+  modal.showModal();
+  view.querySelector('h1').focus({ preventScroll: true });
 }
 
 const moves = [
@@ -528,7 +556,9 @@ function sceneCrossfade(outgoing, incoming, outClass, inClass, duration) {
   setTimeout(() => outgoing.remove(), duration);
 }
 
-function render(leavingWelcome, leavingMission) {
+function render(leavingWelcome, leavingMission, freshCompletion) {
+  disposeMap?.();
+  disposeMap = undefined;
   disposeMission?.();
   disposeMission = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
@@ -560,6 +590,18 @@ function render(leavingWelcome, leavingMission) {
     stage.querySelector('h1').focus({ preventScroll: true });
     return;
   }
+  if (!practiceRun && (scene === 'map' || progress.run?.mapFrom)) {
+    const { view, dispose } = adventureMap({
+      freshCompletion, onAdvance: arriveFromMap, onSkipBreak: skipMapBreak, onReview: openStop,
+    });
+    disposeMap = dispose;
+    const main = el('main', { className: 'map-main' }, view, persistWarning);
+    root.replaceChildren(main);
+    sceneCrossfade(leavingMission, main, 'mission-leaving', 'mission-map-in', 300);
+    window.scrollTo(0, 0);
+    view.querySelector('h1').focus({ preventScroll: true });
+    return;
+  }
   const header = el('header', { className: 'chapter-header' },
     button('Math Quest', home, 'chapter-brand'), el('div', { className: 'chapter-actions' },
       ...(progress.badge ? [picture(reward('reward-egg'), 'chapter-header-badge', 'Golden Egg badge')] : []),
@@ -568,21 +610,17 @@ function render(leavingWelcome, leavingMission) {
   const headerActions = header.querySelector('.chapter-actions');
   if (practiceRun) {
     headerActions.prepend(button('Leave practice', returnToAdventure, 'chapter-secondary'));
-  } else if (progress.run && !intro && !['mission', 'map'].includes(scene)) {
-    const map = button('Trail map', () => {
-      const modal = dialog('Island trail', trailMap(() => modal.close()), map);
-    }, 'chapter-secondary');
+  } else if (progress.run) {
+    const map = button('Trail map', () => revisitMap(map), 'chapter-secondary');
     headerActions.prepend(map);
   }
   const index = qIndex();
   let content;
-  if (scene === 'map') content = trailMap();
-  else if (scene === 'wiggle') content = el('section', { className: 'chapter-break' }, el('h1', { tabindex: '-1' }, 'Dino Wiggle Break'),
+  if (scene === 'wiggle') content = el('section', { className: 'chapter-break' }, el('h1', { tabindex: '-1' }, 'Dino Wiggle Break'),
     el('p', {}, 'Take a little movement break if you want.'), movementBody(next));
   else content = stories[scene] ? storyScene(scene) : mathScene(index);
   const main = el('main', { className: 'chapter-main' }, content, persistWarning);
   root.replaceChildren(header, main);
-  sceneCrossfade(leavingMission, main, 'mission-leaving', 'mission-map-in', 300);
   window.scrollTo(0, 0);
   root.querySelector('h1')?.focus({ preventScroll: true });
 }
