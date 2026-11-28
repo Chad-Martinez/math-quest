@@ -1,5 +1,6 @@
 import { seededRandom, validateAnswer } from './engine.js';
 import { berryHelp, berryQuestion, berryVariants, chooseBerryVariant, newBerryBeat, readBerryBeat } from './berry-grove-state.js';
+import { chooseTrailVariant, newTrailBeat, restoreTrailBeat, trailHelp, trailQuestion, trailVariants } from './velociraptor-state.js';
 
 export const scenes = ['welcome', 'mission', 'map', 'supplies', 'footprints', 'share', 'wiggle', 'gems',
   'cave', 'mosasaurus', 'discovery', 'complete', 'replay'];
@@ -107,7 +108,7 @@ export function readChapter(storage) {
       const outcomesByStop = Array.from({ length: 5 }, (_, i) => outcomes.includes(run.outcomes?.[i]) ? run.outcomes[i] : null);
       const attempt = emptyAttempt();
       if (index >= 0) {
-        const q = index === 0 ? chapterBerryQuestion(run) : chapterQuestions(run.seed)[index];
+        const q = index === 0 ? chapterBerryQuestion(run) : index === 1 ? chapterTrailQuestion(run) : chapterQuestions(run.seed)[index];
         attempt.step = run.attempt?.step === 1 && q.answers.length === 2 ? 1 : 0;
         attempt.draft = typeof run.attempt?.draft === 'string' && /^\d{0,2}$/.test(run.attempt.draft) ? run.attempt.draft : '';
         attempt.hints = Number.isInteger(run.attempt?.hints) ? Math.max(0, Math.min(run.attempt.hints, q.hints[attempt.step].length)) : 0;
@@ -116,7 +117,11 @@ export function readChapter(storage) {
         attempt.teach = run.attempt?.teach === true;
         if (index === 0) {
           attempt.berry = readBerryBeat(attempt, run.attempt, q);
-          attempt.assisted ||= attempt.berry.help.length > 0;
+        }
+        if (index === 1) attempt.trail = restoreTrailBeat(attempt, run.attempt, q);
+        const detail = attempt.berry ?? attempt.trail;
+        if (detail) {
+          attempt.assisted ||= detail.help.length > 0;
           const feedback = Object.values(q.mistakes[attempt.step]).concat(q.defaultFeedback[attempt.step]);
           if (!attempt.solved && feedback.includes(run.attempt?.error)) attempt.error = run.attempt.error;
         }
@@ -124,6 +129,8 @@ export function readChapter(storage) {
       valid = { seed: run.seed, scene: run.scene, outcomes: outcomesByStop, attempt };
       if (Number.isInteger(run.berryVariant) && berryVariants[run.berryVariant]) valid.berryVariant = run.berryVariant;
       if (outcomesByStop[0] && Array.isArray(run.berryHelp)) valid.berryHelp = berryHelp(run.berryHelp);
+      if (Number.isInteger(run.trailVariant) && trailVariants[run.trailVariant]) valid.trailVariant = run.trailVariant;
+      if (outcomesByStop[1] && Array.isArray(run.trailHelp)) valid.trailHelp = trailHelp(run.trailHelp);
       if (mapOrigins[run.scene]?.includes(run.mapFrom)) valid.mapFrom = run.mapFrom;
     }
     return { version: 1, autoBreak: saved.autoBreak !== false, badge: saved.badge === true,
@@ -138,9 +145,16 @@ export function chapterBerryQuestion(run) {
   return berryQuestion({ red: a, blue: b, target: need });
 }
 
+export function chapterTrailQuestion(run) {
+  const variant = Number.isInteger(run.trailVariant) ? trailVariants[run.trailVariant] : undefined;
+  if (variant) return trailQuestion(variant);
+  const { params: { large, small } } = chapterQuestions(run.seed)[1];
+  return trailQuestion({ first: large, second: small, question: trailVariants[0].question });
+}
+
 export function startChapter(progress, seed) {
   return { ...progress, run: { seed, scene: 'mission', outcomes: Array(5).fill(null), attempt: emptyAttempt(),
-    berryVariant: chooseBerryVariant(progress, seed) } };
+    berryVariant: chooseBerryVariant(progress, seed), trailVariant: chooseTrailVariant(progress, seed) } };
 }
 
 export function advanceChapter(progress) {
@@ -150,15 +164,22 @@ export function advanceChapter(progress) {
   if (scene === 'wiggle' && !progress.autoBreak) scene = 'gems';
   const finishing = scene === 'complete';
   const attempt = emptyAttempt();
-  const berry = scene === 'supplies' ? { berryVariant: run.berryVariant ?? 0 } : {};
-  if (scene === 'supplies') attempt.berry = newBerryBeat();
+  const variant = {};
+  if (scene === 'supplies') {
+    attempt.berry = newBerryBeat();
+    variant.berryVariant = run.berryVariant ?? 0;
+  }
+  if (scene === 'footprints') {
+    attempt.trail = newTrailBeat();
+    variant.trailVariant = run.trailVariant ?? 0;
+  }
   return { ...progress, badge: progress.badge || finishing, runs: progress.runs + Number(finishing),
-    run: { ...run, ...berry, scene, attempt } };
+    run: { ...run, ...variant, scene, attempt } };
 }
 
 export function applyChapterAnswer(run, question, value) {
   const current = run.attempt;
-  if (current.solved || question.id !== run.scene || !/^\d{1,2}$/.test(value) || Number(value) > 20) return run;
+  if (current.solved || question.id !== run.scene || !/^\d{1,2}$/.test(value) || (question.id !== 'footprints' && Number(value) > 20)) return run;
   const step = current.step;
   if (!validateAnswer({ answerType: 'number', answer: question.answers[step] }, value)) {
     return { ...run, attempt: { ...current, draft: value,

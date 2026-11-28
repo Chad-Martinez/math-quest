@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterBerryQuestion, chapterKey, chapterQuestions, freshQuestion } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, freshQuestion } from '../js/chapter.js';
+import { trailGuide } from '../js/velociraptor-content.js';
 import { berryGuide } from '../js/berry-grove-content.js';
 import { readProgress } from '../js/storage.js';
 
@@ -60,6 +61,14 @@ async function leaveGrove(page) {
   for (let i = 0; i < 4; i++) await press(page, 'Continue');
   await press(page, 'Follow the Trail');
 }
+async function enterTrail(page) {
+  await heading(page, 'Velociraptor Trail');
+  for (const label of ['Continue', 'Let’s Investigate!', 'Continue', 'Continue']) await press(page, label);
+}
+async function leaveTrail(page) {
+  for (let i = 0; i < 4; i++) await press(page, 'Continue');
+  await press(page, 'Visit Triceratops');
+}
 async function heading(page, label) { await page.getByRole('heading', { name: label, exact: true }).waitFor(); }
 async function stored(page) { return page.evaluate(key => JSON.parse(localStorage.getItem(key)), chapterKey); }
 async function drag(page, piece, target) {
@@ -75,7 +84,7 @@ async function teachingTips(page, index, reveal = false) {
   await press(page, 'Teaching tips for this problem');
   await heading(page, 'Teaching tips');
   const modal = page.getByRole('dialog', { name: 'Teaching tips' });
-  assert.ok(await modal.getByText(index === 0 ? berryGuide.objective : qs[index].objective, { exact: true }).isVisible());
+  assert.ok(await modal.getByText(index === 0 ? berryGuide.objective : index === 1 ? trailGuide.objective : qs[index].objective, { exact: true }).isVisible());
   assert.equal(await modal.getByText(qs[index].equations.at(-1), { exact: true }).count(), 0);
   if (reveal) {
     await press(page, 'I helped with this problem');
@@ -84,7 +93,7 @@ async function teachingTips(page, index, reveal = false) {
     assert.ok(await modal.getByText(qs[index].equations.at(-1), { exact: true }).isVisible());
   }
   await modal.locator('summary').click();
-  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
+  await modal.getByLabel('Transfer answer').fill(String(index === 0 ? berryGuide.transfer.answer : index === 1 ? trailGuide.transfer.answer : freshQuestion(seed, index).answers.at(-1)));
   await modal.getByRole('button', { name: 'Check', exact: true }).click();
   assert.match(await modal.locator('form + p').textContent(), /That works/);
   await press(page, 'Close');
@@ -185,7 +194,7 @@ try {
   await leaveGrove(page);
 
   await press(page, 'Visit Raptor Trail');
-  await heading(page, 'Follow footprints');
+  await enterTrail(page);
   await page.getByLabel('Your answer').fill('2');
   await press(page, 'Trail map');
   assert.equal(await page.locator('.map-numbered[data-status=completed]').count(), 1);
@@ -195,22 +204,25 @@ try {
   await press(page, 'Math tools');
   assert.equal(await page.getByRole('region', { name: 'Blue berries' }).getByRole('button').count(), qs[0].params.b);
   await press(page, 'Leave practice');
-  await heading(page, 'Follow footprints');
+  await heading(page, 'Velociraptor Trail');
   assert.equal(await page.getByLabel('Your answer').inputValue(), '2');
   assert.deepEqual(await stored(page), footprintsCheckpoint);
   await press(page, 'Trail map');
   await press(page, 'Continue Stop');
   assert.deepEqual(await stored(page), footprintsCheckpoint);
-  assert.equal(await page.locator('.chapter-group').nth(0).locator('.chapter-token').count(), qs[1].params.large);
-  assert.equal(await page.locator('.chapter-group').nth(1).locator('.chapter-token').count(), qs[1].params.small);
-  await page.locator('.chapter-group').nth(0).getByRole('button').first().press('Enter');
-  assert.equal(await page.locator('.chapter-token[aria-pressed=true]').count(), 2);
+  const trail = chapterTrailQuestion((await stored(page)).run);
+  await press(page, 'Math tools');
+  assert.equal(await page.locator('.trail-spot[data-row="0"]').count(), trail.values.first);
+  assert.equal(await page.locator('.trail-spot[data-row="1"]').count(), trail.values.second);
+  await page.locator('.trail-spot[data-row="0"]').first().press('Enter');
+  await page.locator('.trail-spot[data-row="1"]').first().press('Enter');
+  assert.equal(await page.locator('.trail-spot.trail-matched').count(), 2);
   await teachingTips(page, 1);
   await screen(page, '05-follow-footprints');
-  await check(page, qs[1].params.large + qs[1].params.small);
-  assert.match(await page.locator('#chapter-feedback').textContent(), /both trails/);
-  await check(page, qs[1].answers[0]);
-  await press(page, 'Continue the search');
+  await check(page, trail.values.first + trail.values.second);
+  assert.match(await page.locator('#chapter-feedback').textContent(), /comparing the trails/);
+  await check(page, trail.answers[0]);
+  await leaveTrail(page);
 
   await press(page, 'Visit Picnic Clearing');
   await heading(page, 'Share the food');
@@ -318,8 +330,9 @@ try {
   await leaveGrove(page);
   const replay = chapterQuestions((await stored(page)).run.seed);
   await press(page, 'Visit Raptor Trail');
-  await check(page, replay[1].answers[0]);
-  await press(page, 'Continue the search');
+  await enterTrail(page);
+  await check(page, chapterTrailQuestion((await stored(page)).run).answers[0]);
+  await leaveTrail(page);
   await press(page, 'Visit Picnic Clearing');
   await check(page, replay[2].answers[0]);
   await press(page, 'Continue the search');

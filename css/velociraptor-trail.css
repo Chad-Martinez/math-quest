@@ -1,0 +1,172 @@
+.trail-stage {
+  --trex-x: var(--landscape-trex-x);
+  --trex-y: var(--landscape-trex-y);
+  --raptor-x: var(--landscape-raptor-x);
+  --raptor-y: var(--landscape-raptor-y);
+}
+.trail-stage .trail-landscape { object-position: center; }
+.trail-stage:has(.trail-learning) {
+  background: #29432d url('../assets/scene-05/trail-landscape.webp') center / cover no-repeat;
+}
+.trail-trex, .trail-raptor {
+  position: absolute;
+  height: auto;
+  transform: translate(var(--pivot, -50%), -100%);
+  filter: drop-shadow(0 3px 3px #201e147d);
+}
+.trail-trex { left: var(--trex-x); top: var(--trex-y); width: min(25%, 43svh); }
+.trail-trex.trail-walk { opacity: 0; }
+.trail-raptor {
+  left: var(--raptor-x);
+  top: var(--raptor-y);
+  width: min(var(--pose-width, 27%), var(--pose-limit, 47svh));
+  scale: var(--pose-face, -1) 1;
+}
+.trail-raptor[data-pose=raptor-investigate] { --pose-width: 34%; --pose-face: 1; --pose-limit: 58svh; }
+.trail-raptor[data-pose=raptor-celebrate] { --pose-width: 25%; --pose-limit: 38svh; }
+.trail-stage[data-beat=clue] .trail-raptor {
+  --pose-face: 1;
+  --pose-width: 21%;
+  left: 57%;
+  top: 70%;
+}
+.trail-stage[data-beat=clue] .trail-trex { width: min(22%, 39svh); }
+.trail-shell-highlight {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+.trail-shell-highlight ellipse {
+  opacity: 0;
+  fill: #ffe48222;
+  stroke: #ffe08b;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 6px #ffd761);
+}
+.trail-shell-portrait { display: none; }
+
+.trail-problem-heading { display: flex; gap: .5rem; align-items: flex-start; }
+.trail-portrait { width: clamp(43px, 8%, 70px); height: 75px; object-fit: contain; margin-top: .62rem; }
+.trail-task h2 { margin: .65rem 0 .6rem; }
+.trail-stage .grove-tools:has(+ .trail-model:not([hidden])) { margin-bottom: .65rem; }
+.trail-model {
+  padding: .5rem;
+  min-width: 0;
+  border: 1px solid #a87949;
+  border-radius: .75rem;
+  background: #fff2cc;
+  color: #422d1c;
+}
+.trail-labels { display: flex; flex-wrap: wrap; gap: .3rem .7rem; }
+.trail-labels p { margin: 0; font-size: .92rem; font-weight: 850; }
+.trail-labels [data-row='0']::before,
+.trail-labels [data-row='1']::before {
+  content: '';
+  display: inline-block;
+  width: .65em;
+  height: .65em;
+  margin-inline-end: .35em;
+  background: #c68857;
+  border: 1px solid #73431f;
+  border-radius: 2px;
+}
+.trail-labels [data-row='1']::before { background: #a8c5a4; border-color: #436641; border-radius: 50%; }
+.trail-field { position: relative; }
+.trail-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: .25rem .14rem;
+  padding: .3rem 0;
+}
+.trail-column { display: grid; grid-template-rows: 44px 44px; gap: 16px; justify-items: center; }
+#chapter .trail-spot, .trail-empty {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 3px;
+  display: grid;
+  place-items: center;
+  color: #442c1e;
+  border: 1px solid #97653a;
+  border-radius: 7px;
+  background: #fff7df;
+}
+#chapter .trail-spot[data-row='1'] { border-radius: 45%; border-color: #5c733e; background: #f3f6de; }
+#chapter .trail-spot[aria-pressed=true]:not(.trail-matched) { outline: 3px solid #9d5f29; outline-offset: -3px; }
+#chapter .trail-spot.trail-matched { background: #dbeace; border-color: #55754a; }
+#chapter .trail-spot.trail-remaining { outline: 2px dashed #9b571e; outline-offset: -2px; }
+.trail-spot.trail-matched::after {
+  content: '✓';
+  position: absolute;
+  right: -2px;
+  bottom: -3px;
+  padding-inline: .13rem;
+  color: #f9faed;
+  background: #2d5b3b;
+  border-radius: 50%;
+  font-size: .66rem;
+  line-height: 1.15;
+}
+.trail-empty { visibility: hidden; }
+.trail-print { width: 28px; height: 34px; object-fit: contain; }
+.trail-links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.trail-links path { fill: none; stroke: #48754e; stroke-width: 2; stroke-linecap: round; opacity: .82; }
+.trail-model-status { font-size: .94rem; margin: .2rem 0 .35rem; }
+.trail-match-actions { justify-content: space-between; }
+#chapter .trail-guided .grove-equation { margin-top: .65rem; }
+
+.trail-success-panel {
+  position: absolute;
+  max-width: 32rem;
+  width: 47%;
+  bottom: max(12%, 63px);
+  left: 39%;
+}
+.trail-success-panel .trail-equation {
+  margin-inline: auto;
+  background: #fff1c0;
+  border: 2px solid #a76e35;
+  box-shadow: 0 4px 9px #1c2b235b;
+}
+.trail-success-panel .trail-model {
+  box-shadow: 0 4px 9px #1c2b235b;
+}
+.trail-success-panel .trail-columns {
+  grid-template-columns: repeat(auto-fit, minmax(20px, 1fr));
+  gap: .16rem;
+}
+.trail-success-panel .trail-column { grid-template-rows: 20px 20px; gap: 7px; }
+#chapter .trail-success-panel .trail-spot,
+.trail-success-panel .trail-empty { width: 20px; height: 20px; min-height: 0; padding: 1px; }
+.trail-success-panel .trail-print { width: 15px; height: 17px; }
+.trail-success-panel .trail-spot.trail-matched::after { font-size: .47rem; }
+
+@media (orientation: portrait) {
+  .trail-stage {
+    --trex-x: var(--portrait-trex-x);
+    --trex-y: var(--portrait-trex-y);
+    --raptor-x: var(--portrait-raptor-x);
+    --raptor-y: var(--portrait-raptor-y);
+  }
+  .trail-stage:has(.trail-learning) {
+    background-image: url('../assets/scene-05/trail-portrait.webp');
+  }
+  .trail-trex { width: min(37%, 32svh); }
+  .trail-raptor { --pose-width: 42%; --pose-limit: 40svh; }
+  .trail-raptor[data-pose=raptor-investigate] { --pose-width: 47%; }
+  .trail-raptor[data-pose=raptor-celebrate] { --pose-width: 38%; }
+  .trail-stage[data-beat=clue] .trail-raptor { left: 77%; top: 65%; --pose-width: 35%; }
+  .trail-stage[data-beat=clue] .trail-trex { width: min(34%, 34svh); }
+  .trail-stage[data-beat=success] :is(.trail-trex, .trail-raptor) { top: 69%; }
+  .trail-shell-landscape { display: none; }
+  .trail-shell-portrait { display: block; }
+  .trail-success-panel { width: auto; inset-inline: 8%; max-width: none; bottom: max(13%, 60px); }
+}
+@media (orientation: landscape) and (max-height: 520px) {
+  .trail-success-panel { width: 46%; left: 39%; bottom: max(15%, 54px); }
+  .trail-success-panel .trail-model-status { display: none; }
+}

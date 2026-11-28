@@ -4,7 +4,7 @@ Run `npm test` from the repository root. Tests sample 24,500 generated questions
 
 ## Current Chapter 1 checks
 
-Use the [Chapter 1 checklist](chapter-1.md) for the active Pages release and the [Welcome](scene-01.md), [Missing Egg](scene-02.md), [Adventure Map](scene-03.md) and [Berry Grove](scene-04.md) checks for individual scenes. A scene review should identify the browser, emulated viewport or physical device, reference comparison and remaining checks.
+Use the [Chapter 1 checklist](chapter-1.md) for the active Pages release and the [Welcome](scene-01.md), [Missing Egg](scene-02.md), [Adventure Map](scene-03.md), [Berry Grove](scene-04.md) and [Velociraptor Trail](scene-05.md) checks for individual scenes. A scene review should identify the browser, emulated viewport or physical device, reference comparison and remaining checks.
 
 ## Legacy manual iPad acceptance checklist
 

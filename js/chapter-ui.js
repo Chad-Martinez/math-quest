@@ -1,4 +1,4 @@
-import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterKey, chapterQuestions, emptyAttempt, finishChallenge, freshQuestion,
+import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
@@ -9,6 +9,9 @@ import { advanceToMap, mapState } from './adventure-map-state.js';
 import { createBerryGrove } from './berry-grove.js';
 import { berryGuide } from './berry-grove-content.js';
 import { berryHelp, fillBerryCopy, newBerryBeat } from './berry-grove-state.js';
+import { createVelociraptorTrail } from './velociraptor-trail.js';
+import { trailGuide } from './velociraptor-content.js';
+import { newTrailBeat, trailHelp } from './velociraptor-state.js';
 
 let activeScene;
 let suspendedAdventure;
@@ -180,8 +183,9 @@ function openStop(index) {
   stopSpeech();
   const attempt = emptyAttempt();
   if (index === 0) attempt.berry = newBerryBeat('combine');
+  if (index === 1) attempt.trail = newTrailBeat('solve');
   practiceRun = { seed: progress.run.seed, scene: stops[index], outcomes: Array(stops.length).fill(null), attempt,
-    berryVariant: progress.run.berryVariant };
+    berryVariant: progress.run.berryVariant, trailVariant: progress.run.trailVariant };
   render();
 }
 
@@ -192,9 +196,10 @@ function restartStop() {
     return;
   }
   stopSpeech();
-  const { assisted, teach, berry } = run.attempt;
+  const { assisted, teach, berry, trail } = run.attempt;
   const attempt = { ...emptyAttempt(), assisted, teach };
   if (berry) attempt.berry = { ...newBerryBeat('combine'), help: berry.help };
+  if (trail) attempt.trail = { ...newTrailBeat('solve'), help: trail.help };
   writeRun({ ...run, attempt });
   render();
 }
@@ -210,6 +215,10 @@ function arriveFromMap() {
   if (progress.run.scene === 'map') write(advanceChapter(progress));
   else {
     const { mapFrom, ...run } = progress.run;
+    if (run.scene === 'footprints' && run.trailVariant === undefined) {
+      run.trailVariant = 0;
+      run.attempt = { ...emptyAttempt(), trail: newTrailBeat() };
+    }
     writeRun(run);
   }
   render();
@@ -350,21 +359,26 @@ function coach() {
   const index = qIndex();
   if (index < 0) return;
   const isGrove = index === 0;
-  const question = isGrove ? chapterBerryQuestion(activeRun()) : questions[index];
-  const guide = isGrove ? berryGuide : undefined;
+  const isTrail = index === 1;
+  const question = isGrove ? chapterBerryQuestion(activeRun()) : isTrail ? chapterTrailQuestion(activeRun()) : questions[index];
+  const guide = isGrove ? berryGuide : isTrail ? trailGuide : undefined;
   const copy = text => fillBerryCopy(text, question.values);
-  const body = el('div', {}, el('p', { className: 'chapter-coach-tip' }, guide?.comprehension ?? question.ask),
+  const questionsToAsk = isTrail ? el('ul', { className: 'chapter-coach-tip' },
+    ...guide.questions.map(line => el('li', {}, line))) : el('p', { className: 'chapter-coach-tip' }, guide?.comprehension ?? question.ask);
+  const body = el('div', {}, questionsToAsk,
     el('h3', {}, 'What this teaches'), el('p', {}, guide?.objective ?? question.objective),
-    el('h3', {}, 'Try it with objects'), guide
-      ? el('ol', {}, ...guide.physicalDemo.map(step => el('li', {}, copy(step)))) : el('p', {}, question.activity),
+    el('h3', {}, 'Try it with objects'), isGrove
+      ? el('ol', {}, ...guide.physicalDemo.map(step => el('li', {}, copy(step))))
+      : el('p', {}, isTrail ? copy(guide.physicalDemo) : question.activity),
     el('h3', {}, 'Hints to try'), el('ul', {}, ...question.hints.flat().map(hint => el('li', {}, hint))),
-    el('h3', {}, 'If they get stuck'), guide
+    el('h3', {}, 'If they get stuck'), isGrove
       ? el('ul', {}, ...Object.values(guide.misunderstandings).map(note => el('li', {}, note)))
-      : el('p', {}, Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
-  if (guide) body.append(el('p', {}, copy(guide.alternative)), el('p', {}, guide.note));
+      : el('p', {}, isTrail ? guide.misconceptions : Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
+  if (isGrove) body.append(el('p', {}, copy(guide.alternative)), el('p', {}, guide.note));
   function markParent(changes) {
-    const current = activeRun().attempt.berry;
-    if (isGrove && current) updateAttempt({ ...changes, berry: { ...current, help: berryHelp([...current.help, 'parent']) } });
+    const { berry, trail } = activeRun().attempt;
+    if (isGrove && berry) updateAttempt({ ...changes, berry: { ...berry, help: berryHelp([...berry.help, 'parent']) } });
+    else if (isTrail && trail) updateAttempt({ ...changes, trail: { ...trail, help: trailHelp([...trail.help, 'parent']) } });
     else updateAttempt(changes);
   }
   if (!activeRun().attempt.solved) {
@@ -380,6 +394,7 @@ function coach() {
     if (!activeRun().attempt.solved) markParent({ assisted: true });
     const equations = guide ? guide.equations.map(copy) : question.equations;
     solution.replaceChildren(...equations.map(equation => el('p', {}, equation)));
+    if (isTrail) solution.append(el('p', {}, copy(guide.reverse)));
   }, 'chapter-secondary'), solution);
   const transfer = guide?.transfer ?? freshQuestion(activeRun().seed, index);
   if (transfer) {
@@ -391,11 +406,14 @@ function coach() {
     form.addEventListener('submit', event => {
       event.preventDefault();
       const answer = guide ? transfer.answer : transfer.answers.at(-1);
-      const explanation = guide ? transfer.explanation : transfer.equations.at(-1);
+      const explanation = isTrail ? `The answer is ${answer}.` : guide ? transfer.explanation : transfer.equations.at(-1);
       result.textContent = /^\d{1,2}$/.test(field.value.trim()) && Number(field.value) === answer
         ? 'That works! ' + explanation : 'Try again. Use the same idea with these new numbers.';
     });
     transferDetails.append(el('p', {}, guide ? transfer.question : contexts[index](transfer.params)), form, result);
+    if (isTrail) transferDetails.append(button('Reveal transfer answer', () => {
+      result.textContent = `The answer is ${transfer.answer}.`;
+    }, 'chapter-secondary'));
     body.append(transferDetails);
   }
   dialog('Teaching tips', body, document.getElementById('chapter-grownups'));
@@ -592,7 +610,7 @@ function mountScene(stage, className, outgoing, outClass, inClass, duration) {
   stage.querySelector('h1').focus({ preventScroll: true });
 }
 
-function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry } = {}) {
+function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail } = {}) {
   activeScene?.dispose();
   activeScene = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
@@ -658,6 +676,36 @@ function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapF
     });
     mountScene(activeScene.stage, 'grove-main');
     if (focusBerry) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
+    return;
+  }
+  if (scene === 'footprints') {
+    const readAttempt = () => activeRun().attempt;
+    if (!readAttempt().trail) updateAttempt({ trail: newTrailBeat(readAttempt().solved ? 'success' : 'solve') });
+    activeScene = createVelociraptorTrail({
+      question: chapterTrailQuestion(activeRun()), readAttempt, update: updateAttempt,
+      changeBeat(phase, line) {
+        const trail = readAttempt().trail;
+        updateAttempt({ trail: { ...trail, phase, line } });
+        render(undefined, undefined, undefined, { focusTrail: true, animateTrail: trail.phase !== phase });
+      },
+      checkAnswer(question, value) {
+        const before = activeRun();
+        const after = applyChapterAnswer(before, question, value);
+        const trail = before.attempt.trail;
+        after.attempt.trail = after.attempt.solved ? { ...trail, phase: 'success', line: 0 } :
+          { ...trail, mistakes: trail.mistakes + 1 };
+        if (after.attempt.solved) after.trailHelp = trail.help.slice();
+        writeRun(after);
+        if (after.attempt.solved) render(undefined, undefined, undefined, { focusTrail: true, animateTrail: true });
+        return after.attempt.solved;
+      },
+      exit: mapFade => practiceRun ? returnToAdventure() : next({ mapFade }),
+      restart: restartStop, practice: Boolean(practiceRun), stopCount: stops.length, animateEntry: animateTrail,
+      home, grownUps: growUps, openMap: revisitMap, leavePractice: returnToAdventure, movementBreak,
+      drawing, answerField, dialog, listen, stopSpeech, el, picture,
+    });
+    mountScene(activeScene.stage, 'grove-main');
+    if (focusTrail) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
     return;
   }
   const header = el('header', { className: 'chapter-header' },

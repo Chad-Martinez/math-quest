@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterBerryQuestion, chapterKey, chapterQuestions, emptyAttempt } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt } from '../js/chapter.js';
 import { mapSpec } from '../js/adventure-map-data.js';
 
 const require = createRequire(import.meta.url);
@@ -77,14 +77,16 @@ async function capture(page, name, animations = 'disabled') {
 }
 
 async function dialogue(page, id) {
+  await page.locator('.map-line').and(page.getByText(mapSpec.dialogue[id], { exact: true })).waitFor();
   assert.equal(await page.locator('.map-line').textContent(), mapSpec.dialogue[id]);
   assert.equal(await page.locator('.map-line').count(), 1);
 }
 async function answer(page, index) {
-  const q = index === 0 ? chapterBerryQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
+  const q = index === 0 ? chapterBerryQuestion((await saved(page)).run)
+    : index === 1 ? chapterTrailQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
   for (const [step, value] of q.answers.entries()) {
     await page.getByLabel('Your answer').fill(String(value));
-    await press(page, index === 0 ? 'Check Answer' : 'Check answer');
+    await press(page, index <= 1 ? 'Check Answer' : 'Check answer');
     if (index === 0 && step === 0) await press(page, 'Continue');
   }
 }
@@ -143,9 +145,11 @@ try {
   await press(page, 'Continue Adventure');
   await dialogue(page, '1');
   await press(page, 'Visit Raptor Trail');
-  await heading(page, 'Follow footprints');
+  await heading(page, 'Velociraptor Trail');
+  for (const label of ['Continue', 'Let’s Investigate!', 'Continue', 'Continue']) await press(page, label);
   await answer(page, 1);
-  await press(page, 'Continue the search');
+  for (let i = 0; i < 4; i++) await press(page, 'Continue');
+  await press(page, 'Visit Triceratops');
   await dialogue(page, '2');
   await press(page, 'Visit Picnic Clearing');
   await heading(page, 'Share the food');

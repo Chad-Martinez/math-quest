@@ -4,6 +4,7 @@ import { berryImage, berryUnits, createBerryModel, groveArt, welcomeArt } from '
 import { validateAnswer } from './engine.js';
 import { buildModel } from './manipulatives.js';
 import { sceneLifecycle } from './scene-lifecycle.js';
+import { chapterSceneDialogue, chapterSceneHeader } from './chapter-scene-ui.js';
 
 const timing = Object.fromEntries(berryAnimations.sequences.map(({ trigger, durationMs }) => [trigger, durationMs]));
 const beatById = Object.fromEntries(berryScene.beats.map(beat => [beat.id, beat]));
@@ -62,17 +63,8 @@ export function createBerryGrove(options) {
     onChangeBeat({ ...nextBeat, phase: next, line: nextLine }, collect);
   }
 
-  const brand = action('', home, 'grove-brand');
-  brand.setAttribute('aria-label', 'Math Quest home');
-  brand.append(picture(welcomeArt + 'logo.png', '', ''));
-  const parent = action('Grown-ups', grownUps, 'welcome-secondary grove-secondary');
-  parent.id = 'chapter-grownups';
-  const title = el('h1', { id: 'grove-title', tabindex: '-1' }, berryScene.title);
-  stage.append(el('header', { className: 'grove-bar' }, brand, title,
-    el('div', { className: 'grove-nav' }, el('p', { className: 'grove-progress' },
-      `${practice ? 'Practice · ' : ''}Stop 1 of ${stopCount}`),
-    practice ? action('Leave practice', leavePractice, 'welcome-secondary grove-secondary')
-      : action('Trail map', event => openMap(event.currentTarget), 'welcome-secondary grove-secondary'), parent)));
+  stage.append(chapterSceneHeader({ el, picture, action, title: berryScene.title, titleId: 'grove-title', art: welcomeArt,
+    progress: `${practice ? 'Practice · ' : ''}Stop 1 of ${stopCount}`, practice, home, grownUps, openMap, leavePractice }));
 
   const dialogueId = verified ? berryChallenge.steps[phase === 'combine' ? 0 : 1].correctDialogue
     : phase === 'success' ? beat.dialogueIds[line + 1] : beat.dialogueIds[line];
@@ -80,11 +72,7 @@ export function createBerryGrove(options) {
   const text = copy(speech.text);
   function bubble() {
     const isQuestion = phase === 'missing' && !verified;
-    return el('div', { className: 'grove-bubble-zone', 'data-speaker': speech.speaker },
-      el('div', { className: 'welcome-greeting grove-bubble' }, el('strong', { className: 'grove-speaker' }, speech.speaker),
-        el(isQuestion ? 'h2' : 'p', { className: 'grove-line', 'aria-live': 'polite', tabindex: '-1',
-          ...(isQuestion ? { id: 'chapter-question' } : {}), ...(!learning || isQuestion ? { 'data-focus-beat': '' } : {}) }, text)),
-      listen(text, { label: 'Listen' }));
+    return chapterSceneDialogue({ el, listen, speaker: speech.speaker, text, isQuestion, focus: !learning || isQuestion });
   }
 
   if (learning) {
