@@ -115,8 +115,16 @@ try {
   await heading(page, 'Dinosaur Island Adventure');
   assert.equal(await marker(page, '1').getAttribute('aria-current'), 'step');
   await press(page, 'Listen');
-  await press(page, 'Continue Stop');
-  assert.equal((await speech(page)).canceled, 3);
+  await button(page, 'Continue Stop').evaluate(control => {
+    control.click();
+    const mathListen = [...document.querySelectorAll('.chapter-listen button')]
+      .find(candidate => candidate.textContent === '◖ Listen');
+    mathListen.click();
+  });
+  await page.locator('.adventure-map-dialog').waitFor({ state: 'detached' });
+  assert.equal((await speech(page)).canceled, 3, 'the old map cannot stop the new narration');
+  assert.equal(await button(page, 'Stop').count(), 1);
+  await press(page, 'Stop');
   assert.deepEqual(await saved(page), unfinished);
   assert.equal(await basket.getByRole('button').count(), 1);
   assert.equal(await page.getByLabel('Your answer').inputValue(), '2');

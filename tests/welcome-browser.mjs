@@ -133,7 +133,12 @@ try {
   await confirmation.waitFor();
   await confirmation.getByRole('button', { name: 'Close' }).click();
   assert.deepEqual(await stored(landscape), saved);
-  await button(landscape, 'Continue Adventure').click();
+  assert.ok(await button(landscape, 'Continue Adventure').evaluate(control => {
+    control.click();
+    const workspace = document.querySelector('.chapter-work-panel');
+    control.click();
+    return workspace && document.querySelector('.chapter-work-panel') === workspace;
+  }), 'a disposed welcome control cannot remount the active workspace');
   await heading(landscape, 'Follow footprints').waitFor();
   assert.equal(await landscape.getByLabel('Your answer').inputValue(), '6');
   assert.deepEqual(await stored(landscape), saved);
