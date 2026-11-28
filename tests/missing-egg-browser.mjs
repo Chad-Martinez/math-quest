@@ -117,7 +117,7 @@ try {
       if (index > 0) await page.waitForTimeout(230);
       await button(page, index < 3 ? 'Continue' : "Let's Find It!").tap();
     }
-    await heading(page, 'Follow the island trail').waitFor();
+    await heading(page, 'Dinosaur Island Adventure').waitFor();
     const result = await stored(page);
     assert.equal(result.run.scene, 'map');
     assert.equal(result.run.seed, original.run.seed);
@@ -182,7 +182,7 @@ try {
   assert.equal((await stored(motion)).run.scene, 'mission');
   assert.match(await motion.locator('.mission-current-pose').getAttribute('src'), /trex-celebrate.png$/);
   await capture(motion, 'mission-celebration');
-  await heading(motion, 'Follow the island trail').waitFor();
+  await heading(motion, 'Dinosaur Island Adventure').waitFor();
   assert.equal((await stored(motion)).run.scene, 'map');
   await motion.close();
 

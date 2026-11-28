@@ -108,16 +108,14 @@ try {
   await press(page, 'Start Adventure');
   await heading(page, 'The Missing Egg');
   await finishIntroduction(page);
-  assert.equal(await page.locator('.chapter-map-node').count(), 5);
-  assert.equal(await page.locator('.chapter-map-node[aria-current=step]').textContent(), '1');
+  await heading(page, 'Dinosaur Island Adventure');
+  assert.equal(await page.locator('.map-numbered').count(), 5);
+  assert.equal(await page.locator('.map-numbered[data-status=locked]').count(), 4);
   await screen(page, '02-trail');
   const mapCheckpoint = await stored(page);
-  await button(page, '2. Follow footprints').tap();
-  await heading(page, 'Follow footprints');
-  await check(page, qs[1].answers[0]);
-  assert.deepEqual(await stored(page), mapCheckpoint);
-  await press(page, 'Back to adventure');
-  await button(page, '1. Gather supplies').tap();
+  assert.equal(mapCheckpoint.run.scene, 'map');
+  await press(page, "Let's Go!");
+  await press(page, 'Visit Berry Grove');
   await heading(page, 'Gather supplies');
   assert.equal(await page.locator('.chapter-group').nth(0).locator('.chapter-token').count(), qs[0].params.a);
   assert.equal(await page.locator('.chapter-group').nth(1).locator('.chapter-token').count(), qs[0].params.b);
@@ -171,12 +169,13 @@ try {
   assert.equal((await stored(page)).run.outcomes[0], 'independent');
   await press(page, 'Continue the search');
 
+  await press(page, 'Visit Raptor Trail');
   await heading(page, 'Follow footprints');
   await page.getByLabel('Your answer').fill('2');
   await press(page, 'Trail map');
-  assert.equal(await page.locator('.chapter-map-node[data-complete]').count(), 1);
+  assert.equal(await page.locator('.map-numbered[data-status=completed]').count(), 1);
   const footprintsCheckpoint = await stored(page);
-  await button(page, '1. Gather supplies, done').tap();
+  await button(page, 'Stop 1: Berry Grove, completed, practice').tap();
   await heading(page, qs[0].prompts[0]);
   assert.equal(await page.getByRole('region', { name: 'Blue berries' }).getByRole('button').count(), qs[0].params.b);
   await press(page, 'Leave practice');
@@ -184,7 +183,7 @@ try {
   assert.equal(await page.getByLabel('Your answer').inputValue(), '2');
   assert.deepEqual(await stored(page), footprintsCheckpoint);
   await press(page, 'Trail map');
-  await button(page, '2. Follow footprints').tap();
+  await press(page, 'Continue Stop');
   assert.deepEqual(await stored(page), footprintsCheckpoint);
   assert.equal(await page.locator('.chapter-group').nth(0).locator('.chapter-token').count(), qs[1].params.large);
   assert.equal(await page.locator('.chapter-group').nth(1).locator('.chapter-token').count(), qs[1].params.small);
@@ -197,6 +196,7 @@ try {
   await check(page, qs[1].answers[0]);
   await press(page, 'Continue the search');
 
+  await press(page, 'Visit Picnic Clearing');
   await heading(page, 'Share the food');
   await teachingTips(page, 2, true);
   await screen(page, '06-share-the-food');
@@ -205,6 +205,7 @@ try {
   await check(page, qs[2].answers[0]);
   assert.equal((await stored(page)).run.outcomes[2], 'assisted');
   await press(page, 'Continue the search');
+  await press(page, 'Take a Wiggle Break');
   await heading(page, 'Dino Wiggle Break');
   await screen(page, '07-wiggle-break');
   await page.reload();
@@ -212,6 +213,7 @@ try {
   await heading(page, 'Dino Wiggle Break');
   await press(page, 'Skip for now');
 
+  await press(page, 'Visit Crystal Lagoon');
   await heading(page, 'Collect gems');
   for (let i = 0; i < qs[3].answers[0] - 1; i++) await page.locator('.chapter-group').nth(2).getByRole('button').first().click();
   assert.match(await page.locator('.chapter-model-status').textContent(), /tie/);
@@ -230,6 +232,7 @@ try {
   assert.equal((await stored(page)).run.outcomes[3], 'assisted');
   await press(page, 'Continue the search');
 
+  await press(page, 'Visit Crystal Cave');
   await heading(page, 'Open the cave');
   await teachingTips(page, 4);
   await check(page, qs[4].answers[0]);
@@ -245,6 +248,7 @@ try {
   await screen(page, '09-open-the-cave');
   await check(page, qs[4].answers[1]);
   await press(page, 'Follow the clue');
+  await press(page, 'Find the Egg!');
   await heading(page, 'Meet Mosasaurus!');
   await screen(page, '10-meet-mosasaurus');
   await press(page, 'Look in the cave');
@@ -269,7 +273,8 @@ try {
   const portrait = { width: 768, height: 1024 };
   await page.setViewportSize(portrait);
   await finishIntroduction(page);
-  await press(page, 'Go to the first stop');
+  await press(page, "Let's Go!");
+  await press(page, 'Visit Berry Grove');
   await screen(page, '13-ipad-portrait');
   await page.setViewportSize({ width: 390, height: 844 });
   await screen(page, '14-phone');
@@ -289,10 +294,13 @@ try {
   assert.equal((await stored(page)).run.outcomes[0], 'worked-example');
   await press(page, 'Continue the search');
   const replay = chapterQuestions((await stored(page)).run.seed);
+  await press(page, 'Visit Raptor Trail');
   await check(page, replay[1].answers[0]);
   await press(page, 'Continue the search');
+  await press(page, 'Visit Picnic Clearing');
   await check(page, replay[2].answers[0]);
   await press(page, 'Continue the search');
+  await press(page, 'Visit Crystal Lagoon');
   await heading(page, 'Collect gems');
   assert.equal((await stored(page)).autoBreak, false);
   const legacyPage = await context.newPage();

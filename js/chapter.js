@@ -4,6 +4,9 @@ export const scenes = ['welcome', 'mission', 'map', 'supplies', 'footprints', 's
   'cave', 'mosasaurus', 'discovery', 'complete', 'replay'];
 export const stops = ['supplies', 'footprints', 'share', 'gems', 'cave'];
 export const stopNames = ['Gather supplies', 'Follow footprints', 'Share the food', 'Collect gems', 'Open the cave'];
+// Presentation checkpoint in the existing run. The scene remains the saved destination.
+const mapOrigins = { footprints: ['1'], share: ['2'], wiggle: ['3'], gems: ['3', 'break'],
+  cave: ['4'], mosasaurus: ['5'] };
 export const chapterKey = 'math-quest.lost-egg-1';
 const outcomes = ['independent', 'assisted', 'worked-example'];
 
@@ -112,6 +115,7 @@ export function readChapter(storage) {
         attempt.teach = run.attempt?.teach === true;
       }
       valid = { seed: run.seed, scene: run.scene, outcomes: outcomesByStop, attempt };
+      if (mapOrigins[run.scene]?.includes(run.mapFrom)) valid.mapFrom = run.mapFrom;
     }
     return { version: 1, autoBreak: saved.autoBreak !== false, badge: saved.badge === true,
       runs: Number.isSafeInteger(saved.runs) && saved.runs >= 0 ? saved.runs : 0, run: valid };
