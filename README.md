@@ -18,4 +18,8 @@ The browser saves chapter checkpoints, badges and break preferences on that devi
 
 Review the development branch before merging to `main`. GitHub Pages uses **Settings → Pages → Deploy from a branch → main → / (root)**. After approval and merge, confirm the deployment succeeded and the site loads the correct version. [Math Quest production](https://chad-martinez.github.io/math-quest/)
 
-See [architecture](docs/architecture.md), [curriculum](docs/curriculum.md), [game design](docs/game-design.md), and [roadmap](docs/roadmap.md).
+## Development reference
+
+- [Agent instructions](AGENTS.md), [scene production](docs/scene-production.md), [art direction](docs/art-direction.md) and the [scene-kit starter](templates/scene-kit/README.md)
+- [Architecture](docs/architecture.md), [game design](docs/game-design.md), [roadmap](docs/roadmap.md), [release scope](docs/release-scope.md) and the [approval register](docs/approval-register.md)
+- [Curriculum](docs/curriculum.md), [educational requirements](docs/educational-requirements.md), the [evidence register](docs/educational-research.md) and [testing](docs/testing.md)

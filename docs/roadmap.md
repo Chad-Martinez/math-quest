@@ -2,7 +2,9 @@
 
 ## Current release milestone
 
-**Dinosaur Island: The Lost Egg, Chapter 1.** Review the five-stop adventure on a physical iPad, observe a full play session, and adjust any unclear instructions, touch interactions, or transitions. Keep Chapter 2 and the other adventures out of playtest navigation pending feedback. [Chapter 1 review checklist](chapter-1.md)
+**Dinosaur Island: The Lost Egg, Chapter 1.** Continue one authorized scene at a time. After Scenes 01–03, the next proposed revision is Scene 04, Berry Grove. Its approved kit and authorization determine the scope. Reuse the existing math, hints, Coach, progress and rewards while refining the scene experience. See the [release scope](release-scope.md), [approval register](approval-register.md) and [architecture review](architecture-review.md).
+
+Review the five-stop adventure on a physical iPad and observe a full play session. Refine confusing instructions, touch interactions or transitions before expanding to Chapter 2. Preserve the earlier learning capabilities while they remain outside playtest navigation. [Chapter 1 review checklist](chapter-1.md)
 
 ## Prior work and future options
 

@@ -1,0 +1,45 @@
+{
+  "sceneId": null,
+  "kitRevision": null,
+  "status": "draft",
+  "entry": null,
+  "exit": null,
+  "layout": {
+    "portrait": {},
+    "landscape": {}
+  },
+  "layers": [
+    {
+      "assetId": "character-pose",
+      "anchor": null,
+      "zOrder": null
+    }
+  ],
+  "beats": [
+    {
+      "id": "opening",
+      "speaker": null,
+      "dialogue": null,
+      "listen": true,
+      "action": {
+        "label": null,
+        "next": null
+      },
+      "animations": [
+        {
+          "id": "entrance",
+          "trigger": "on-entry",
+          "assetId": "character-pose",
+          "from": null,
+          "to": null,
+          "delayMs": null,
+          "durationMs": null,
+          "easing": null,
+          "onComplete": null,
+          "onInterrupt": null,
+          "reducedMotion": null
+        }
+      ]
+    }
+  ]
+}

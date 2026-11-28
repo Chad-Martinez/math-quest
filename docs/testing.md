@@ -2,9 +2,15 @@
 
 Run `npm test` from the repository root. Tests sample 24,500 generated questions across 500 seeds and exercise number bounds, session variation, arithmetic, chart relationships, answer formats, hints, rewards, and storage recovery. Difficulty progression is deferred until adaptive difficulty is implemented.
 
-## Manual iPad acceptance checklist
+## Current Chapter 1 checks
 
-1. In Safari, open https://chad-martinez.github.io/math-quest/ and verify the map shows seven worlds. Rotate between portrait and landscape and check that controls remain visible and readable.
+Use the [Chapter 1 checklist](chapter-1.md) for the active Pages release and the [Welcome](scene-01.md), [Missing Egg](scene-02.md) and [Adventure Map](scene-03.md) checks for individual scenes. A scene review should identify the browser, emulated viewport or physical device, reference comparison and remaining checks.
+
+## Legacy manual iPad acceptance checklist
+
+The following sections exercise the older seven-world build. Run it locally with the [legacy release flag](release-scope.md) enabled in a development checkout.
+
+1. In Safari, open that local build and verify the map shows seven worlds. Rotate between portrait and landscape and check that controls remain visible and readable.
 2. Open Story Forest. Try an incorrect answer and confirm you can retry. Use Hint twice and check that the clues progress. Enter a correct answer and confirm a single star appears.
 3. Tap Read aloud, stop it, then replay it. Try changing questions while speech is active.
 4. Open Draw, sketch with a finger or Apple Pencil if available, and clear the pad. Check that drawing does not scroll the page.
