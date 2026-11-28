@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterKey, chapterQuestions, emptyAttempt } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterKey, chapterQuestions, emptyAttempt } from '../js/chapter.js';
 import { mapSpec } from '../js/adventure-map-data.js';
 
 const require = createRequire(import.meta.url);
@@ -81,9 +81,11 @@ async function dialogue(page, id) {
   assert.equal(await page.locator('.map-line').count(), 1);
 }
 async function answer(page, index) {
-  for (const value of chapterQuestions(seed)[index].answers) {
+  const q = index === 0 ? chapterBerryQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
+  for (const [step, value] of q.answers.entries()) {
     await page.getByLabel('Your answer').fill(String(value));
-    await press(page, 'Check answer');
+    await press(page, index === 0 ? 'Check Answer' : 'Check answer');
+    if (index === 0 && step === 0) await press(page, 'Continue');
   }
 }
 
@@ -103,22 +105,24 @@ try {
   assert.deepEqual(await saved(page), original);
   await press(page, 'Listen');
   await marker(page, '1').tap();
-  await heading(page, 'Gather supplies');
+  await heading(page, 'Brachiosaurus Berry Grove');
+  for (const label of ['Continue', 'Let’s Collect Berries!', 'Continue', 'Continue']) await press(page, label);
+  await press(page, 'Math tools');
   assert.equal((await speech(page)).canceled, 2);
   assert.equal(await button(page, 'Skip travel').count(), 0);
 
-  const basket = page.getByRole('region', { name: 'Travel basket' });
+  const basket = page.getByRole('region', { name: 'Together in the basket' });
   await page.getByRole('region', { name: 'Red berries' }).getByRole('button').first().tap();
   await page.getByLabel('Your answer').fill('2');
   const unfinished = await saved(page);
   await press(page, 'Trail map');
   await heading(page, 'Dinosaur Island Adventure');
   assert.equal(await marker(page, '1').getAttribute('aria-current'), 'step');
-  await press(page, 'Listen');
+  await press(page.getByRole('dialog'), 'Listen');
   await button(page, 'Continue Stop').evaluate(control => {
     control.click();
     const mathListen = [...document.querySelectorAll('.chapter-listen button')]
-      .find(candidate => candidate.textContent === '◖ Listen');
+      .find(candidate => candidate.textContent === 'Listen' && candidate.closest('.grove-stage'));
     mathListen.click();
   });
   await page.locator('.adventure-map-dialog').waitFor({ state: 'detached' });
@@ -130,7 +134,8 @@ try {
   assert.equal(await page.getByLabel('Your answer').inputValue(), '2');
 
   await answer(page, 0);
-  await press(page, 'Continue the search');
+  for (let i = 0; i < 4; i++) await press(page, 'Continue');
+  await press(page, 'Follow the Trail');
   await dialogue(page, '1');
   assert.equal(await marker(page, '1').getAttribute('data-status'), 'completed');
   await capture(page, '02-ipad-landscape-berry-grove-completed');
@@ -255,7 +260,7 @@ try {
   await press(natural.page, 'Continue Adventure');
   await press(natural.page, "Let's Go!");
   await press(natural.page, 'Visit Berry Grove');
-  await heading(natural.page, 'Gather supplies');
+  await heading(natural.page, 'Brachiosaurus Berry Grove');
   assert.equal((await saved(natural.page)).run.scene, 'supplies');
   await natural.context.close();
 

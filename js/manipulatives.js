@@ -158,15 +158,19 @@ function remove(container, { start, change, icon }) {
   update();
 }
 
-function numberLine(container, { start, target, showJumps = false, atTarget = false }) {
-  let position = atTarget ? target : start;
+function numberLine(container, { start, target, showJumps = false, atTarget = false, initialPosition = start }, { onChange } = {}) {
+  let position = atTarget ? target : initialPosition;
+  function move(value) {
+    position = value;
+    update();
+    onChange?.(position);
+  }
   const track = node('div', '', 'number-line');
   const ticks = Array.from({ length: target - start + 1 }, (_, index) => {
     const value = start + index;
     if (!showJumps) return node('span', String(value));
     const tick = button(String(value), () => {
-      position = value;
-      update();
+      move(value);
     });
     tick.type = 'button';
     return tick;
@@ -176,12 +180,10 @@ function numberLine(container, { start, target, showJumps = false, atTarget = fa
   const status = node('p', '', 'model-status');
   status.setAttribute('role', 'status');
   const jump = button('Jump one forward', () => {
-    position = Math.min(position + 1, target);
-    update();
+    move(Math.min(position + 1, target));
   });
   const reset = button('Start over', () => {
-    position = start;
-    update();
+    move(start);
   });
   function update() {
     for (const [index, tick] of ticks.entries()) {

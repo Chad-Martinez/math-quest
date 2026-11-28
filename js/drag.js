@@ -1,5 +1,5 @@
 // Keep drag optional. The source remains an ordinary button for tap and keyboard.
-export function dragTo(source, targetFor, onDrop, canDrag = () => true) {
+export function dragTo(source, targetFor, onDrop, canDrag = () => true, { signal } = {}) {
   let gesture;
   let suppressClick = false;
   source.classList.add('drag-source');
@@ -9,6 +9,8 @@ export function dragTo(source, targetFor, onDrop, canDrag = () => true) {
     gesture?.target?.classList.remove('drop-ready');
     gesture = undefined;
   }
+
+  signal?.addEventListener('abort', clear, { once: true });
 
   source.addEventListener('pointerdown', event => {
     if (gesture || !event.isPrimary || event.button !== 0) return;

@@ -1,4 +1,4 @@
-import { advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, emptyAttempt, finishChallenge, freshQuestion,
+import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterKey, chapterQuestions, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
@@ -6,6 +6,9 @@ import { createWelcome } from './welcome.js';
 import { createMissingEgg } from './missing-egg.js';
 import { createAdventureMap } from './adventure-map.js';
 import { advanceToMap, mapState } from './adventure-map-state.js';
+import { createBerryGrove } from './berry-grove.js';
+import { berryGuide } from './berry-grove-content.js';
+import { berryHelp, fillBerryCopy, newBerryBeat } from './berry-grove-state.js';
 
 let activeScene;
 let suspendedAdventure;
@@ -162,8 +165,10 @@ function returnToAdventure() {
   stopSpeech();
   practiceRun = undefined;
   if (suspendedAdventure) {
-    const { nodes, trigger, scroll } = suspendedAdventure;
+    const { nodes, trigger, scroll, scene } = suspendedAdventure;
     suspendedAdventure = undefined;
+    activeScene?.dispose();
+    activeScene = scene;
     root.replaceChildren(...nodes);
     root.querySelector('main').append(persistWarning);
     window.scrollTo(scroll.x, scroll.y);
@@ -173,7 +178,10 @@ function returnToAdventure() {
 
 function openStop(index) {
   stopSpeech();
-  practiceRun = { seed: progress.run.seed, scene: stops[index], outcomes: Array(stops.length).fill(null), attempt: emptyAttempt() };
+  const attempt = emptyAttempt();
+  if (index === 0) attempt.berry = newBerryBeat('combine');
+  practiceRun = { seed: progress.run.seed, scene: stops[index], outcomes: Array(stops.length).fill(null), attempt,
+    berryVariant: progress.run.berryVariant };
   render();
 }
 
@@ -184,16 +192,18 @@ function restartStop() {
     return;
   }
   stopSpeech();
-  const { assisted, teach } = run.attempt;
-  writeRun({ ...run, attempt: { ...emptyAttempt(), assisted, teach } });
+  const { assisted, teach, berry } = run.attempt;
+  const attempt = { ...emptyAttempt(), assisted, teach };
+  if (berry) attempt.berry = { ...newBerryBeat('combine'), help: berry.help };
+  writeRun({ ...run, attempt });
   render();
 }
 
-function next({ leavingMission } = {}) {
+function next({ leavingMission, mapFade } = {}) {
   stopSpeech();
   const finished = stops.indexOf(progress.run?.scene);
   write(advanceToMap(progress));
-  render(undefined, leavingMission, finished < 0 ? undefined : String(finished + 1));
+  render(undefined, leavingMission, finished < 0 ? undefined : String(finished + 1), { mapFade });
 }
 
 function arriveFromMap() {
@@ -213,6 +223,7 @@ function skipMapBreak() {
 function home() {
   stopSpeech();
   practiceRun = undefined;
+  suspendedAdventure?.scene?.dispose();
   suspendedAdventure = undefined;
   intro = true;
   render();
@@ -273,10 +284,11 @@ function revisitMap(trigger) {
     revisit: true,
     onAdvance: () => modal.close(),
     onReview: index => {
-      suspendedAdventure = { nodes: [...root.children].filter(child => child !== modal), trigger,
+      suspendedAdventure = { nodes: [...root.children].filter(child => child !== modal), trigger, scene: activeScene,
         scroll: { x: window.scrollX, y: window.scrollY } };
       dispose();
       modal.close();
+      activeScene = undefined;
       openStop(index);
     },
   });
@@ -337,15 +349,27 @@ function answerField(label) {
 function coach() {
   const index = qIndex();
   if (index < 0) return;
-  const question = questions[index];
-  const body = el('div', {}, el('p', { className: 'chapter-coach-tip' }, question.ask),
-    el('h3', {}, 'What this teaches'), el('p', {}, question.objective),
-    el('h3', {}, 'Try it with objects'), el('p', {}, question.activity),
+  const isGrove = index === 0;
+  const question = isGrove ? chapterBerryQuestion(activeRun()) : questions[index];
+  const guide = isGrove ? berryGuide : undefined;
+  const copy = text => fillBerryCopy(text, question.values);
+  const body = el('div', {}, el('p', { className: 'chapter-coach-tip' }, guide?.comprehension ?? question.ask),
+    el('h3', {}, 'What this teaches'), el('p', {}, guide?.objective ?? question.objective),
+    el('h3', {}, 'Try it with objects'), guide
+      ? el('ol', {}, ...guide.physicalDemo.map(step => el('li', {}, copy(step)))) : el('p', {}, question.activity),
     el('h3', {}, 'Hints to try'), el('ul', {}, ...question.hints.flat().map(hint => el('li', {}, hint))),
-    el('h3', {}, 'If they get stuck'), el('p', {}, Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
+    el('h3', {}, 'If they get stuck'), guide
+      ? el('ul', {}, ...Object.values(guide.misunderstandings).map(note => el('li', {}, note)))
+      : el('p', {}, Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
+  if (guide) body.append(el('p', {}, copy(guide.alternative)), el('p', {}, guide.note));
+  function markParent(changes) {
+    const current = activeRun().attempt.berry;
+    if (isGrove && current) updateAttempt({ ...changes, berry: { ...current, help: berryHelp([...current.help, 'parent']) } });
+    else updateAttempt(changes);
+  }
   if (!activeRun().attempt.solved) {
     const helped = button('I helped with this problem', () => {
-      updateAttempt({ assisted: true, teach: true });
+      markParent({ assisted: true, teach: true });
       helped.setAttribute('aria-pressed', 'true');
     }, 'chapter-secondary');
     helped.setAttribute('aria-pressed', String(activeRun().attempt.teach));
@@ -353,10 +377,11 @@ function coach() {
   }
   const solution = el('div', { role: 'status' });
   body.append(button('Reveal worked solution', () => {
-    if (!activeRun().attempt.solved) updateAttempt({ assisted: true });
-    solution.replaceChildren(...question.equations.map(equation => el('p', {}, equation)));
+    if (!activeRun().attempt.solved) markParent({ assisted: true });
+    const equations = guide ? guide.equations.map(copy) : question.equations;
+    solution.replaceChildren(...equations.map(equation => el('p', {}, equation)));
   }, 'chapter-secondary'), solution);
-  const transfer = freshQuestion(activeRun().seed, index);
+  const transfer = guide?.transfer ?? freshQuestion(activeRun().seed, index);
   if (transfer) {
     const transferDetails = el('details', {}, el('summary', {}, 'Try an independent transfer problem'));
     const { field, label } = answerField('Transfer answer');
@@ -365,10 +390,12 @@ function coach() {
       el('button', { type: 'submit' }, 'Check'));
     form.addEventListener('submit', event => {
       event.preventDefault();
-      result.textContent = /^\d{1,2}$/.test(field.value.trim()) && Number(field.value) === transfer.answers.at(-1)
-        ? 'That works! ' + transfer.equations.at(-1) : 'Try again. Use the same idea with these new numbers.';
+      const answer = guide ? transfer.answer : transfer.answers.at(-1);
+      const explanation = guide ? transfer.explanation : transfer.equations.at(-1);
+      result.textContent = /^\d{1,2}$/.test(field.value.trim()) && Number(field.value) === answer
+        ? 'That works! ' + explanation : 'Try again. Use the same idea with these new numbers.';
     });
-    transferDetails.append(el('p', {}, contexts[index](transfer.params)), form, result);
+    transferDetails.append(el('p', {}, guide ? transfer.question : contexts[index](transfer.params)), form, result);
     body.append(transferDetails);
   }
   dialog('Teaching tips', body, document.getElementById('chapter-grownups'));
@@ -565,7 +592,7 @@ function mountScene(stage, className, outgoing, outClass, inClass, duration) {
   stage.querySelector('h1').focus({ preventScroll: true });
 }
 
-function render(leavingWelcome, leavingMission, freshCompletion) {
+function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry } = {}) {
   activeScene?.dispose();
   activeScene = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
@@ -595,6 +622,42 @@ function render(leavingWelcome, leavingMission, freshCompletion) {
       freshCompletion, onAdvance: arriveFromMap, onSkipBreak: skipMapBreak, onReview: openStop,
     });
     mountScene(activeScene.stage, 'map-main', leavingMission, 'mission-leaving', 'mission-map-in', 300);
+    if (mapFade) {
+      const animation = activeScene.stage.animate([{ opacity: .5 }, { opacity: 1 }], { duration: mapFade });
+      activeScene.signal.addEventListener('abort', () => animation.cancel(), { once: true });
+    }
+    return;
+  }
+  if (scene === 'supplies') {
+    const readAttempt = () => activeRun().attempt;
+    if (!readAttempt().berry) updateAttempt({ berry: newBerryBeat(
+      readAttempt().solved ? 'success' : readAttempt().step ? 'missing' : 'combine') });
+    activeScene = createBerryGrove({
+      question: chapterBerryQuestion(activeRun()), attempt: readAttempt(), readAttempt,
+      update: updateAttempt,
+      onChangeBeat(berry, playCollection) {
+        updateAttempt({ berry });
+        render(undefined, undefined, undefined, { collect: playCollection, focusBerry: true });
+      },
+      onAnswer(question, value) {
+        const before = activeRun();
+        const after = applyChapterAnswer(before, question, value);
+        const berry = before.attempt.berry;
+        const correct = after.attempt.solved || after.attempt.step !== before.attempt.step;
+        after.attempt.berry = { ...berry, line: Number(correct), mistakes: correct ? 0 : berry.mistakes + 1 };
+        if (after.attempt.solved) after.berryHelp = berry.help.slice();
+        writeRun(after);
+        if (correct) render(undefined, undefined, undefined, { focusBerry: true });
+        return correct;
+      },
+      onExit: mapFade => practiceRun ? returnToAdventure() : next({ mapFade }),
+      onRestart: restartStop,
+      playCollection: collect, practice: Boolean(practiceRun), stopCount: stops.length,
+      home, grownUps: growUps, openMap: revisitMap, leavePractice: returnToAdventure, movementBreak,
+      drawing, answerField, dialog, listen, stopSpeech, el, button, picture,
+    });
+    mountScene(activeScene.stage, 'grove-main');
+    if (focusBerry) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
     return;
   }
   const header = el('header', { className: 'chapter-header' },

@@ -1,0 +1,332 @@
+{
+  "scene": "04",
+  "assets": [
+    {
+      "id": "grove-landscape",
+      "dimensions": [
+        1448,
+        1086
+      ],
+      "format": "WEBP",
+      "source": "jungle_berry_grove_waterfall_clearing.png",
+      "usage": "Narrative environment; scenery berries and baked baskets are decorative only.",
+      "anchor": null,
+      "kitPath": "assets/grove-landscape.webp",
+      "runtimePath": "assets/scene-04/grove-landscape.webp"
+    },
+    {
+      "id": "grove-portrait",
+      "dimensions": [
+        887,
+        1774
+      ],
+      "format": "WEBP",
+      "source": "vibrant_berry_grove_waterfall_valley.png",
+      "usage": "Narrative environment; scenery berries and baked baskets are decorative only.",
+      "anchor": null,
+      "kitPath": "assets/grove-portrait.webp",
+      "runtimePath": "assets/scene-04/grove-portrait.webp"
+    },
+    {
+      "id": "brachio-neutral",
+      "dimensions": [
+        401,
+        436
+      ],
+      "format": "PNG",
+      "source": "brachiosaurus_pose_collection_sprite_sheet.png",
+      "usage": "Pose; normalize by torso/feet rather than total image height.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/brachio-neutral.png",
+      "runtimePath": "assets/scene-04/brachio-neutral.png"
+    },
+    {
+      "id": "brachio-greeting",
+      "dimensions": [
+        520,
+        344
+      ],
+      "format": "PNG",
+      "source": "brachiosaurus_pose_collection_sprite_sheet.png",
+      "usage": "Pose; normalize by torso/feet rather than total image height.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/brachio-greeting.png",
+      "runtimePath": "assets/scene-04/brachio-greeting.png"
+    },
+    {
+      "id": "brachio-happy",
+      "dimensions": [
+        439,
+        426
+      ],
+      "format": "PNG",
+      "source": "brachiosaurus_pose_collection_sprite_sheet.png",
+      "usage": "Pose; normalize by torso/feet rather than total image height.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/brachio-happy.png",
+      "runtimePath": "assets/scene-04/brachio-happy.png"
+    },
+    {
+      "id": "brachio-looking-down",
+      "dimensions": [
+        495,
+        348
+      ],
+      "format": "PNG",
+      "source": "brachiosaurus_pose_collection_sprite_sheet.png",
+      "usage": "Pose; normalize by torso/feet rather than total image height.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/brachio-looking-down.png",
+      "runtimePath": "assets/scene-04/brachio-looking-down.png"
+    },
+    {
+      "id": "brachio-reaching",
+      "dimensions": [
+        441,
+        513
+      ],
+      "format": "PNG",
+      "source": "brachiosaurus_pose_collection_sprite_sheet.png",
+      "usage": "Pose; normalize by torso/feet rather than total image height.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/brachio-reaching.png",
+      "runtimePath": "assets/scene-04/brachio-reaching.png"
+    },
+    {
+      "id": "brachio-gesture-right",
+      "dimensions": [
+        376,
+        443
+      ],
+      "format": "PNG",
+      "source": "brachiosaurus_pose_collection_sprite_sheet.png",
+      "usage": "Pose; normalize by torso/feet rather than total image height.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/brachio-gesture-right.png",
+      "runtimePath": "assets/scene-04/brachio-gesture-right.png"
+    },
+    {
+      "id": "berry-red",
+      "dimensions": [
+        116,
+        133
+      ],
+      "format": "PNG",
+      "source": "berry_grove_game_props_collection.png",
+      "usage": "One countable red berry",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/berry-red.png",
+      "runtimePath": "assets/scene-04/berry-red.png"
+    },
+    {
+      "id": "berry-blue",
+      "dimensions": [
+        123,
+        139
+      ],
+      "format": "PNG",
+      "source": "berry_grove_game_props_collection.png",
+      "usage": "One countable blue berry",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/berry-blue.png",
+      "runtimePath": "assets/scene-04/berry-blue.png"
+    },
+    {
+      "id": "basket-empty",
+      "dimensions": [
+        388,
+        303
+      ],
+      "format": "PNG",
+      "source": "berry_grove_game_props_collection.png",
+      "usage": "Decorative basket shell; render berries separately",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/basket-empty.png",
+      "runtimePath": "assets/scene-04/basket-empty.png"
+    },
+    {
+      "id": "equation-sign",
+      "dimensions": [
+        812,
+        486
+      ],
+      "format": "PNG",
+      "source": "berry_grove_game_props_collection.png",
+      "usage": "Blank sign; live equation overlay",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/equation-sign.png",
+      "runtimePath": "assets/scene-04/equation-sign.png"
+    },
+    {
+      "id": "trail-sign",
+      "dimensions": [
+        439,
+        473
+      ],
+      "format": "PNG",
+      "source": "berry_grove_game_props_collection.png",
+      "usage": "Decorative clue sign",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trail-sign.png",
+      "runtimePath": "assets/scene-04/trail-sign.png"
+    },
+    {
+      "id": "trex-greeting",
+      "dimensions": [
+        247,
+        252
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-greeting.png",
+      "runtimePath": "assets/scene-01/trex-greeting.png"
+    },
+    {
+      "id": "trex-thinking",
+      "dimensions": [
+        186,
+        251
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-thinking.png",
+      "runtimePath": "assets/scene-04/trex-thinking.png"
+    },
+    {
+      "id": "trex-celebrate",
+      "dimensions": [
+        244,
+        261
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-celebrate.png",
+      "runtimePath": "assets/scene-01/trex-celebrate.png"
+    },
+    {
+      "id": "trex-walk-1",
+      "dimensions": [
+        171,
+        184
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-walk-1.png",
+      "runtimePath": "assets/scene-01/trex-walk-1.png"
+    },
+    {
+      "id": "trex-walk-2",
+      "dimensions": [
+        162,
+        188
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-walk-2.png",
+      "runtimePath": "assets/scene-01/trex-walk-2.png"
+    },
+    {
+      "id": "trex-walk-3",
+      "dimensions": [
+        163,
+        190
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-walk-3.png",
+      "runtimePath": "assets/scene-01/trex-walk-3.png"
+    },
+    {
+      "id": "trex-walk-4",
+      "dimensions": [
+        156,
+        195
+      ],
+      "format": "PNG",
+      "source": "Scene 01 approved kit",
+      "usage": "Reuse existing repository equivalent; bundled fallback.",
+      "anchor": [
+        0.5,
+        1
+      ],
+      "kitPath": "assets/trex-walk-4.png",
+      "runtimePath": "assets/scene-01/trex-walk-4.png"
+    }
+  ],
+  "referenceOnly": [
+    "approved-storyboard.png",
+    "approved-arrival.png",
+    "approved-asset-sheet.png",
+    "brachiosaurus-poses.png",
+    "props-sheet.png",
+    "trex-reference.png"
+  ],
+  "notes": [
+    "Never use prefilled basket art or storyboard as a runtime count model.",
+    "Landscape has three decorative baskets; do not overlay interactive baskets on them.",
+    "Brachiosaurus poses have different silhouettes; align feet and scale by body, not image height."
+  ]
+}
