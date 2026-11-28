@@ -157,9 +157,10 @@ try {
   await drag(page, redGroup.getByRole('button').first(), basket);
   assert.equal(await basket.getByRole('button').count(), 2);
   await press(page, 'Take a break');
-  await heading(page, 'Dino Wiggle Break');
-  await press(page, 'Next move');
-  await press(page, 'I’m ready!');
+  await heading(page, 'Stegosaurus Wiggle Meadow');
+  await press(page, 'Continue');
+  await press(page, "Let's Wiggle!");
+  await press(page, 'End break');
   assert.equal(await page.getByLabel('Your answer').inputValue(), '8');
   assert.equal(await basket.getByRole('button').count(), 2);
   await press(page, 'Listen');
@@ -246,12 +247,12 @@ try {
   assert.equal((await stored(page)).run.outcomes[2], 'assisted');
   await leaveBridge(page);
   await press(page, 'Take a Wiggle Break');
-  await heading(page, 'Dino Wiggle Break');
+  await heading(page, 'Stegosaurus Wiggle Meadow');
   await screen(page, '07-wiggle-break');
   await page.reload();
   await press(page, 'Continue Adventure');
-  await heading(page, 'Dino Wiggle Break');
-  await press(page, 'Skip for now');
+  await heading(page, 'Stegosaurus Wiggle Meadow');
+  await press(page, 'Skip for Now');
 
   await press(page, 'Visit Crystal Lagoon');
   await heading(page, 'Collect gems');

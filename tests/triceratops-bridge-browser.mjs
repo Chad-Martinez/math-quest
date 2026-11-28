@@ -181,7 +181,7 @@ try {
   await field(page).fill('5');
   const checkpoint = await read(page);
   await press(page, 'Take a break');
-  await press(page, 'I’m ready!');
+  await press(page, 'Skip for Now');
   await press(page, 'Trail map');
   await press(page, 'Continue Stop');
   await page.setViewportSize({ width: 820, height: 1180 });

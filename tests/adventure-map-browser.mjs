@@ -226,8 +226,8 @@ try {
 
   const exercise = await setup(ipad, 'wiggle', 3, '3');
   await press(exercise.page, 'Take a Wiggle Break');
-  await heading(exercise.page, 'Dino Wiggle Break');
-  await press(exercise.page, 'I’m ready!');
+  await heading(exercise.page, 'Stegosaurus Wiggle Meadow');
+  await press(exercise.page, 'Skip for Now');
   await dialogue(exercise.page, 'break');
   assert.equal((await saved(exercise.page)).run.mapFrom, 'break');
   await exercise.context.close();

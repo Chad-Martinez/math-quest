@@ -1,0 +1,278 @@
+[
+  {
+    "id": "brachio-looking-down",
+    "path": "assets/brachio-looking-down.png",
+    "source": "previous approved kit",
+    "width": 495,
+    "height": 348,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-04/brachio-looking-down.png"
+  },
+  {
+    "id": "brachio-neutral",
+    "path": "assets/brachio-neutral.png",
+    "source": "previous approved kit",
+    "width": 401,
+    "height": 436,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-04/brachio-neutral.png"
+  },
+  {
+    "id": "brachio-reaching",
+    "path": "assets/brachio-reaching.png",
+    "source": "previous approved kit",
+    "width": 441,
+    "height": 513,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-04/brachio-reaching.png"
+  },
+  {
+    "id": "breathing-flower",
+    "path": "assets/breathing-flower.svg",
+    "source": "Scene 07 generated artwork or derived asset",
+    "runtimePath": "assets/scene-07/breathing-flower.svg"
+  },
+  {
+    "id": "meadow-landscape",
+    "path": "assets/meadow-landscape.webp",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 1672,
+    "height": 941,
+    "mode": "RGB",
+    "runtimePath": "assets/scene-07/meadow-landscape.webp"
+  },
+  {
+    "id": "meadow-portrait",
+    "path": "assets/meadow-portrait.webp",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 941,
+    "height": 1672,
+    "mode": "RGB",
+    "runtimePath": "assets/scene-07/meadow-portrait.webp"
+  },
+  {
+    "id": "raptor-celebrate",
+    "path": "assets/raptor-celebrate.png",
+    "source": "previous approved kit",
+    "width": 342,
+    "height": 308,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "raptor-neutral",
+    "path": "assets/raptor-neutral.png",
+    "source": "previous approved kit",
+    "width": 391,
+    "height": 376,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-05/raptor-neutral.png"
+  },
+  {
+    "id": "raptor-side",
+    "path": "assets/raptor-side.png",
+    "source": "previous approved kit",
+    "width": 567,
+    "height": 369,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-07/raptor-side.png"
+  },
+  {
+    "id": "stego-greeting",
+    "path": "assets/stego-greeting.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 1478,
+    "height": 976,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-07/stego-greeting.png"
+  },
+  {
+    "id": "stego-idle",
+    "path": "assets/stego-idle.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 1377,
+    "height": 982,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-07/stego-idle.png"
+  },
+  {
+    "id": "stego-pointing",
+    "path": "assets/stego-pointing.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 218,
+    "height": 158,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": "assets/scene-07/stego-pointing.png"
+  },
+  {
+    "id": "stego-wiggle-1",
+    "path": "assets/stego-wiggle-1.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 181,
+    "height": 127,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-2",
+    "path": "assets/stego-wiggle-2.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 188,
+    "height": 129,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-3",
+    "path": "assets/stego-wiggle-3.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 189,
+    "height": 132,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-4",
+    "path": "assets/stego-wiggle-4.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 189,
+    "height": 132,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-5",
+    "path": "assets/stego-wiggle-5.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 181,
+    "height": 132,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-6",
+    "path": "assets/stego-wiggle-6.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 183,
+    "height": 132,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-7",
+    "path": "assets/stego-wiggle-7.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 186,
+    "height": 132,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "stego-wiggle-8",
+    "path": "assets/stego-wiggle-8.png",
+    "source": "Scene 07 generated artwork or derived asset",
+    "width": 191,
+    "height": 132,
+    "mode": "RGBA",
+    "limitation": "small extracted reference sprite; provisional edges and alignment",
+    "runtimePath": null
+  },
+  {
+    "id": "trex-celebrate",
+    "path": "assets/trex-celebrate.png",
+    "source": "previous approved kit",
+    "width": 244,
+    "height": 261,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-01/trex-celebrate.png"
+  },
+  {
+    "id": "trex-greeting",
+    "path": "assets/trex-greeting.png",
+    "source": "previous approved kit",
+    "width": 247,
+    "height": 252,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-01/trex-greeting.png"
+  },
+  {
+    "id": "trex-thinking",
+    "path": "assets/trex-thinking.png",
+    "source": "previous approved kit",
+    "width": 186,
+    "height": 251,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "trex-walk-1",
+    "path": "assets/trex-walk-1.png",
+    "source": "previous approved kit",
+    "width": 171,
+    "height": 184,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "trex-walk-2",
+    "path": "assets/trex-walk-2.png",
+    "source": "previous approved kit",
+    "width": 162,
+    "height": 188,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "trex-walk-3",
+    "path": "assets/trex-walk-3.png",
+    "source": "previous approved kit",
+    "width": 163,
+    "height": 190,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "trex-walk-4",
+    "path": "assets/trex-walk-4.png",
+    "source": "previous approved kit",
+    "width": 156,
+    "height": 195,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "triceratops-greeting",
+    "path": "assets/triceratops-greeting.png",
+    "source": "previous approved kit",
+    "width": 1000,
+    "height": 1000,
+    "mode": "RGBA",
+    "runtimePath": null
+  },
+  {
+    "id": "triceratops-idle",
+    "path": "assets/triceratops-idle.png",
+    "source": "previous approved kit",
+    "width": 1000,
+    "height": 1000,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-06/triceratops-idle.png"
+  },
+  {
+    "id": "triceratops-stomp",
+    "path": "assets/triceratops-stomp.png",
+    "source": "previous approved kit",
+    "width": 1000,
+    "height": 1000,
+    "mode": "RGBA",
+    "runtimePath": "assets/scene-06/triceratops-stomp.png"
+  }
+]

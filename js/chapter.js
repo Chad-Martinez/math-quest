@@ -1,3 +1,4 @@
+import { readMeadowBeat } from './wiggle-meadow-state.js';
 import { seededRandom, validateAnswer } from './engine.js';
 import { berryHelp, berryQuestion, berryVariants, chooseBerryVariant, newBerryBeat, readBerryBeat } from './berry-grove-state.js';
 import { chooseTrailVariant, newTrailBeat, restoreTrailBeat, trailHelp, trailQuestion, trailVariants } from './velociraptor-state.js';
@@ -126,6 +127,7 @@ export function readChapter(storage) {
       if (outcomesByStop[1] && Array.isArray(run.trailHelp)) valid.trailHelp = trailHelp(run.trailHelp);
       if (Number.isInteger(run.bridgeVariant) && bridgeVariants[run.bridgeVariant]) valid.bridgeVariant = run.bridgeVariant;
       if (outcomesByStop[2] && Array.isArray(run.bridgeHelp)) valid.bridgeHelp = bridgeHelp(run.bridgeHelp);
+      if (run.scene === 'wiggle' && !run.mapFrom) valid.meadow = readMeadowBeat(run.meadow);
       if (mapOrigins[run.scene]?.includes(run.mapFrom)) valid.mapFrom = run.mapFrom;
     }
     return { version: 1, autoBreak: saved.autoBreak !== false, badge: saved.badge === true,
@@ -178,8 +180,9 @@ export function advanceChapter(progress) {
     attempt.bridge = newBridgeBeat();
     variant.bridgeVariant = run.bridgeVariant ?? 0;
   }
+  const { meadow, ...checkpoint } = run;
   return { ...progress, badge: progress.badge || finishing, runs: progress.runs + Number(finishing),
-    run: { ...run, ...variant, scene, attempt } };
+    run: { ...checkpoint, ...variant, scene, attempt } };
 }
 
 export function applyChapterAnswer(run, question, value) {
