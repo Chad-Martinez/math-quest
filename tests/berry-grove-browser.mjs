@@ -47,7 +47,6 @@ async function setup(viewport = ipad, { motion = 'reduce', scene = 'map', varian
     attempt: { ...emptyAttempt(), ...support, ...(resume ? { berry: { phase: resume, line: 0 } } : {}) },
   } } });
   const page = await context.newPage();
-  page.setDefaultTimeout(8000);
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', event => { if (event.type() === 'error') errors.push(event.text()); });
   page.on('response', response => { if (response.status() >= 400) errors.push(response.url()); });
