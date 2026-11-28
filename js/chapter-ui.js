@@ -1,7 +1,7 @@
 import { createWiggleMeadow } from './wiggle-meadow.js';
 import { clearMovementWorkspace, restoreMovementWorkspace, saveMovementWorkspace, takeMovementWorkspace } from './movement-workspace.js';
 import { meadowGuide } from './wiggle-meadow-content.js';
-import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt, finishChallenge, freshQuestion,
+import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterLagoonQuestion, chapterQuestions, chapterTrailQuestion, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
@@ -18,6 +18,10 @@ import { newTrailBeat, trailHelp } from './velociraptor-state.js';
 import { createTriceratopsBridge } from './triceratops-bridge.js';
 import { bridgeGuide } from './triceratops-content.js';
 import { bridgeHelp, newBridgeBeat } from './triceratops-state.js';
+
+import { createCrystalLagoon } from './crystal-lagoon.js';
+import { lagoonGuide } from './crystal-lagoon-content.js';
+import { lagoonHelp, newLagoonBeat } from './crystal-lagoon-state.js';
 
 let activeScene;
 let suspendedAdventure;
@@ -193,8 +197,10 @@ function openStop(index) {
   if (index === 0) attempt.berry = newBerryBeat('combine');
   if (index === 1) attempt.trail = newTrailBeat('solve');
   if (index === 2) attempt.bridge = newBridgeBeat('construction');
+  if (index === 3) attempt.lagoon = newLagoonBeat('compare');
   practiceRun = { seed: progress.run.seed, scene: stops[index], outcomes: Array(stops.length).fill(null), attempt,
-    berryVariant: progress.run.berryVariant, trailVariant: progress.run.trailVariant, bridgeVariant: progress.run.bridgeVariant };
+    berryVariant: progress.run.berryVariant, trailVariant: progress.run.trailVariant, bridgeVariant: progress.run.bridgeVariant,
+    lagoonVariant: progress.run.lagoonVariant };
   render();
 }
 
@@ -205,11 +211,12 @@ function restartStop() {
     return;
   }
   stopSpeech();
-  const { assisted, teach, berry, trail, bridge } = run.attempt;
+  const { assisted, teach, berry, trail, bridge, lagoon } = run.attempt;
   const attempt = { ...emptyAttempt(), assisted, teach };
   if (berry) attempt.berry = { ...newBerryBeat('combine'), help: berry.help };
   if (trail) attempt.trail = { ...newTrailBeat('solve'), help: trail.help };
   if (bridge) attempt.bridge = { ...newBridgeBeat('construction'), help: bridge.help };
+  if (lagoon) attempt.lagoon = { ...newLagoonBeat('compare'), help: lagoon.help };
   writeRun({ ...run, attempt });
   render();
 }
@@ -232,6 +239,10 @@ function arriveFromMap() {
     if (run.scene === 'share' && run.bridgeVariant === undefined && !run.attempt.solved) {
       run.bridgeVariant = 0;
       run.attempt = { ...run.attempt, bridge: newBridgeBeat() };
+    }
+    if (run.scene === 'gems' && run.lagoonVariant === undefined && !run.attempt.solved) {
+      run.lagoonVariant = 0;
+      run.attempt = { ...run.attempt, lagoon: newLagoonBeat() };
     }
     writeRun(run);
   }
@@ -267,6 +278,14 @@ function begin(newRun = false, leavingWelcome) {
   if (workspace?.practice) {
     const preview = readChapter({ getItem: () => JSON.stringify({ version: 1, run: workspace.practice }) }).run;
     if (preview && stops.includes(preview.scene)) practiceRun = preview;
+  }
+  const run = activeRun();
+  const savedCrystals = workspace?.groups?.[1];
+  if (run.scene === 'gems' && run.lagoonVariant === undefined && !run.attempt.solved && Array.isArray(savedCrystals)) {
+    const { supply } = chapterLagoonQuestion(run).values;
+    const added = new Set(savedCrystals.filter(piece => typeof piece === 'string' && /^Spare gem [1-9]$/.test(piece) &&
+      Number(piece.at(-1)) <= supply)).size;
+    updateAttempt({ lagoon: { ...run.attempt.lagoon, added, tool: 'model' } });
   }
   render(leavingWelcome, undefined, undefined, { movementWorkspace: workspace });
   if (workspace) restoreMovementWorkspace(root, workspace);
@@ -373,29 +392,32 @@ function coach() {
   const isGrove = index === 0;
   const isTrail = index === 1;
   const isBridge = index === 2;
+  const isLagoon = index === 3;
   const question = isGrove ? chapterBerryQuestion(activeRun()) : isTrail ? chapterTrailQuestion(activeRun())
-    : isBridge ? chapterBridgeQuestion(activeRun()) : questions[index];
-  const guide = isGrove ? berryGuide : isTrail ? trailGuide : isBridge ? bridgeGuide : undefined;
+    : isBridge ? chapterBridgeQuestion(activeRun()) : isLagoon ? chapterLagoonQuestion(activeRun()) : questions[index];
+  const guide = isGrove ? berryGuide : isTrail ? trailGuide : isBridge ? bridgeGuide : isLagoon ? lagoonGuide : undefined;
   const copy = text => fillBerryCopy(text, question.values);
-  const questionsToAsk = guide?.questions ? el('ul', { className: 'chapter-coach-tip' },
-    ...guide.questions.map(line => el('li', {}, line))) : el('p', { className: 'chapter-coach-tip' }, guide?.comprehension ?? question.ask);
+  const prompts = guide?.questions ?? guide?.prompts;
+  const questionsToAsk = prompts ? el('ul', { className: 'chapter-coach-tip' },
+    ...prompts.map(line => el('li', {}, line))) : el('p', { className: 'chapter-coach-tip' }, guide?.comprehension ?? question.ask);
   const body = el('div', {}, questionsToAsk,
     el('h3', {}, 'What this teaches'), el('p', {}, guide?.objective ?? question.objective),
     el('h3', {}, 'Try it with objects'), isGrove
       ? el('ol', {}, ...guide.physicalDemo.map(step => el('li', {}, copy(step))))
-      : el('p', {}, guide ? copy(guide.physicalDemo) : question.activity),
+      : el('p', {}, guide ? copy(guide.physicalDemo ?? guide.materials) : question.activity),
     el('h3', {}, 'Hints to try'), el('ul', {}, ...question.hints.flat().map(hint => el('li', {}, hint))),
     el('h3', {}, 'If they get stuck'), isGrove
       ? el('ul', {}, ...Object.values(guide.misunderstandings).map(note => el('li', {}, note)))
       : isBridge ? el('ul', {}, ...guide.misconceptions.map(note => el('li', {}, note)))
-        : el('p', {}, isTrail ? guide.misconceptions : Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
+        : el('p', {}, isTrail || isLagoon ? guide.misconceptions : Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
   if (isGrove) body.append(el('p', {}, copy(guide.alternative)), el('p', {}, guide.note));
   if (isBridge) body.append(el('p', {}, guide.boundary));
   function markParent(changes) {
-    const { berry, trail, bridge } = activeRun().attempt;
+    const { berry, trail, bridge, lagoon } = activeRun().attempt;
     if (isGrove && berry) updateAttempt({ ...changes, berry: { ...berry, help: berryHelp([...berry.help, 'parent']) } });
     else if (isTrail && trail) updateAttempt({ ...changes, trail: { ...trail, help: trailHelp([...trail.help, 'parent']) } });
     else if (isBridge && bridge) updateAttempt({ ...changes, bridge: { ...bridge, help: bridgeHelp([...bridge.help, 'parent']) } });
+    else if (isLagoon && lagoon) updateAttempt({ ...changes, lagoon: { ...lagoon, help: lagoonHelp([...lagoon.help, 'parent']) } });
     else updateAttempt(changes);
   }
   if (!activeRun().attempt.solved) {
@@ -428,7 +450,7 @@ function coach() {
         ? 'That works! ' + explanation : 'Try again. Use the same idea with these new numbers.';
     });
     transferDetails.append(el('p', {}, guide ? transfer.question : contexts[index](transfer.params)), form, result);
-    if (isTrail || isBridge) transferDetails.append(button('Reveal transfer answer', () => {
+    if (isTrail || isBridge || isLagoon) transferDetails.append(button('Reveal transfer answer', () => {
       result.textContent = `The answer is ${transfer.answer}.`;
     }, 'chapter-secondary'));
     body.append(transferDetails);
@@ -627,7 +649,7 @@ function mountScene(stage, className, outgoing, outClass, inClass, duration) {
   stage.querySelector('h1').focus({ preventScroll: true });
 }
 
-function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail, focusBridge, animateBridge, repairFrom, movementWorkspace } = {}) {
+function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail, focusBridge, animateBridge, repairFrom, movementWorkspace, focusLagoon, animateLagoon } = {}) {
   activeScene?.dispose();
   activeScene = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
@@ -759,6 +781,33 @@ function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapF
     });
     mountScene(activeScene.stage, 'grove-main');
     if (focusBridge) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
+    return;
+  }
+  if (scene === 'gems') {
+    const readAttempt = () => activeRun().attempt;
+    activeScene = createCrystalLagoon({
+      question: chapterLagoonQuestion(activeRun()), readAttempt, update: updateAttempt,
+      changeBeat(phase, line) {
+        const lagoon = readAttempt().lagoon;
+        updateAttempt({ lagoon: { ...lagoon, phase, line } });
+        render(undefined, undefined, undefined, { focusLagoon: true, animateLagoon: lagoon.phase !== phase || lagoon.line === -1 });
+      },
+      checkAnswer(question, value) {
+        const before = activeRun();
+        const after = applyChapterAnswer(before, question, value);
+        if (after === before) return before.attempt.solved;
+        if (!after.attempt.solved) after.attempt.lagoon = { ...before.attempt.lagoon, mistakes: before.attempt.lagoon.mistakes + 1 };
+        writeRun(after);
+        if (after.attempt.solved) render(undefined, undefined, undefined, { focusLagoon: true, repairFrom: before.attempt.lagoon.added });
+        return after.attempt.solved;
+      },
+      exit: mapFade => practiceRun ? returnToAdventure() : next({ mapFade }),
+      restart: restartStop, practice: Boolean(practiceRun), stopCount: stops.length, animateEntry: animateLagoon, repairFrom,
+      home, grownUps: growUps, openMap: revisitMap, leavePractice: returnToAdventure, movementBreak,
+      drawing, answerField, dialog, listen, stopSpeech, el, picture,
+    });
+    mountScene(activeScene.stage, 'grove-main');
+    if (focusLagoon) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
     return;
   }
   const header = el('header', { className: 'chapter-header' },

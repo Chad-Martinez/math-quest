@@ -3,25 +3,39 @@ import { bridgeCounts } from './triceratops-state.js';
 
 export const bridgeArt = './assets/scene-06/';
 
-export function createBridgeModel({ values, read, update, el, picture, action, signal, animate, timing, readOnly = false }) {
+const bridgeAppearance = {
+  name: 'Bridge plank workspace', rows: 'Aligned bridge rows', first: 'First row', second: 'Second row',
+  fixedAsset: bridgeArt + 'plank.png', movingAsset: bridgeArt + 'plank.png', supplyAsset: bridgeArt + 'spare-crate.png',
+  item: 'plank', addLabel: 'Add a Plank', showSlots: true,
+  status: { equal: 'The rows match. Count the planks you added.',
+    greater: 'The second row has more planks. Move an extra one back.',
+    shorter: 'The second row has fewer planks. Add from the spare supply.' },
+};
+
+export function createBridgeModel(options) {
+  return createAlignedTransferModel(options, bridgeAppearance);
+}
+
+export function createAlignedTransferModel({ values, read, update, el, picture, action, signal, animate, timing,
+  readOnly = false }, appearance) {
   const { target, initial, supply } = values;
   const first = el('p', { className: 'bridge-row-label' });
   const second = el('p', { className: 'bridge-row-label' });
   const spare = el('h3', { className: 'bridge-row-label' });
-  const aligned = el('div', { className: 'bridge-columns', role: 'group', 'aria-label': 'Aligned bridge rows' });
+  const aligned = el('div', { className: 'bridge-columns', role: 'group', 'aria-label': appearance.rows });
   const holder = el('div', { className: 'bridge-supply-grid' });
   const status = el('p', { className: 'bridge-model-status', role: 'status' });
   const supplyArea = el('section', { className: 'bridge-supply', 'aria-label': 'Spare supply' },
-    picture(bridgeArt + 'spare-crate.png', 'bridge-crate'), el('div', {}, spare, holder));
-  const board = el('div', { className: 'bridge-model', role: 'group', 'aria-label': 'Bridge plank workspace' },
+    picture(appearance.supplyAsset, 'bridge-crate'), el('div', {}, spare, holder));
+  const board = el('div', { className: 'bridge-model', role: 'group', 'aria-label': appearance.name },
     el('div', { className: 'bridge-row-labels' }, first, second), aligned, supplyArea, status);
-  const plank = () => picture(bridgeArt + 'plank.png', 'bridge-plank');
-  const base = Array.from({ length: target + 2 }, (_, index) => {
+  const pieceArt = asset => picture(asset, 'bridge-plank');
+  const base = Array.from({ length: initial + supply }, (_, index) => {
     const slot = el('span', { className: 'bridge-slot', 'aria-hidden': 'true' });
     aligned.append(el('div', { className: 'bridge-column' },
-      el('span', { className: 'bridge-slot bridge-fixed', 'aria-hidden': 'true' }, ...(index < target ? [plank()] : [])),
+      el('span', { className: 'bridge-slot bridge-fixed', 'aria-hidden': 'true' }, ...(index < target ? [pieceArt(appearance.fixedAsset)] : [])),
       slot));
-    if (index < initial) slot.append(plank());
+    if (index < initial) slot.append(pieceArt(appearance.movingAsset));
     return slot;
   });
   const supplyCells = Array.from({ length: supply }, () => el('span', { className: 'bridge-slot' }));
@@ -30,18 +44,18 @@ export function createBridgeModel({ values, read, update, el, picture, action, s
   const units = supplyCells.map(() => {
     const piece = readOnly ? el('span', { className: 'bridge-piece', 'aria-hidden': 'true' })
       : action('', () => move(piece), 'bridge-piece');
-    piece.append(plank());
+    piece.append(pieceArt(appearance.movingAsset));
     if (!readOnly) dragTo(piece, () => base[initial + read().shared], () => place(piece), () => units.indexOf(piece) >= read().shared, { signal });
     return piece;
   });
-  const add = !readOnly && action('Add a Plank', () => place(units[read().shared]), 'chapter-secondary');
+  const add = !readOnly && action(appearance.addLabel, () => place(units[read().shared]), 'chapter-secondary');
   const undo = !readOnly && action('Undo', () => change(read().shared - 1), 'chapter-secondary');
   const reset = !readOnly && action('Reset', () => change(0), 'chapter-secondary');
-  const slots = !readOnly && action('Show empty slots', () => {
+  const slots = !readOnly && appearance.showSlots && action('Show empty slots', () => {
     update({ slots: !read().slots }, true);
     paint();
   }, 'chapter-secondary');
-  if (!readOnly) board.append(el('div', { className: 'chapter-actions grove-tool-actions' }, add, undo, reset, slots));
+  if (!readOnly) board.append(el('div', { className: 'chapter-actions grove-tool-actions' }, add, undo, reset, ...(slots ? [slots] : [])));
 
   function slotAt(index, shared) {
     return index < shared ? base[initial + index] : supplyCells[supply - 1 - index];
@@ -50,13 +64,13 @@ export function createBridgeModel({ values, read, update, el, picture, action, s
   function paint() {
     const { shared } = read();
     const counts = bridgeCounts(values, shared);
-    first.textContent = `First row · ${counts.first}`;
-    second.textContent = `Second row · ${counts.second}`;
+    first.textContent = `${appearance.first} · ${counts.first}`;
+    second.textContent = `${appearance.second} · ${counts.second}`;
     spare.textContent = `Spare supply · ${counts.spare}`;
     for (const [index, slot] of base.entries()) {
       slot.classList.toggle('bridge-next', !readOnly && index === counts.second);
       slot.classList.toggle('bridge-staging', index >= target && counts.second >= target && !readOnly);
-      slot.classList.toggle('bridge-empty', read().slots && index >= counts.second && index < target);
+      slot.classList.toggle('bridge-empty', Boolean(appearance.showSlots && read().slots && index >= counts.second && index < target));
     }
     for (const [index, piece] of units.entries()) {
       const added = index < shared;
@@ -65,20 +79,21 @@ export function createBridgeModel({ values, read, update, el, picture, action, s
       slot.removeAttribute('aria-hidden');
       piece.classList.toggle('bridge-added', added);
       if (!readOnly) {
-        piece.setAttribute('aria-label', added ? `Placed plank ${index + 1}${index === shared - 1 ? ', undo' : ''}`
-          : `Spare plank ${index + 1}, add to second row`);
+        piece.setAttribute('aria-label', added ? `Placed ${appearance.item} ${index + 1}${index === shared - 1 ? ', undo' : ''}`
+          : `Spare ${appearance.item} ${index + 1}, add to ${appearance.second.toLowerCase()}`);
         piece.setAttribute('aria-disabled', String(added && index !== shared - 1));
       }
     }
     board.dataset.relation = counts.second === target ? 'equal' : counts.second > target ? 'greater' : 'shorter';
-    status.textContent = counts.second === target ? 'The rows match. Count the planks you added.'
-      : counts.second > target ? 'The second row has more planks. Move an extra one back.'
-        : 'The second row has fewer planks. Add from the spare supply.';
+    const minimum = appearance.minimum && shared === values.missing;
+    status.textContent = minimum ? appearance.minimum : appearance.status[board.dataset.relation];
     if (!readOnly) {
       add.disabled = shared >= supply;
       undo.disabled = reset.disabled = shared === 0;
-      slots.textContent = read().slots ? 'Hide empty slots' : 'Show empty slots';
-      slots.setAttribute('aria-pressed', String(read().slots));
+      if (slots) {
+        slots.textContent = read().slots ? 'Hide empty slots' : 'Show empty slots';
+        slots.setAttribute('aria-pressed', String(read().slots));
+      }
     }
   }
 
@@ -121,8 +136,9 @@ export function createBridgeModel({ values, read, update, el, picture, action, s
     if (document.activeElement !== focus || focus?.disabled) {
       (moved.includes(focus) ? focus : !add.disabled ? add : undo).focus({ preventScroll: true });
     }
-    if (shared === values.missing) animate(aligned, [{ outlineColor: '#3c7850' }, { outlineColor: 'transparent' }],
-      { duration: timing.equal, easing: 'ease-out' });
+    const relation = board.dataset.relation;
+    if (relation === 'equal' || (relation === 'greater' && timing.greater)) animate(aligned, [{ outlineColor: '#3c7850' }, { outlineColor: 'transparent' }],
+      { duration: relation === 'equal' ? timing.equal : timing.greater, easing: 'ease-out' });
   }
 
   function reconcile(from) {

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  advanceChapter, applyChapterAnswer, chapterBridgeQuestion, chapterKey, chapterQuestions, finishChallenge, freshQuestion,
+  advanceChapter, applyChapterAnswer, chapterBridgeQuestion, chapterKey, chapterLagoonQuestion, chapterQuestions, finishChallenge, freshQuestion,
   readChapter, scenes, startChapter, stops,
 } from '../js/chapter.js';
 
@@ -85,7 +85,7 @@ test('scene sequence, saved checkpoint, default break, completion and replay', (
     const index = stops.indexOf(state.run.scene);
     if (index >= 0) {
       assert.equal(advanceChapter(state), state);
-      state = solved(state, index === 2 ? chapterBridgeQuestion(state.run) : questions[index]);
+      state = solved(state, index === 2 ? chapterBridgeQuestion(state.run) : index === 3 ? chapterLagoonQuestion(state.run) : questions[index]);
     }
     state = snapshot(advanceChapter(state));
   }
