@@ -135,11 +135,11 @@ try {
   assert.deepEqual(await stored(landscape), saved);
   assert.ok(await button(landscape, 'Continue Adventure').evaluate(control => {
     control.click();
-    const workspace = document.querySelector('.chapter-work-panel');
+    const workspace = document.querySelector('.trail-learning');
     control.click();
-    return workspace && document.querySelector('.chapter-work-panel') === workspace;
+    return workspace && document.querySelector('.trail-learning') === workspace;
   }), 'a disposed welcome control cannot remount the active workspace');
-  await heading(landscape, 'Follow footprints').waitFor();
+  await heading(landscape, 'Velociraptor Trail').waitFor();
   assert.equal(await landscape.getByLabel('Your answer').inputValue(), '6');
   assert.deepEqual(await stored(landscape), saved);
   assert.equal(await landscape.locator('.welcome-leaving').count(), 0);

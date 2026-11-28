@@ -1,0 +1,217 @@
+{
+  "assets": [
+    {
+      "id": "eggshell-clue",
+      "path": "assets/eggshell-clue.png",
+      "width": 528,
+      "height": 314,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": null
+    },
+    {
+      "id": "footprint",
+      "path": "assets/footprint.png",
+      "width": 308,
+      "height": 348,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-05/footprint.png"
+    },
+    {
+      "id": "raptor-celebrate",
+      "path": "assets/raptor-celebrate.png",
+      "width": 342,
+      "height": 308,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-05/raptor-celebrate.png"
+    },
+    {
+      "id": "raptor-front",
+      "path": "assets/raptor-front.png",
+      "width": 299,
+      "height": 372,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-05/raptor-front.png"
+    },
+    {
+      "id": "raptor-gesture",
+      "path": "assets/raptor-gesture.png",
+      "width": 339,
+      "height": 351,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-05/raptor-gesture.png"
+    },
+    {
+      "id": "raptor-investigate",
+      "path": "assets/raptor-investigate.png",
+      "width": 473,
+      "height": 283,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-05/raptor-investigate.png"
+    },
+    {
+      "id": "raptor-neutral",
+      "path": "assets/raptor-neutral.png",
+      "width": 391,
+      "height": 376,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-05/raptor-neutral.png"
+    },
+    {
+      "id": "raptor-side",
+      "path": "assets/raptor-side.png",
+      "width": 567,
+      "height": 369,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": null
+    },
+    {
+      "id": "trail-landscape-clue",
+      "path": "assets/trail-landscape-clue.webp",
+      "width": 1672,
+      "height": 941,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "runtimePath": "assets/scene-05/trail-landscape-clue.webp"
+    },
+    {
+      "id": "trail-landscape",
+      "path": "assets/trail-landscape.webp",
+      "width": 1672,
+      "height": 941,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "runtimePath": "assets/scene-05/trail-landscape.webp"
+    },
+    {
+      "id": "trail-portrait-clue",
+      "path": "assets/trail-portrait-clue.webp",
+      "width": 1086,
+      "height": 1448,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "runtimePath": "assets/scene-05/trail-portrait-clue.webp"
+    },
+    {
+      "id": "trail-portrait",
+      "path": "assets/trail-portrait.webp",
+      "width": 1086,
+      "height": 1448,
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "runtimePath": "assets/scene-05/trail-portrait.webp"
+    },
+    {
+      "id": "trex-celebrate",
+      "path": "assets/trex-celebrate.png",
+      "width": 244,
+      "height": 261,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-01/trex-celebrate.png"
+    },
+    {
+      "id": "trex-greeting",
+      "path": "assets/trex-greeting.png",
+      "width": 247,
+      "height": 252,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-01/trex-greeting.png"
+    },
+    {
+      "id": "trex-thinking",
+      "path": "assets/trex-thinking.png",
+      "width": 186,
+      "height": 251,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-04/trex-thinking.png"
+    },
+    {
+      "id": "trex-walk-1",
+      "path": "assets/trex-walk-1.png",
+      "width": 171,
+      "height": 184,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-01/trex-walk-1.png"
+    },
+    {
+      "id": "trex-walk-2",
+      "path": "assets/trex-walk-2.png",
+      "width": 162,
+      "height": 188,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-01/trex-walk-2.png"
+    },
+    {
+      "id": "trex-walk-3",
+      "path": "assets/trex-walk-3.png",
+      "width": 163,
+      "height": 190,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-01/trex-walk-3.png"
+    },
+    {
+      "id": "trex-walk-4",
+      "path": "assets/trex-walk-4.png",
+      "width": 156,
+      "height": 195,
+      "anchor": [
+        0.5,
+        1
+      ],
+      "runtimePath": "assets/scene-01/trex-walk-4.png"
+    }
+  ],
+  "notes": [
+    "Backgrounds contain decorative tracks; never count them. Early backgrounds use local shell removal; inspect patch. Clue backgrounds include shell; do not duplicate it.",
+    "Investigating and gesture poses retain some ground/foliage; use as grounded vignettes. Reuse existing approved T-Rex runtime assets if identical."
+  ]
+}

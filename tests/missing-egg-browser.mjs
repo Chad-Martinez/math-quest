@@ -200,7 +200,7 @@ try {
 
   const resume = await visit(768, 1024, { fixture: prior });
   await button(resume, 'Continue Adventure').tap();
-  await heading(resume, 'Follow footprints').waitFor();
+  await heading(resume, 'Velociraptor Trail').waitFor();
   assert.equal(await resume.locator('.mission-stage').count(), 0);
   assert.equal(await resume.getByLabel('Your answer').inputValue(), '6');
   assert.deepEqual(await stored(resume), prior);
