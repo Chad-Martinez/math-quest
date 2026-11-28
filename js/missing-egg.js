@@ -1,3 +1,5 @@
+import { sceneLifecycle } from './scene-lifecycle.js';
+
 const sceneArt = './assets/scene-02/';
 const welcomeArt = './assets/scene-01/';
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -67,6 +69,11 @@ export function createMissingEgg({ listen, stopSpeech, grownUps, openMap }) {
   let lastPress = -Infinity;
   let accepting = false;
   let mapTimer;
+  const scene = sceneLifecycle(stage, stopSpeech, () => {
+    clearTimeout(mapTimer);
+    for (const animation of stage.getAnimations({ subtree: true })) animation.cancel();
+  });
+  const { signal } = scene;
 
   // These small images can decode in parallel while the first beat is playing.
   for (const src of [...beats.slice(1).map(({ pose }) => pose), welcomeArt + 'trex-celebrate.png']) {
@@ -85,7 +92,7 @@ export function createMissingEgg({ listen, stopSpeech, grownUps, openMap }) {
 
   advance.addEventListener('keydown', event => {
     if (event.repeat && (event.key === 'Enter' || event.key === ' ')) event.preventDefault();
-  });
+  }, { signal });
   advance.addEventListener('click', () => {
     const now = performance.now();
     if (accepting || now - lastPress < 220) return;
@@ -107,16 +114,9 @@ export function createMissingEgg({ listen, stopSpeech, grownUps, openMap }) {
     mapTimer = setTimeout(() => {
       if (stage.isConnected) openMap(stage);
     }, 400);
-  });
+  }, { signal });
 
-  stage.querySelector('#chapter-grownups').addEventListener('click', grownUps);
+  stage.querySelector('#chapter-grownups').addEventListener('click', grownUps, { signal });
   showBeat();
-  return {
-    stage,
-    dispose() {
-      clearTimeout(mapTimer);
-      stopSpeech();
-      for (const animation of stage.getAnimations({ subtree: true })) animation.cancel();
-    },
-  };
+  return scene;
 }

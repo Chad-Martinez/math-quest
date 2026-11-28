@@ -1,3 +1,5 @@
+import { sceneLifecycle } from './scene-lifecycle.js';
+
 const greetingOpening = 'Hi, Harrison!';
 const greetingQuestion = 'Are you ready for a dinosaur adventure?';
 const greeting = `${greetingOpening} ${greetingQuestion}`;
@@ -47,6 +49,8 @@ export function createWelcome({ resumable, start, resume, grownUps, confirmStart
   dialogue.append(audio);
 
   let startTimer;
+  const scene = sceneLifecycle(stage, stopSpeech, () => clearTimeout(startTimer));
+  const { signal } = scene;
   const startButton = stage.querySelector('.welcome-start');
 
   function cancelStart() {
@@ -56,7 +60,7 @@ export function createWelcome({ resumable, start, resume, grownUps, confirmStart
   }
 
   function celebrate() {
-    if (!stage.isConnected || startTimer !== undefined) return;
+    if (signal.aborted || !stage.isConnected || startTimer !== undefined) return;
     if (reducedMotion.matches) {
       start();
       return;
@@ -73,15 +77,15 @@ export function createWelcome({ resumable, start, resume, grownUps, confirmStart
     stopSpeech();
     if (resumable) confirmStart(celebrate, startButton);
     else celebrate();
-  });
+  }, { signal });
   stage.querySelector('.welcome-continue')?.addEventListener('click', () => {
     cancelStart();
     stopSpeech();
     resume();
-  });
+  }, { signal });
   stage.querySelector('#chapter-grownups').addEventListener('click', () => {
     cancelStart();
     grownUps();
-  });
-  return stage;
+  }, { signal });
+  return scene;
 }

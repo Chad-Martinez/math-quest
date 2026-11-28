@@ -1,4 +1,5 @@
 import { mapSpec } from './adventure-map-data.js';
+import { sceneLifecycle } from './scene-lifecycle.js';
 
 const sceneArt = './assets/scene-03/';
 const welcomeArt = './assets/scene-01/';
@@ -73,10 +74,14 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
   board.append(route);
 
   let traveling = false;
-  let disposed = false;
   let intro = state.introduction;
   let frameRequest;
   let timer;
+  const scene = sceneLifecycle(view, stopSpeech, () => {
+    cancelAnimationFrame(frameRequest);
+    clearTimeout(timer);
+  });
+  const { signal } = scene;
   let facing = 1;
   const markers = new Map();
   const origin = mapSpec.stops.find(stop => stop.id === state.from);
@@ -100,7 +105,7 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
     const active = state.current === id;
     const marker = done || active
       ? button('', () => {
-        if (traveling || disposed) return;
+        if (traveling || signal.aborted) return;
         if (active && !intro) beginTravel();
         else if (done) onReview(Number(id) - 1);
       }, 'map-marker')
@@ -160,7 +165,7 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
     audio.replaceChildren(listen(dialogue, { label: 'Listen' }));
     nextPlace.textContent = !intro && state.current ? labels[state.current] : '';
     const main = button(intro ? "Let's Go!" : state.action, event => {
-      if (disposed || traveling || !event.currentTarget.isConnected || event.detail > 1) return;
+      if (signal.aborted || traveling || !event.currentTarget.isConnected || event.detail > 1) return;
       if (!intro) {
         beginTravel();
         return;
@@ -173,22 +178,15 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
     }, 'welcome-primary map-primary');
     actions.replaceChildren(main);
     if (state.offerBreak) actions.append(button('Skip for now', () => {
-      if (disposed || traveling) return;
+      if (signal.aborted || traveling) return;
       stopSpeech();
       onSkipBreak();
     }, 'map-secondary welcome-secondary'));
   }
 
-  function dispose() {
-    disposed = true;
-    cancelAnimationFrame(frameRequest);
-    clearTimeout(timer);
-    motion.removeEventListener('change', finishOnReducedMotion);
-  }
-
   function finish() {
-    if (disposed || !traveling) return;
-    dispose();
+    if (signal.aborted || !traveling) return;
+    scene.dispose();
     onAdvance();
   }
 
@@ -197,7 +195,7 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
   }
 
   function beginTravel() {
-    if (traveling || disposed) return;
+    if (traveling || signal.aborted) return;
     traveling = true;
     stopSpeech();
     if (revisit || motion.matches) return finish();
@@ -212,7 +210,7 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
     for (const marker of markers.values()) {
       if (marker.tagName === 'BUTTON') marker.disabled = true;
     }
-    motion.addEventListener('change', finishOnReducedMotion);
+    motion.addEventListener('change', finishOnReducedMotion, { signal });
     if (state.reveal) {
       board.classList.add('map-cave-reveal');
       timer = setTimeout(finish, 600);
@@ -248,5 +246,5 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
   }
 
   showDialogue();
-  return { view, dispose };
+  return scene;
 }

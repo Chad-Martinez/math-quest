@@ -8,6 +8,7 @@ Applies to `welcome.js`, `missing-egg.js`, `adventure-map*.js`, the scene and na
 
 - Render the approved scene as separate environment, character, foreground and semantic HTML UI layers. Use the approved dialogue verbatim, one beat at a time with optional **Listen**. Advance by player action and stop obsolete speech on exit, restart or advance.
 - Follow the kit’s choreography. Keep controls usable during nonessential motion, respect reduced motion, cancel obsolete timers and animations, and guard rapid input against duplicate actions. Follow the [scene production standard](../docs/scene-production.md).
+- Return a scene with `sceneLifecycle()` for chapter views that own timers, animation frames or listeners. Use its abort signal to detach listeners and register cleanup for work the scene starts. Test leaving during pending navigation and verify that the checkpoint stays put.
 - Derive navigation and markers from existing chapter state. Preserve the live workspace on temporary exits and use the existing checkpoint for reload. Award completion and rewards only on their established transitions.
 
 ## Learning, models and progress

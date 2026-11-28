@@ -7,8 +7,7 @@ import { createMissingEgg } from './missing-egg.js';
 import { createAdventureMap } from './adventure-map.js';
 import { advanceToMap, mapState } from './adventure-map-state.js';
 
-let disposeMission;
-let disposeMap;
+let activeScene;
 let suspendedAdventure;
 
 const root = document.getElementById('chapter');
@@ -270,26 +269,27 @@ function adventureMap(options) {
 function revisitMap(trigger) {
   stopSpeech();
   const modal = el('dialog', { className: 'adventure-map-dialog', 'aria-labelledby': 'adventure-map-title' });
-  const { view, dispose } = adventureMap({
+  const { stage, dispose } = adventureMap({
     revisit: true,
     onAdvance: () => modal.close(),
     onReview: index => {
       suspendedAdventure = { nodes: [...root.children].filter(child => child !== modal), trigger,
         scroll: { x: window.scrollX, y: window.scrollY } };
+      dispose();
       modal.close();
       openStop(index);
     },
   });
+  modal.addEventListener('cancel', dispose);
   modal.addEventListener('close', () => {
     dispose();
-    stopSpeech();
     modal.remove();
     if (trigger.isConnected) trigger.focus({ preventScroll: true });
   });
-  modal.append(view);
+  modal.append(stage);
   root.append(modal);
   modal.showModal();
-  view.querySelector('h1').focus({ preventScroll: true });
+  stage.querySelector('h1').focus({ preventScroll: true });
 }
 
 const moves = [
@@ -557,14 +557,20 @@ function sceneCrossfade(outgoing, incoming, outClass, inClass, duration) {
   setTimeout(() => outgoing.remove(), duration);
 }
 
+function mountScene(stage, className, outgoing, outClass, inClass, duration) {
+  const main = el('main', { className }, stage, persistWarning);
+  root.replaceChildren(main);
+  sceneCrossfade(outgoing, main, outClass, inClass, duration);
+  window.scrollTo(0, 0);
+  stage.querySelector('h1').focus({ preventScroll: true });
+}
+
 function render(leavingWelcome, leavingMission, freshCompletion) {
-  disposeMap?.();
-  disposeMap = undefined;
-  disposeMission?.();
-  disposeMission = undefined;
+  activeScene?.dispose();
+  activeScene = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
   if (scene === 'welcome') {
-    const stage = createWelcome({
+    activeScene = createWelcome({
       resumable: Boolean(progress.run && progress.run.scene !== 'replay'),
       start: previous => begin(true, previous),
       resume: () => begin(),
@@ -573,34 +579,22 @@ function render(leavingWelcome, leavingMission, freshCompletion) {
       listen,
       stopSpeech,
     });
-    root.replaceChildren(el('main', { className: 'welcome-main' }, stage, persistWarning));
-    window.scrollTo(0, 0);
-    stage.querySelector('h1').focus({ preventScroll: true });
+    mountScene(activeScene.stage, 'welcome-main');
     return;
   }
   if (scene === 'mission') {
-    const { stage, dispose } = createMissingEgg({
+    activeScene = createMissingEgg({
       listen, stopSpeech, grownUps: growUps,
       openMap: stage => next({ leavingMission: stage }),
     });
-    disposeMission = dispose;
-    const main = el('main', { className: 'mission-main' }, stage, persistWarning);
-    root.replaceChildren(main);
-    sceneCrossfade(leavingWelcome, main, 'welcome-leaving', 'welcome-mission-in', 200);
-    window.scrollTo(0, 0);
-    stage.querySelector('h1').focus({ preventScroll: true });
+    mountScene(activeScene.stage, 'mission-main', leavingWelcome, 'welcome-leaving', 'welcome-mission-in', 200);
     return;
   }
   if (!practiceRun && (scene === 'map' || progress.run?.mapFrom)) {
-    const { view, dispose } = adventureMap({
+    activeScene = adventureMap({
       freshCompletion, onAdvance: arriveFromMap, onSkipBreak: skipMapBreak, onReview: openStop,
     });
-    disposeMap = dispose;
-    const main = el('main', { className: 'map-main' }, view, persistWarning);
-    root.replaceChildren(main);
-    sceneCrossfade(leavingMission, main, 'mission-leaving', 'mission-map-in', 300);
-    window.scrollTo(0, 0);
-    view.querySelector('h1').focus({ preventScroll: true });
+    mountScene(activeScene.stage, 'map-main', leavingMission, 'mission-leaving', 'mission-map-in', 300);
     return;
   }
   const header = el('header', { className: 'chapter-header' },
