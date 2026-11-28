@@ -178,7 +178,7 @@ export function createBerryGrove(options) {
     const sketch = drawing();
     const hint = el('p', { id: 'grove-hint', className: 'chapter-hint', role: 'status' });
     const feedback = el('p', { id: 'chapter-feedback', className: 'grove-feedback', role: 'status' }, attempt.error);
-    let selected = attempt.berry.numberLine && step ? 'line' : attempt.berry.tools ? 'model' : 'closed';
+    let selected = 'model';
     const numberLine = step ? buildModel({ kind: 'line', start: values.total, target: values.target, showJumps: true,
       initialPosition: values.total + (attempt.berry.jumps ?? 0) }, {
       onChange(position) {
@@ -200,8 +200,10 @@ export function createBerryGrove(options) {
       chooseLine?.setAttribute('aria-expanded', String(view === 'line'));
       draw.setAttribute('aria-pressed', String(view === 'draw'));
     }
+    if (chooseLine) chooseLine.hidden = true;
     const toggle = action('Math tools', () => select(panel.hidden ? 'model' : 'closed'), 'chapter-secondary');
     const draw = action('Draw', () => toolView(sketch.hidden ? 'draw' : selected), 'chapter-secondary');
+    draw.hidden = true;
     const hints = question.hints[step];
     const hintAction = action('Hint', () => {
       const level = readAttempt().hints;
@@ -359,10 +361,13 @@ export function createBerryGrove(options) {
       for (const [index, berry] of additions.entries()) {
         berry.dataset.collecting = '';
         const slot = berry.getBoundingClientRect();
+        const targetBox = basket.querySelector('.grove-basket-art').getBoundingClientRect();
+        const basketX = targetBox.left + targetBox.width / 2 - (slot.left + slot.width / 2);
+        const basketY = targetBox.top + targetBox.height * .4 - (slot.top + slot.height / 2);
         const x = mouth.left + mouth.width * .21 - (slot.left + slot.width / 2);
         const y = mouth.top + mouth.height * .14 - (slot.top + slot.height / 2);
         const move = animate(berry, [{ opacity: 1, transform: `translate(${x}px,${y}px) scale(.72)` },
-          { opacity: 1, transform: 'translate(0,0) scale(1)' }],
+          { opacity: 1, transform: `translate(${basketX}px,${basketY}px) scale(.55)` }],
         { duration: timing.collection, delay: timing['step2 correct'] + index * collectionStagger, easing: 'ease-in-out' });
         move?.addEventListener('finish', () => {
           berry.style.opacity = '';

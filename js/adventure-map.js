@@ -106,7 +106,7 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
     const marker = done || active
       ? button('', () => {
         if (traveling || signal.aborted) return;
-        if (active && !intro) beginTravel();
+        if (active) beginTravel();
         else if (done) onReview(Number(id) - 1);
       }, 'map-marker')
       : el('span', { className: 'map-marker' });
@@ -132,7 +132,6 @@ export function createAdventureMap({ state, freshCompletion, revisit, onAdvance,
     plaque.dataset.waypoint = id;
     markers.set(id, marker);
   }
-  if (intro) markers.get(state.current).disabled = true;
   board.append(traveler);
 
   const title = el('h1', { id: 'adventure-map-title', tabindex: '-1' }, 'Dinosaur Island Adventure');
