@@ -71,6 +71,10 @@ async function inspect(page, index, width, height) {
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth === innerWidth && document.documentElement.scrollHeight === innerHeight));
   const pose = await page.locator('.mission-character').boundingBox();
   assert.ok((pose.y + pose.height) / height >= .81 && (pose.y + pose.height) / height <= .94);
+  const dialogue = await page.locator('.mission-dialogue').boundingBox();
+  const primary = await page.locator('.mission-advance').boundingBox();
+  assert.ok(dialogue.y >= height * .29 && dialogue.y <= height * .45, 'Dialogue sits near T-Rex');
+  assert.ok(dialogue.y + dialogue.height < primary.y, 'Dialogue and Listen clear the primary action');
   const controls = await page.locator('.mission-stage button').all();
   for (const control of controls) {
     const rect = await control.boundingBox();
@@ -82,7 +86,7 @@ async function inspect(page, index, width, height) {
 try {
   for (const [width, height, name] of [
     [1024, 768, 'ipad-landscape'], [390, 844, 'iphone-portrait'], [768, 1024, 'ipad-portrait'],
-    [844, 390, 'iphone-landscape'], [1672, 941, 'desktop'],
+    [844, 390, 'iphone-landscape'], [1280, 836, 'ipad-browser-chrome'], [1672, 941, 'desktop'],
   ]) {
     const page = await visit(width, height);
     await button(page, 'Start Adventure').tap();
