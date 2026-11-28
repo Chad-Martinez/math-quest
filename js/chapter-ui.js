@@ -549,6 +549,7 @@ function confirmWelcomeRestart(start, trigger) {
 function sceneCrossfade(outgoing, incoming, outClass, inClass, duration) {
   if (!outgoing) return;
   outgoing.inert = true;
+  outgoing.setAttribute('aria-hidden', 'true');
   outgoing.querySelector('#chapter-grownups').removeAttribute('id');
   outgoing.classList.add(outClass);
   root.append(outgoing);
