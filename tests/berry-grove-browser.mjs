@@ -156,7 +156,7 @@ try {
   assert.equal(await basket.getByRole('button').count(), 1);
   await capture(page, '03-combine-tools-ipad-landscape');
   await press(page, 'Take a break');
-  await press(page, 'I’m ready!');
+  await press(page, 'Skip for Now');
   assert.equal(await digits(page).inputValue(), '7');
   await press(page, 'Trail map');
   await press(page, 'Continue Stop');

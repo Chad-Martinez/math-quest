@@ -375,7 +375,7 @@ function fixedBlocks(container, count, term, object) {
   container.append(group);
 }
 
-function balance(container, config, { example = false, onChange, initialMoveCount = 0 } = {}) {
+function balance(container, config, { example = false, onChange, initialMoveCount = 0, initialOrder } = {}) {
   const adding = config.action === 'add-right';
   const item = config.object ? 'stone' : 'block';
   const countItems = count => `${count} ${count === 1 ? item : item + 's'}`;
@@ -422,6 +422,18 @@ function balance(container, config, { example = false, onChange, initialMoveCoun
   for (let index = 0; index < Math.min(initialMoveCount, limit); index++) {
     moved.add(index);
     destination.contents.append(blocks[index]);
+  }
+  if (Array.isArray(initialOrder?.[1])) {
+    for (const index of initialOrder[1]) {
+      if (!Number.isInteger(index) || !blocks[index]) continue;
+      moved.add(index);
+      destination.contents.append(blocks[index]);
+    }
+  }
+  if (Array.isArray(initialOrder?.[0])) {
+    for (const index of initialOrder[0]) {
+      if (Number.isInteger(index) && blocks[index] && !moved.has(index)) origin.contents.append(blocks[index]);
+    }
   }
   const showOne = button('Show me one', () => move(0));
   const reset = button('Start over', () => {

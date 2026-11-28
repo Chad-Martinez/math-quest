@@ -1,3 +1,6 @@
+import { createWiggleMeadow } from './wiggle-meadow.js';
+import { clearMovementWorkspace, restoreMovementWorkspace, saveMovementWorkspace, takeMovementWorkspace } from './movement-workspace.js';
+import { meadowGuide } from './wiggle-meadow-content.js';
 import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
@@ -141,7 +144,7 @@ function dialog(title, content, trigger) {
   return modal;
 }
 
-function growUps() {
+function growUps({ meadow = false, trigger } = {}) {
   const toggle = el('input', { type: 'checkbox' });
   toggle.checked = progress.autoBreak;
   toggle.addEventListener('change', () => write({ ...progress, autoBreak: toggle.checked }));
@@ -149,12 +152,14 @@ function growUps() {
   const body = el('div', {}, el('label', { className: 'chapter-setting' }, toggle, 'Offer a wiggle break after challenge three'),
     el('h3', {}, 'Learning progress'), el('p', {}, `Chapter completions: ${progress.runs}`),
     el('p', {}, `Stars already earned in Math Quest: ${totals.stars}`));
-  if (!intro && (practiceRun || !progress.run?.mapFrom) && qIndex() >= 0) body.append(button('Teaching tips for this problem', () => {
+  if (!meadow && !intro && (practiceRun || !progress.run?.mapFrom) && qIndex() >= 0) body.append(button('Teaching tips for this problem', () => {
     modal.close();
     coach();
   }));
   if (!intro && activeRun()?.scene === 'mission') body.append(button('Back to welcome', home, 'chapter-secondary'));
-  const modal = dialog('Grown-ups', body, document.getElementById('chapter-grownups'));
+  if (meadow) body.append(el('h3', {}, 'Movement break tips'), el('p', {}, meadowGuide.purpose),
+    el('ul', {}, ...meadowGuide.parentTips.map(tip => el('li', {}, tip))));
+  const modal = dialog('Grown-ups', body, trigger ?? document.getElementById('chapter-grownups'));
   modal.addEventListener('close', () => {
     if (!intro && !practiceRun && !progress.autoBreak && progress.run?.scene === 'wiggle' && progress.run.mapFrom) {
       skipMapBreak();
@@ -258,7 +263,13 @@ function begin(newRun = false, leavingWelcome) {
   if (!progress.autoBreak && progress.run.scene === 'wiggle' && progress.run.mapFrom) {
     write(advanceToMap(progress, { skipBreak: true }));
   }
-  render(leavingWelcome);
+  const workspace = takeMovementWorkspace(progress.run);
+  if (workspace?.practice) {
+    const preview = readChapter({ getItem: () => JSON.stringify({ version: 1, run: workspace.practice }) }).run;
+    if (preview && stops.includes(preview.scene)) practiceRun = preview;
+  }
+  render(leavingWelcome, undefined, undefined, { movementWorkspace: workspace });
+  if (workspace) restoreMovementWorkspace(root, workspace);
 }
 
 const stories = {
@@ -322,32 +333,24 @@ function revisitMap(trigger) {
   stage.querySelector('h1').focus({ preventScroll: true });
 }
 
-const moves = [
-  ['march', 'Take five T-Rex steps in place.', 'Or tap your feet while seated.'],
-  ['shake', 'Gently shake your little T-Rex arms.', 'Keep your movements small and easy.'],
-  ['ready', 'Relax your shoulders and take three slow breaths.', 'Sit or stand where you are comfortable.'],
-];
-
-function movementBody(done) {
-  const body = el('div', { className: 'chapter-movement' });
-  let index = 0;
-  function step() {
-    const [pose, instruction, alternative] = moves[index];
-    const controls = el('div', { className: 'chapter-actions' });
-    if (index < moves.length - 1) controls.append(button('Next move', () => { stopSpeech(); index++; step(); }, 'chapter-secondary'));
-    controls.append(button('I’m ready!', done), button('Skip for now', done, 'chapter-secondary'), listen(instruction + ' ' + alternative));
-    body.replaceChildren(picture(assets + 'movement/' + pose + '.png', 'chapter-movement-dino'),
-      el('div', {}, el('p', { className: 'chapter-kicker' }, `Optional movement · ${index + 1} of ${moves.length}`),
-        el('h3', { tabindex: '-1' }, instruction), el('p', {}, alternative), controls));
-    if (index > 0) body.querySelector('h3').focus({ preventScroll: true });
-  }
-  step();
-  return body;
-}
-
 function movementBreak(trigger) {
-  const panel = movementBody(() => modal.close());
-  const modal = dialog('Dino Wiggle Break', panel, trigger);
+  if (root.querySelector('.meadow-dialog')) return;
+  stopSpeech();
+  saveMovementWorkspace(progress.run, root, practiceRun);
+  const modal = el('dialog', { className: 'meadow-dialog', 'aria-labelledby': 'meadow-title' });
+  const scene = createWiggleMeadow({ onDemand: true, exit: () => modal.close(),
+    grownUps: control => growUps({ meadow: true, trigger: control }), listen, stopSpeech, el, picture });
+  modal.addEventListener('cancel', scene.dispose);
+  modal.addEventListener('close', () => {
+    scene.dispose();
+    clearMovementWorkspace();
+    modal.remove();
+    if (trigger.isConnected) trigger.focus({ preventScroll: true });
+  });
+  modal.append(scene.stage);
+  root.append(modal);
+  modal.showModal();
+  scene.stage.querySelector('h1').focus({ preventScroll: true });
 }
 
 const contexts = [
@@ -497,12 +500,12 @@ function exampleDialog(index, trigger, onWorked) {
   const modal = dialog('See a different example', section, trigger);
 }
 
-function mathScene(index) {
+function mathScene(index, workspace) {
   const question = questions[index];
   const attempt = activeRun().attempt;
   const currentPanel = el('div', { className: 'chapter-work-panel' });
   const sketch = drawing();
-  const work = chapterModel(question, attempt.step);
+  const work = chapterModel(question, attempt.step, false, workspace);
   const result = el('p', { id: 'chapter-feedback', role: 'status' }, attempt.error);
   const hint = el('p', { className: 'chapter-hint', role: 'status', id: 'chapter-hint' });
   const { field, label } = answerField('Your answer');
@@ -624,7 +627,7 @@ function mountScene(stage, className, outgoing, outClass, inClass, duration) {
   stage.querySelector('h1').focus({ preventScroll: true });
 }
 
-function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail, focusBridge, animateBridge, repairFrom } = {}) {
+function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail, focusBridge, animateBridge, repairFrom, movementWorkspace } = {}) {
   activeScene?.dispose();
   activeScene = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
@@ -658,6 +661,15 @@ function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapF
       const animation = activeScene.stage.animate([{ opacity: .5 }, { opacity: 1 }], { duration: mapFade });
       activeScene.signal.addEventListener('abort', () => animation.cancel(), { once: true });
     }
+    return;
+  }
+  if (scene === 'wiggle') {
+    activeScene = createWiggleMeadow({
+      state: progress.run.meadow, save: meadow => writeRun({ ...progress.run, meadow }),
+      exit: next, home, grownUps: trigger => growUps({ meadow: true, trigger }),
+      listen, stopSpeech, el, picture,
+    });
+    mountScene(activeScene.stage, 'grove-main');
     return;
   }
   if (scene === 'supplies') {
@@ -762,10 +774,7 @@ function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapF
     headerActions.prepend(map);
   }
   const index = qIndex();
-  let content;
-  if (scene === 'wiggle') content = el('section', { className: 'chapter-break' }, el('h1', { tabindex: '-1' }, 'Dino Wiggle Break'),
-    el('p', {}, 'Take a little movement break if you want.'), movementBody(next));
-  else content = stories[scene] ? storyScene(scene) : mathScene(index);
+  const content = stories[scene] ? storyScene(scene) : mathScene(index, movementWorkspace);
   const main = el('main', { className: 'chapter-main' }, content, persistWarning);
   root.replaceChildren(header, main);
   window.scrollTo(0, 0);

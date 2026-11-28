@@ -1,0 +1,138 @@
+#chapter .meadow-dialog {
+  position: fixed;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  color: inherit;
+  background: #284929;
+  overscroll-behavior: contain;
+}
+.meadow-stage {
+  --meadow-center: var(--landscape-center);
+  --meadow-ground: var(--landscape-ground);
+  background: #315235;
+}
+.meadow-stage .meadow-landscape { object-position: center 64%; }
+.meadow-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(16rem, .88fr);
+  align-items: center;
+  gap: clamp(.45rem, 1.5vw, 1.25rem);
+  margin-inline: auto;
+  width: min(100% - var(--gutter) * 2, 86rem);
+  min-height: max(0px, calc(100svh - 7rem));
+  padding-bottom: max(.65rem, env(safe-area-inset-bottom));
+}
+.meadow-cast {
+  position: relative;
+  min-height: clamp(14rem, 73svh, 43rem);
+  pointer-events: none;
+}
+.meadow-actor, .meadow-flower {
+  position: absolute;
+  left: var(--actor-x, var(--meadow-center));
+  top: var(--actor-y, var(--meadow-ground));
+  width: var(--actor-width, min(81%, 61svh));
+  height: 0;
+}
+.meadow-sprite {
+  width: var(--pose-width);
+  max-width: none;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  transform: translate(-50%, calc(100% + var(--pose-feet)));
+  transform-origin: 50% 94%;
+}
+.meadow-motion-frame { opacity: 0; }
+.meadow-stretch { --actor-width: min(92%, 58svh); }
+.meadow-stomp { --actor-width: min(82%, 61svh); }
+.meadow-march { --actor-width: min(67%, 51svh); }
+.meadow-wiggle { --actor-width: min(94%, 75svh); }
+.meadow-trex { --actor-x: 26%; --actor-width: min(41%, 38svh); }
+.meadow-stego { --actor-x: 66%; --actor-width: min(61%, 52svh); }
+.meadow-calm { --actor-x: 33%; --actor-width: min(47%, 40svh); }
+.meadow-flower {
+  --actor-x: 72%;
+  --actor-width: min(29%, 27svh);
+  height: auto;
+  transform: translate(-50%, -105%);
+  transform-origin: center 91%;
+}
+.meadow-panel {
+  min-width: 0;
+  align-self: center;
+  max-width: 36rem;
+  padding: clamp(.7rem, 1.7vw, 1.22rem);
+  border: 2px solid #624920;
+  border-radius: 1.15rem;
+  background: #fff8e2;
+  box-shadow: 0 4px 14px #1629168c;
+}
+#chapter .meadow-stage .grove-bubble-zone { position: static; width: 100%; gap: .25rem; }
+#chapter .meadow-stage .grove-bubble { padding: .42em .6em; }
+#chapter .meadow-stage .grove-bubble::after { display: none; }
+#chapter .meadow-stage .grove-bubble .grove-line { text-wrap: pretty; }
+#chapter .meadow-stage .meadow-activity {
+  margin: 0 0 .55rem;
+  color: #204830;
+  font-size: clamp(1.17rem, 2.2vw, 1.77rem);
+}
+.meadow-instruction { margin: .52rem 0 .25rem; color: #2a4431; font-weight: 750; }
+.meadow-seated { margin-block: .22rem; }
+.meadow-seated summary {
+  display: list-item;
+  min-height: 44px;
+  align-content: center;
+  color: #214c33;
+  font-weight: 750;
+  cursor: pointer;
+}
+.meadow-seated p { margin: .12rem 0 .45rem; }
+.meadow-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  align-items: center;
+  margin-top: .55rem;
+}
+.meadow-actions > .grove-primary { flex: 1 1 100%; }
+#chapter .meadow-stage .meadow-actions button { overflow-wrap: anywhere; }
+.meadow-stage .grove-brand img { height: auto; }
+
+@media (orientation: portrait) {
+  .meadow-stage {
+    --meadow-center: var(--portrait-center);
+    --meadow-ground: var(--portrait-ground);
+  }
+  .meadow-view {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    min-height: max(0px, calc(100svh - 8rem));
+    align-content: end;
+  }
+  .meadow-panel { width: 100%; }
+  .meadow-cast { min-height: clamp(12rem, 36svh, 32rem); width: min(100%, 41rem); }
+  .meadow-actor, .meadow-flower { top: 93%; }
+  .meadow-stretch { --actor-width: min(78%, 38svh); }
+  .meadow-stomp { --actor-width: min(64%, 39svh); }
+  .meadow-march { --actor-width: min(57%, 36svh); }
+  .meadow-wiggle { --actor-width: min(88%, 51svh); }
+  .meadow-trex { --actor-x: 28%; --actor-width: min(41%, 29svh); }
+  .meadow-stego { --actor-x: 65%; --actor-width: min(60%, 38svh); }
+  .meadow-calm { --actor-width: min(48%, 31svh); }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .meadow-view { min-height: calc(100svh - 5rem); }
+  .meadow-cast { min-height: clamp(9rem, 67svh, 20rem); }
+  .meadow-panel { padding: .48rem; }
+  #chapter .meadow-stage .meadow-activity { margin-bottom: .25rem; }
+  .meadow-instruction { margin-top: .22rem; }
+}

@@ -139,7 +139,7 @@ try {
   await capture(page, '03-match-ipad-portrait');
   await page.setViewportSize(ipad);
   await press(page, 'Take a break');
-  await press(page, 'I’m ready!');
+  await press(page, 'Skip for Now');
   await press(page, 'Trail map');
   await press(page, 'Continue Stop');
   await page.reload();

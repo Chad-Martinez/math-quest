@@ -62,6 +62,7 @@ function movable(asset, label, from, to, update, moved = false) {
   }
   const piece = token(asset, label + (moved ? ', put back' : ', move'), move);
   piece.dataset.dragIcon = '●';
+  piece.dataset.chapterPiece = label;
   dragTo(piece, () => piece.parentElement === from.items ? to.node : from.node, move);
   (moved ? to : from).items.append(piece);
 }
@@ -73,7 +74,19 @@ function statusLine(container) {
   return status;
 }
 
-function combine(container, first, second, assets, labels, demonstrated) {
+function restoreOrder(groups, saved) {
+  if (!Array.isArray(saved)) return;
+  for (const [index, group] of groups.entries()) {
+    const keys = saved[index];
+    if (!Array.isArray(keys)) continue;
+    const pieces = new Map([...group.items.children].map(piece => [piece.dataset.chapterPiece, piece]));
+    for (const key of keys) {
+      if (key && pieces.has(key)) group.items.append(pieces.get(key));
+    }
+  }
+}
+
+function combine(container, first, second, assets, labels, demonstrated, saved) {
   const a = group(labels[0]), b = group(labels[1]), basket = group(labels[2]);
   const rows = element('div', 'chapter-model-groups');
   rows.append(a.node, b.node, basket.node);
@@ -83,9 +96,14 @@ function combine(container, first, second, assets, labels, demonstrated) {
     const moved = basket.items.childElementCount;
     status.textContent = moved === first + second ? 'Count everything in the basket.' : 'Tap or drag the objects into the basket.';
   };
+  const moved = Array.isArray(saved?.[2]) ? new Set(saved[2]) : new Set();
   for (const [count, source, asset, label] of [[first, a, assets[0], labels[0]], [second, b, assets[1], labels[1]]]) {
-    for (let i = 0; i < count; i++) movable(asset, `${label} ${i + 1}`, source, basket, update, demonstrated);
+    for (let i = 0; i < count; i++) {
+      const id = `${label} ${i + 1}`;
+      movable(asset, id, source, basket, update, demonstrated || moved.has(id));
+    }
   }
+  restoreOrder([a, b, basket], saved);
   update();
 }
 
@@ -121,7 +139,7 @@ function footprints(container, { small, large }, demonstrated) {
   if (demonstrated) for (let i = 0; i < small; i++) pair(i, first);
 }
 
-function grow(container, question, demonstrated) {
+function grow(container, question, demonstrated, saved) {
   const more = group('Green Dino'), fewer = group('Blue Dino');
   const spare = group('Spare gems');
   const { large, small } = question.params;
@@ -142,11 +160,16 @@ function grow(container, question, demonstrated) {
       status.textContent = 'Move a spare gem to Blue Dino’s group.';
     }
   };
-  for (let i = 0; i < Math.min(large - small + 2, 20 - small); i++) movable(addedAsset, `Spare gem ${i + 1}`, spare, fewer, update, demonstrated && i < question.answers[0]);
+  const moved = Array.isArray(saved?.[1]) ? new Set(saved[1]) : new Set();
+  for (let i = 0; i < Math.min(large - small + 2, 20 - small); i++) {
+    const id = `Spare gem ${i + 1}`;
+    movable(addedAsset, id, spare, fewer, update, (demonstrated && i < question.answers[0]) || moved.has(id));
+  }
+  restoreOrder([more, fewer, spare], saved);
   update();
 }
 
-export function chapterModel(question, step, demonstrated = false) {
+export function chapterModel(question, step, demonstrated = false, saved) {
   const container = element('div', 'chapter-model');
   const p = question.params;
   if (question.id === 'supplies') {
@@ -155,11 +178,11 @@ export function chapterModel(question, step, demonstrated = false) {
   } else if (question.id === 'footprints') {
     footprints(container, p, demonstrated);
   } else if (question.id === 'gems') {
-    grow(container, question, demonstrated);
+    grow(container, question, demonstrated, saved?.groups);
   } else if (step === 0) {
-    combine(container, ...p.rightParts, [stone, stone], ['First group', 'Second group', 'Right pan'], demonstrated);
+    combine(container, ...p.rightParts, [stone, stone], ['First group', 'Second group', 'Right pan'], demonstrated, saved?.groups);
   } else {
-    container.append(buildModel({ kind: 'balance', left: p.left, rightParts: p.rightParts, action: 'remove-left', object: stone }, { initialMoveCount: demonstrated ? question.answers[step] : 0 }));
+    container.append(buildModel({ kind: 'balance', left: p.left, rightParts: p.rightParts, action: 'remove-left', object: stone }, { initialMoveCount: demonstrated ? question.answers[step] : 0, initialOrder: saved?.balance }));
   }
   return container;
 }
