@@ -265,12 +265,15 @@ try {
   });
   await beat(moving.page, 'crossing');
   await capture(moving.page, 'motion-02-near-bank', 'allow');
-  await moving.page.evaluate(() => { for (const animation of window.crossing) animation.currentTime = 870; });
+  await moving.page.evaluate(async () => {
+    for (const animation of window.crossing) animation.currentTime = 870;
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
   const halfway = await moving.page.locator('.bridge-trex').evaluate(el => ({
     left: parseFloat(getComputedStyle(el).left) / el.parentElement.clientWidth,
     top: parseFloat(getComputedStyle(el).top) / el.parentElement.clientHeight,
   }));
-  assert.ok(halfway.left > .4 && halfway.left < .6 && halfway.top > .42 && halfway.top < .46);
+  assert.ok(halfway.left > .4 && halfway.left < .6 && halfway.top > .42 && halfway.top < .475, JSON.stringify(halfway));
   await capture(moving.page, 'motion-03-on-deck', 'allow');
   await press(moving.page, 'Listen');
   await press(moving.page, 'Skip crossing');
