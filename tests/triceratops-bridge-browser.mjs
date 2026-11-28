@@ -285,8 +285,17 @@ try {
   await moving.context.close();
 
   const interrupted = await setup({ phase: 'construction', shared: 3, motion: 'no-preference' });
+  await interrupted.page.evaluate(() => {
+    const animate = Element.prototype.animate;
+    window.repairMoves = 0;
+    Element.prototype.animate = function (...args) {
+      if (this.closest('.bridge-results')) window.repairMoves++;
+      return animate.apply(this, args);
+    };
+  });
   await check(interrupted.page, 4);
-  await interrupted.page.waitForFunction(() => document.querySelector('.bridge-results').getAnimations({ subtree: true }).length === 1);
+  await interrupted.page.waitForFunction(() => window.repairMoves > 0);
+  assert.equal(await interrupted.page.evaluate(() => window.repairMoves), 1);
   await button(interrupted.page, 'Continue').evaluate(control => {
     control.click();
     const current = document.querySelector('.bridge-stage');

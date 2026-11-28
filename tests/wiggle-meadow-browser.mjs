@@ -155,6 +155,17 @@ async function canvasBytes(page) {
   return page.getByLabel('Scratch drawing').evaluate(canvas => canvas.toDataURL());
 }
 
+async function canvasShape(page) {
+  return page.getByLabel('Scratch drawing').evaluate(canvas => {
+    const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+    const points = [];
+    for (let offset = 3; offset < pixels.length; offset += 4) {
+      if (pixels[offset] > 127) points.push((offset - 3) / 4);
+    }
+    return points;
+  });
+}
+
 try {
   await walkthrough(ipad, 'ipad-landscape');
   await walkthrough(phone, 'phone-portrait');
@@ -219,7 +230,9 @@ try {
   await page.mouse.move(bounds.x + 50, bounds.y + 45, { steps: 4 });
   await page.mouse.up();
   const ink = await canvasBytes(page);
+  const strokes = await canvasShape(page);
   assert.notEqual(ink, blank);
+  assert.ok(strokes.length > 0);
   const before = await read(page);
   await press(page, 'Take a break');
   await enter(page);
@@ -238,7 +251,13 @@ try {
   await page.reload();
   await press(page, 'Continue Adventure');
   await page.getByLabel('Scratch drawing').waitFor();
-  await page.waitForFunction(data => document.querySelector('canvas').toDataURL() === data, ink);
+  // WebKit can encode the decoded PNG differently. Compare the restored stroke positions.
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('canvas');
+    return canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data
+      .some((value, offset) => offset % 4 === 3 && value > 127);
+  });
+  assert.deepEqual(await canvasShape(page), strokes);
   assert.equal(await answer.inputValue(), '3');
   assert.deepEqual(await read(page), before);
   await capture(page, '09-resumed-bridge-drawing');
