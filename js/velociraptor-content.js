@@ -108,7 +108,7 @@ export const trailDialogue = {
   },
   "clue3": {
     "speaker": "Velociraptor",
-    "text": "My friend Triceratops is just ahead. Maybe he saw something!"
+    "text": "My friend Triceratops is at the bridge. Maybe he saw something!"
   },
   "clue4": {
     "speaker": "T-Rex",
@@ -170,7 +170,7 @@ export const trailScene = {
         "clue4"
       ],
       "pose": "raptor-gesture",
-      "action": "Visit Triceratops"
+      "action": "Visit Triceratops Bridge"
     }
   ],
   "layout": {

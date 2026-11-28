@@ -1,4 +1,4 @@
-import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt, finishChallenge, freshQuestion,
+import { advanceChapter, applyChapterAnswer, chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt, finishChallenge, freshQuestion,
   readChapter, startChapter, stopNames, stops } from './chapter.js';
 import { chapterModel } from './chapter-models.js';
 import { progressTotals, readProgress } from './storage.js';
@@ -12,6 +12,9 @@ import { berryHelp, fillBerryCopy, newBerryBeat } from './berry-grove-state.js';
 import { createVelociraptorTrail } from './velociraptor-trail.js';
 import { trailGuide } from './velociraptor-content.js';
 import { newTrailBeat, trailHelp } from './velociraptor-state.js';
+import { createTriceratopsBridge } from './triceratops-bridge.js';
+import { bridgeGuide } from './triceratops-content.js';
+import { bridgeHelp, newBridgeBeat } from './triceratops-state.js';
 
 let activeScene;
 let suspendedAdventure;
@@ -184,8 +187,9 @@ function openStop(index) {
   const attempt = emptyAttempt();
   if (index === 0) attempt.berry = newBerryBeat('combine');
   if (index === 1) attempt.trail = newTrailBeat('solve');
+  if (index === 2) attempt.bridge = newBridgeBeat('construction');
   practiceRun = { seed: progress.run.seed, scene: stops[index], outcomes: Array(stops.length).fill(null), attempt,
-    berryVariant: progress.run.berryVariant, trailVariant: progress.run.trailVariant };
+    berryVariant: progress.run.berryVariant, trailVariant: progress.run.trailVariant, bridgeVariant: progress.run.bridgeVariant };
   render();
 }
 
@@ -196,10 +200,11 @@ function restartStop() {
     return;
   }
   stopSpeech();
-  const { assisted, teach, berry, trail } = run.attempt;
+  const { assisted, teach, berry, trail, bridge } = run.attempt;
   const attempt = { ...emptyAttempt(), assisted, teach };
   if (berry) attempt.berry = { ...newBerryBeat('combine'), help: berry.help };
   if (trail) attempt.trail = { ...newTrailBeat('solve'), help: trail.help };
+  if (bridge) attempt.bridge = { ...newBridgeBeat('construction'), help: bridge.help };
   writeRun({ ...run, attempt });
   render();
 }
@@ -218,6 +223,10 @@ function arriveFromMap() {
     if (run.scene === 'footprints' && run.trailVariant === undefined) {
       run.trailVariant = 0;
       run.attempt = { ...emptyAttempt(), trail: newTrailBeat() };
+    }
+    if (run.scene === 'share' && run.bridgeVariant === undefined && !run.attempt.solved) {
+      run.bridgeVariant = 0;
+      run.attempt = { ...run.attempt, bridge: newBridgeBeat() };
     }
     writeRun(run);
   }
@@ -360,25 +369,30 @@ function coach() {
   if (index < 0) return;
   const isGrove = index === 0;
   const isTrail = index === 1;
-  const question = isGrove ? chapterBerryQuestion(activeRun()) : isTrail ? chapterTrailQuestion(activeRun()) : questions[index];
-  const guide = isGrove ? berryGuide : isTrail ? trailGuide : undefined;
+  const isBridge = index === 2;
+  const question = isGrove ? chapterBerryQuestion(activeRun()) : isTrail ? chapterTrailQuestion(activeRun())
+    : isBridge ? chapterBridgeQuestion(activeRun()) : questions[index];
+  const guide = isGrove ? berryGuide : isTrail ? trailGuide : isBridge ? bridgeGuide : undefined;
   const copy = text => fillBerryCopy(text, question.values);
-  const questionsToAsk = isTrail ? el('ul', { className: 'chapter-coach-tip' },
+  const questionsToAsk = guide?.questions ? el('ul', { className: 'chapter-coach-tip' },
     ...guide.questions.map(line => el('li', {}, line))) : el('p', { className: 'chapter-coach-tip' }, guide?.comprehension ?? question.ask);
   const body = el('div', {}, questionsToAsk,
     el('h3', {}, 'What this teaches'), el('p', {}, guide?.objective ?? question.objective),
     el('h3', {}, 'Try it with objects'), isGrove
       ? el('ol', {}, ...guide.physicalDemo.map(step => el('li', {}, copy(step))))
-      : el('p', {}, isTrail ? copy(guide.physicalDemo) : question.activity),
+      : el('p', {}, guide ? copy(guide.physicalDemo) : question.activity),
     el('h3', {}, 'Hints to try'), el('ul', {}, ...question.hints.flat().map(hint => el('li', {}, hint))),
     el('h3', {}, 'If they get stuck'), isGrove
       ? el('ul', {}, ...Object.values(guide.misunderstandings).map(note => el('li', {}, note)))
-      : el('p', {}, isTrail ? guide.misconceptions : Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
+      : isBridge ? el('ul', {}, ...guide.misconceptions.map(note => el('li', {}, note)))
+        : el('p', {}, isTrail ? guide.misconceptions : Object.values(question.mistakes[activeRun().attempt.step]).join(' ')));
   if (isGrove) body.append(el('p', {}, copy(guide.alternative)), el('p', {}, guide.note));
+  if (isBridge) body.append(el('p', {}, guide.boundary));
   function markParent(changes) {
-    const { berry, trail } = activeRun().attempt;
+    const { berry, trail, bridge } = activeRun().attempt;
     if (isGrove && berry) updateAttempt({ ...changes, berry: { ...berry, help: berryHelp([...berry.help, 'parent']) } });
     else if (isTrail && trail) updateAttempt({ ...changes, trail: { ...trail, help: trailHelp([...trail.help, 'parent']) } });
+    else if (isBridge && bridge) updateAttempt({ ...changes, bridge: { ...bridge, help: bridgeHelp([...bridge.help, 'parent']) } });
     else updateAttempt(changes);
   }
   if (!activeRun().attempt.solved) {
@@ -411,7 +425,7 @@ function coach() {
         ? 'That works! ' + explanation : 'Try again. Use the same idea with these new numbers.';
     });
     transferDetails.append(el('p', {}, guide ? transfer.question : contexts[index](transfer.params)), form, result);
-    if (isTrail) transferDetails.append(button('Reveal transfer answer', () => {
+    if (isTrail || isBridge) transferDetails.append(button('Reveal transfer answer', () => {
       result.textContent = `The answer is ${transfer.answer}.`;
     }, 'chapter-secondary'));
     body.append(transferDetails);
@@ -610,7 +624,7 @@ function mountScene(stage, className, outgoing, outClass, inClass, duration) {
   stage.querySelector('h1').focus({ preventScroll: true });
 }
 
-function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail } = {}) {
+function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapFade, focusBerry, focusTrail, animateTrail, focusBridge, animateBridge, repairFrom } = {}) {
   activeScene?.dispose();
   activeScene = undefined;
   const scene = intro ? 'welcome' : activeRun()?.scene ?? 'welcome';
@@ -706,6 +720,33 @@ function render(leavingWelcome, leavingMission, freshCompletion, { collect, mapF
     });
     mountScene(activeScene.stage, 'grove-main');
     if (focusTrail) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
+    return;
+  }
+  if (scene === 'share') {
+    const readAttempt = () => activeRun().attempt;
+    activeScene = createTriceratopsBridge({
+      question: chapterBridgeQuestion(activeRun()), readAttempt, update: updateAttempt,
+      changeBeat(phase, line) {
+        const bridge = readAttempt().bridge;
+        updateAttempt({ bridge: { ...bridge, phase, line } });
+        render(undefined, undefined, undefined, { focusBridge: true, animateBridge: bridge.phase !== phase });
+      },
+      checkAnswer(question, value) {
+        const before = activeRun();
+        const after = applyChapterAnswer(before, question, value);
+        if (after === before) return before.attempt.solved;
+        if (!after.attempt.solved) after.attempt.bridge = { ...before.attempt.bridge, mistakes: before.attempt.bridge.mistakes + 1 };
+        writeRun(after);
+        if (after.attempt.solved) render(undefined, undefined, undefined, { focusBridge: true, repairFrom: before.attempt.bridge.shared });
+        return after.attempt.solved;
+      },
+      exit: mapFade => practiceRun ? returnToAdventure() : next({ mapFade }),
+      restart: restartStop, practice: Boolean(practiceRun), stopCount: stops.length, animateEntry: animateBridge, repairFrom,
+      home, grownUps: growUps, openMap: revisitMap, leavePractice: returnToAdventure, movementBreak,
+      drawing, answerField, dialog, listen, stopSpeech, el, picture,
+    });
+    mountScene(activeScene.stage, 'grove-main');
+    if (focusBridge) activeScene.stage.querySelector('[data-focus-beat]')?.focus({ preventScroll: true });
     return;
   }
   const header = el('header', { className: 'chapter-header' },

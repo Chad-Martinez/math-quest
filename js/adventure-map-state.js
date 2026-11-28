@@ -4,7 +4,7 @@ const origins = { supplies: '1', footprints: '2', share: '3', wiggle: 'break', g
 const destinations = {
   map: ['start', '1', 'Visit Berry Grove'],
   footprints: ['1', '2', 'Visit Raptor Trail'],
-  share: ['2', '3', 'Visit Picnic Clearing'],
+  share: ['2', '3', 'Visit Triceratops Bridge'],
   wiggle: ['3', 'break', 'Take a Wiggle Break'],
   gems: ['break', '4', 'Visit Crystal Lagoon'],
   cave: ['4', '5', 'Visit Crystal Cave'],

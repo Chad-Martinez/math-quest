@@ -122,16 +122,12 @@ function footprints(container, { small, large }, demonstrated) {
 }
 
 function grow(container, question, demonstrated) {
-  const gemsQuestion = question.id === 'gems';
-  const labels = gemsQuestion ? ['Green Dino', 'Blue Dino'] : ['T-Rex', 'Friend'];
-  const more = group(labels[0]), fewer = group(labels[1]);
-  const spare = group(gemsQuestion ? 'Spare gems' : 'Berries to share');
+  const more = group('Green Dino'), fewer = group('Blue Dino');
+  const spare = group('Spare gems');
   const { large, small } = question.params;
-  const fixedAsset = gemsQuestion ? gems('green') : berry('red');
-  const addedAsset = gemsQuestion ? gems('blue') : berry('blue');
-  const noun = gemsQuestion ? 'gem' : 'berry';
-  units(more, large, fixedAsset, noun);
-  units(fewer, small, addedAsset, noun);
+  const addedAsset = gems('blue');
+  units(more, large, gems('green'), 'gem');
+  units(fewer, small, addedAsset, 'gem');
   const rows = element('div', 'chapter-model-groups');
   rows.append(more.node, fewer.node, spare.node);
   container.append(rows);
@@ -139,14 +135,14 @@ function grow(container, question, demonstrated) {
   const update = () => {
     const count = fewer.items.childElementCount;
     if (count === large) {
-      status.textContent = gemsQuestion ? 'They tie. Add just one more.' : 'They match! Count what you moved.';
+      status.textContent = 'They tie. Add just one more.';
     } else if (count > large) {
-      status.textContent = gemsQuestion && count === large + 1 ? 'Blue Dino is just ahead. Count what you moved.' : 'Move an extra one back.';
+      status.textContent = count === large + 1 ? 'Blue Dino is just ahead. Count what you moved.' : 'Move an extra one back.';
     } else {
-      status.textContent = `Move a spare ${noun} to ${labels[1]}’s group.`;
+      status.textContent = 'Move a spare gem to Blue Dino’s group.';
     }
   };
-  for (let i = 0; i < Math.min(large - small + 2, 20 - small); i++) movable(addedAsset, `Spare ${noun} ${i + 1}`, spare, fewer, update, demonstrated && i < question.answers[0]);
+  for (let i = 0; i < Math.min(large - small + 2, 20 - small); i++) movable(addedAsset, `Spare gem ${i + 1}`, spare, fewer, update, demonstrated && i < question.answers[0]);
   update();
 }
 
@@ -158,7 +154,7 @@ export function chapterModel(question, step, demonstrated = false) {
     else container.append(buildModel({ kind: 'line', start: p.have, target: p.need, showJumps: true, atTarget: demonstrated }));
   } else if (question.id === 'footprints') {
     footprints(container, p, demonstrated);
-  } else if (question.id === 'share' || question.id === 'gems') {
+  } else if (question.id === 'gems') {
     grow(container, question, demonstrated);
   } else if (step === 0) {
     combine(container, ...p.rightParts, [stone, stone], ['First group', 'Second group', 'Right pan'], demonstrated);

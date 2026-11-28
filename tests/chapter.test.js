@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  advanceChapter, applyChapterAnswer, chapterKey, chapterQuestions, finishChallenge, freshQuestion,
+  advanceChapter, applyChapterAnswer, chapterBridgeQuestion, chapterKey, chapterQuestions, finishChallenge, freshQuestion,
   readChapter, scenes, startChapter, stops,
 } from '../js/chapter.js';
 
@@ -49,7 +49,7 @@ test('5,000 seeds preserve all five story relationships, step answers and 0–20
     for (const [index, question] of questions.entries()) {
       assert.equal(question.answers.length, question.prompts.length);
       assert.equal(question.answers.length, question.hints.length);
-      assert.ok(question.hints.every(levels => levels.length === 2));
+      assert.ok(question.hints.every(levels => levels.length === (question === share ? 3 : 2)));
       assert.ok(question.ask && question.objective && question.activity);
       assert.ok(question.answers.every(value => Number.isInteger(value) && value >= 0 && value <= 20));
       assert.ok(question.equations.every(equation => equation.split(';').every(part => {
@@ -85,7 +85,7 @@ test('scene sequence, saved checkpoint, default break, completion and replay', (
     const index = stops.indexOf(state.run.scene);
     if (index >= 0) {
       assert.equal(advanceChapter(state), state);
-      state = solved(state, questions[index]);
+      state = solved(state, index === 2 ? chapterBridgeQuestion(state.run) : questions[index]);
     }
     state = snapshot(advanceChapter(state));
   }
@@ -103,7 +103,7 @@ test('scene sequence, saved checkpoint, default break, completion and replay', (
 test('break preference survives storage and skips only the scheduled stop', () => {
   const initialState = startChapter({ ...initial(), autoBreak: false }, 44);
   const state = { ...initialState, run: { ...initialState.run, scene: 'share' } };
-  const after = advanceChapter(solved(state, chapterQuestions(44)[2]));
+  const after = advanceChapter(solved(state, chapterBridgeQuestion(state.run)));
   assert.equal(snapshot(after).run.scene, 'gems');
   assert.equal(snapshot(after).autoBreak, false);
 });

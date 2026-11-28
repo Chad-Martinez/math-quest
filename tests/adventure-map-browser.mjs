@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
-import { chapterBerryQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt } from '../js/chapter.js';
+import { chapterBerryQuestion, chapterBridgeQuestion, chapterKey, chapterQuestions, chapterTrailQuestion, emptyAttempt } from '../js/chapter.js';
 import { mapSpec } from '../js/adventure-map-data.js';
 
 const require = createRequire(import.meta.url);
@@ -83,12 +83,17 @@ async function dialogue(page, id) {
 }
 async function answer(page, index) {
   const q = index === 0 ? chapterBerryQuestion((await saved(page)).run)
-    : index === 1 ? chapterTrailQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
+    : index === 1 ? chapterTrailQuestion((await saved(page)).run) : index === 2 ? chapterBridgeQuestion((await saved(page)).run) : chapterQuestions(seed)[index];
   for (const [step, value] of q.answers.entries()) {
     await page.getByLabel('Your answer').fill(String(value));
-    await press(page, index <= 1 ? 'Check Answer' : 'Check answer');
+    await press(page, index <= 2 ? 'Check Answer' : 'Check answer');
     if (index === 0 && step === 0) await press(page, 'Continue');
   }
+}
+
+async function leaveBridge(page) {
+  for (let i = 0; i < 3; i++) await press(page, 'Continue');
+  await press(page, 'Continue the Adventure');
 }
 
 try {
@@ -149,12 +154,13 @@ try {
   for (const label of ['Continue', 'Let’s Investigate!', 'Continue', 'Continue']) await press(page, label);
   await answer(page, 1);
   for (let i = 0; i < 4; i++) await press(page, 'Continue');
-  await press(page, 'Visit Triceratops');
+  await press(page, 'Visit Triceratops Bridge');
   await dialogue(page, '2');
-  await press(page, 'Visit Picnic Clearing');
-  await heading(page, 'Share the food');
+  await press(page, 'Visit Triceratops Bridge');
+  await heading(page, 'Triceratops Bridge');
+  for (const label of ['Continue', 'Let’s Fix It!', 'Continue', 'Continue']) await press(page, label);
   await answer(page, 2);
-  await press(page, 'Continue the search');
+  await leaveBridge(page);
   await dialogue(page, '3');
   await capture(page, '03-ipad-landscape-wiggle-offer');
   assert.equal(await marker(page, 'break').getAttribute('data-status'), 'current');
@@ -203,7 +209,7 @@ try {
 
   const disabled = await setup(ipad, 'share', 2, undefined, { autoBreak: false });
   await answer(disabled.page, 2);
-  await press(disabled.page, 'Continue the search');
+  await leaveBridge(disabled.page);
   await dialogue(disabled.page, 'break');
   assert.equal(await button(disabled.page, 'Take a Wiggle Break').count(), 0);
   await press(disabled.page, 'Visit Crystal Lagoon');

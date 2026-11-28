@@ -9,7 +9,7 @@ Dinosaur Island: The Lost Egg, Chapter 1, is the active playtest. [Release confi
 | 03 Adventure Map | Empty Nest start, travel, five math stops and an unnumbered break |
 | 04 Brachiosaurus Berry Grove | Math stop 1 |
 | 05 Velociraptor Trail | Math stop 2 |
-| 06 Triceratops Picnic Clearing | Math stop 3 |
+| 06 Triceratops Bridge | Math stop 3 |
 | 07 Stegosaurus Wiggle Meadow | Optional movement |
 | 08 Mosasaurus Crystal Lagoon | Math stop 4 |
 | 09 Ankylosaurus Crystal Cave | Math stop 5 |
