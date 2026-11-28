@@ -4,11 +4,12 @@
   --welcome-cream: #fff3d6;
   --welcome-green: #075b35;
   --welcome-gold: #f7c84d;
+  --mission-dialogue-top: 38svh;
   position: relative;
   isolation: isolate;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: max(55px, 14svh) auto 1fr auto;
+  grid-template-rows: max(55px, var(--mission-dialogue-top)) auto 1fr auto;
   min-height: 100svh;
   padding: 0 max(4vw, env(safe-area-inset-right)) max(4svh, env(safe-area-inset-bottom))
     max(4vw, env(safe-area-inset-left));
@@ -16,6 +17,7 @@
   background: var(--welcome-cream);
   color: #123925;
 }
+.mission-stage[data-beat="3"] { --mission-dialogue-top: 44svh; }
 .mission-heading {
   position: absolute;
   width: 1px;
@@ -75,6 +77,12 @@
   margin-left: 42%;
 }
 .mission-line { font-size: clamp(1.125rem, 2.8vw, 2rem); line-height: 1.13; }
+@media (orientation: landscape) {
+  .mission-line::before, .mission-line::after {
+    transform: rotate(-18deg);
+    transform-origin: right center;
+  }
+}
 .mission-audio { display: flex; justify-content: center; margin-top: .3rem; }
 .mission-audio .chapter-listen { justify-content: center; }
 .mission-audio .chapter-speech-status:not(:empty) {
@@ -104,7 +112,7 @@
 
 @media (orientation: portrait) {
   .mission-stage {
-    grid-template-rows: max(59px, 12svh) auto 1fr auto;
+    --mission-dialogue-top: 37svh;
     padding-bottom: max(2.6svh, calc(env(safe-area-inset-bottom) + .45rem));
   }
   .mission-stage[data-beat="2"] .mission-nest-clues.mission-clues-portrait,
@@ -134,7 +142,8 @@
 
 @media (orientation: landscape) and (max-height: 480px) {
   #chapter .mission-stage .welcome-parents { top: max(6px, env(safe-area-inset-top)); }
-  .mission-stage { grid-template-rows: 55px auto 1fr auto; }
+  .mission-stage { --mission-dialogue-top: 30svh; }
+  .mission-stage[data-beat="3"] { --mission-dialogue-top: 34svh; }
   .mission-line { font-size: clamp(1.125rem, 2.6vw, 1.4rem); }
   #chapter .mission-advance { padding-block: .29em; }
 }
