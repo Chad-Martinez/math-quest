@@ -1,10 +1,11 @@
 # Math Quest development
 
-- Keep the GitHub Pages build dependency-free and use relative asset URLs. Test with the site served from the project subdirectory.
-- Keep curriculum, seeded generation, answer validation, and session transitions independent of the DOM.
-- Use fictional characters and synthetic examples. Keep personal information and learner records out of source, fixtures, issue text, and documentation.
-- Design for touch and keyboard use. Keep instructions short, allow retries and support, and avoid reporting speed or guided completion as mastery.
-- Run `npm test` and check relevant flows in a browser. Document which devices and features were actually verified.
+Math Quest is an illustrated, personalized math adventure for Harrison. Design for iPad first and support phone and desktop. ChatGPT owns creative direction and educational content, including story, dialogue, art, character design, choreography, math and teaching methodology. Codex owns engineering, integration, optimization and verification. The owner approves the creative material and implementations.
 
-- Build teaching guides from the validated question data. Keep contextual coverage in sync with the active template catalog and put worked solutions behind an explicit reveal.
-- Keep neutral tools and narration separate from instructional help. Test that Coach preserves draft state, and verify storage migration and both reset scopes when changing local evidence.
+- Implement one authorized scene or feature at a time. Read its latest approved spec, references, manifests and [approval register](docs/approval-register.md) before editing. Follow approved written behavior and math where illustrative references disagree. Report discrepancies and seek an owner decision for material conflicts or substantial architectural changes. Proceed with reversible choices within scope.
+- Preserve existing scenes, accessibility, learning tools, saved progress and rewards. Keep the static GitHub Pages build free of runtime dependencies and use relative asset URLs under `/math-quest/`. Get approval before introducing a framework, engine or backend. Reuse current components and centralized [release configuration](docs/release-scope.md). Keep progression in the existing state model.
+- Use Harrison where the approved dialogue specifies his name. Keep the approved personalization without a generic name fallback. Keep that first name confined to approved dialogue and exact-copy checks. Use synthetic fixtures and examples elsewhere. Keep additional identifying information, assessments, diagnoses and learner records out of the public repo and GitHub artifacts. Keep learner data local. Do not add tracking, accounts, configurable names or profiles.
+- Run relevant checks and `npm test`. For scene work, capture representative browser states and compare with the approved references. Report actual commands, device or emulator, results, deviations and remaining manual checks. Tests and screenshots are evidence for review, separate from human approval.
+- Work on a development branch. Obtain explicit approval before merging or deploying. Record approvals and verified deployment separately.
+
+Use the [scene production standard](docs/scene-production.md) for visual, animation and delivery requirements and the [educational requirements](docs/educational-requirements.md) for learning work. Read the scoped instructions in `js/`, `css/`, `assets/` and `tests/` when working there.

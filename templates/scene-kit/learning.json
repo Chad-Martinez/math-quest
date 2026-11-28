@@ -1,0 +1,32 @@
+{
+  "challenges": [
+    {
+      "id": null,
+      "skill": null,
+      "schema": null,
+      "unknownRole": null,
+      "parameterConstraints": {},
+      "story": null,
+      "steps": [
+        {
+          "id": null,
+          "prompt": null,
+          "answerRule": null,
+          "manipulative": null,
+          "hints": [],
+          "misconceptionFeedback": [],
+          "successFeedback": null,
+          "workedSolution": null
+        }
+      ],
+      "parentTeachingTips": {
+        "objective": null,
+        "guidingQuestions": [],
+        "physicalDemo": null,
+        "transferProblem": null,
+        "transferAnswer": null
+      },
+      "completion": null
+    }
+  ]
+}

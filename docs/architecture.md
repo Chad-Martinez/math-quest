@@ -26,3 +26,5 @@ The learning layout mounts the prompt and answer separately from the workspace. 
 `js/chapter.js` owns the ordered scenes, seeded math relationships and chapter progress. `js/chapter-ui.js` renders scene and checkpoint state. `js/chapter-models.js` renders one SVG per unit and shares the existing drag, number-line and balance components. The generated numbers drive questions, visuals, feedback, teaching tips and worked solutions. Checking an answer uses the stored mathematical relationship independently of whether the learner uses the model.
 
 Chapter progress lives under `math-quest.lost-egg-1` with its own version. Earlier Math Quest storage can be read to display the existing stars. Chapter play writes the checkpoint, draft answer, hint and assistance state, outcomes, settings and badge to the chapter key. Model arrangements and drawings are kept in memory while an activity stays open.
+
+See the [Scene 01–03 architecture review](architecture-review.md) for how the current scene layers, map checkpoints and shared learning tools fit together and where future changes could consolidate demonstrated duplication.
