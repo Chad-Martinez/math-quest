@@ -285,7 +285,7 @@ export function createCrystalLagoon(options) {
     workspace.append(el('div', { className: 'grove-response' }, form, feedback,
       el('div', { className: 'chapter-actions grove-guidance' }, hintControl, help, move), hint));
     stage.append(workspace);
-    select(read().tool);
+    select('model');
     showHint();
     showFeedback();
     if (animateEntry) animate(workspace, [{ opacity: .8 }, { opacity: 1 }], { duration: timing.learning });

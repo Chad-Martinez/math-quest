@@ -549,6 +549,7 @@ function mathScene(index, workspace) {
   }
   const showWork = button('Math tools', () => select('math'), 'chapter-secondary');
   const showDraw = button('Draw', () => select('draw'), 'chapter-secondary');
+  showDraw.hidden = true;
   function select(view) {
     work.hidden = view !== 'math';
     sketch.hidden = view !== 'draw';

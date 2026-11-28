@@ -220,6 +220,8 @@ export function createTriceratopsBridge(options) {
     const tools = action('Math tools', () => toggle('model'), 'chapter-secondary');
     const lineTool = action('Number line', () => toggle('line'), 'chapter-secondary');
     const draw = action('Draw', () => select(sketch.hidden ? 'draw' : read().tool), 'chapter-secondary');
+    lineTool.hidden = true;
+    draw.hidden = true;
     function select(view) {
       board.hidden = view !== 'model';
       numberLine.hidden = view !== 'line';
@@ -280,7 +282,7 @@ export function createTriceratopsBridge(options) {
     workspace.append(el('div', { className: 'grove-response' }, form, feedback,
       el('div', { className: 'chapter-actions grove-guidance' }, hintControl, help, move), hint));
     stage.append(workspace);
-    select(read().tool);
+    select('model');
     showHint();
     showFeedback();
 

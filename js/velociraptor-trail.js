@@ -167,6 +167,7 @@ export function createVelociraptorTrail(options) {
       toolView(open ? 'model' : 'closed');
     }, 'chapter-secondary');
     const draw = action('Draw', () => toolView(sketch.hidden ? 'draw' : readTrail().tools ? 'model' : 'closed'), 'chapter-secondary');
+    draw.hidden = true;
     function toolView(view) {
       model.hidden = view !== 'model';
       sketch.hidden = view !== 'draw';
@@ -218,7 +219,7 @@ export function createVelociraptorTrail(options) {
     workspace.append(el('div', { className: 'grove-response' }, form, feedback,
       el('div', { className: 'chapter-actions grove-guidance' }, hintControl, help, move), hint));
     stage.append(workspace);
-    toolView(readTrail().tools ? 'model' : 'closed');
+    toolView('model');
     showHint();
     if (animateEntry) animate(workspace, [{ opacity: .8 }, { opacity: 1 }], { duration: timings.learning });
   }

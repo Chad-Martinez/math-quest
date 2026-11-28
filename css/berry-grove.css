@@ -347,3 +347,16 @@
 .grove-bubble-zone > .chapter-listen { margin-top: .2rem; }
 #chapter .grove-learning .grove-line { font-size: inherit; margin: 0; }
 .grove-work-board .math-model { margin-top: .65rem; }
+
+/* Keep response assistance separate from the answer controls. */
+.grove-guidance { margin-top: 1rem; }
+.grove-stage:not(:has(.grove-learning)) [data-speaker=Brachiosaurus].grove-bubble-zone {
+  left: auto;
+  right: 9%;
+}
+@media (orientation: portrait) {
+  .grove-stage:not(:has(.grove-learning)) [data-speaker=Brachiosaurus].grove-bubble-zone {
+    right: 8%;
+    left: auto;
+  }
+}
